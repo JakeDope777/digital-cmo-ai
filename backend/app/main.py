@@ -5,10 +5,13 @@ Central entry point that registers all API routers, configures middleware,
 and initialises the database and brain components.
 """
 
+import os
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from .core.config import settings
 from .db.session import init_db
@@ -52,9 +55,9 @@ app.include_router(analytics.router)
 app.include_router(memory.router)
 
 
-@app.get("/", tags=["Health"])
-async def root():
-    """Health check endpoint."""
+@app.get("/api/health", tags=["Health"])
+async def api_health():
+    """API health check."""
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -79,3 +82,40 @@ async def health_check():
         "llm_configured": bool(settings.OPENAI_API_KEY),
         "memory_path": settings.MEMORY_BASE_PATH,
     }
+
+
+@app.get("/", tags=["Health"])
+async def root():
+    """Root endpoint - serve frontend if available, otherwise API info."""
+    static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+    index_path = os.path.join(static_dir, "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path)
+    return {
+        "name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "status": "running",
+        "modules": [
+            "brain_memory",
+            "business_analysis",
+            "creative_design",
+            "crm_campaign",
+            "analytics_reporting",
+            "integrations",
+        ],
+    }
+
+
+# Mount static files for the built frontend (after API routes)
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.exists(static_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="static-assets")
+
+    # SPA catch-all: serve index.html for any unmatched route
+    @app.get("/{full_path:path}")
+    async def serve_spa(request: Request, full_path: str):
+        """Serve the SPA for any route not matched by API endpoints."""
+        file_path = os.path.join(static_dir, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(static_dir, "index.html"))

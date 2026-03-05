@@ -30,7 +30,7 @@ class Settings(BaseSettings):
 
     # LLM Configuration
     OPENAI_API_KEY: Optional[str] = None
-    OPENAI_MODEL: str = "gpt-4"
+    OPENAI_MODEL: str = "gpt-4.1-mini"
     OPENAI_BASE_URL: Optional[str] = None
 
     # Vector Database (FAISS)
@@ -109,7 +109,7 @@ class Settings(BaseSettings):
     ENTERPRISE_TIER_MONTHLY_TOKENS: int = 1000000
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    CORS_ORIGINS: list[str] = ["*"]
 
     model_config = {
         "env_file": ".env",
