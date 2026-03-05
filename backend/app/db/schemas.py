@@ -336,6 +336,7 @@ class ForecastRequest(BaseModel):
     metric: str
     horizon: int = 30
     params: Optional[dict] = None
+    method: str = "auto"
 
 
 class ExperimentRecordRequest(BaseModel):
@@ -344,11 +345,53 @@ class ExperimentRecordRequest(BaseModel):
     results: Optional[dict] = None
 
 
+class AttributionRequest(BaseModel):
+    journeys: Optional[list[dict]] = None
+    model: str = "all"
+    decay_half_life_days: float = 7.0
+
+
+class InsightRequest(BaseModel):
+    metrics: Optional[dict] = None
+    period_description: str = "last 30 days"
+    use_llm: bool = True
+
+
+class AnomalyRequest(BaseModel):
+    current_metrics: Optional[dict] = None
+    historical_metrics: Optional[list[dict]] = None
+
+
+class CohortRequest(BaseModel):
+    events: Optional[list[dict]] = None
+    cohort_type: str = "acquisition"
+    period: str = "month"
+    retention_event: str = "purchase"
+    num_periods: int = 12
+
+
+class BenchmarkRequest(BaseModel):
+    metrics: Optional[dict] = None
+    industry: str = "saas"
+
+
+class ExportRequest(BaseModel):
+    format: str = "pdf"
+    include_all: bool = True
+    config: Optional[dict] = None
+
+
 class AnalyticsResponse(BaseModel):
     metrics: Optional[dict] = None
     charts: Optional[list[dict]] = None
     forecast: Optional[dict] = None
     experiment_results: Optional[dict] = None
+    attribution: Optional[dict] = None
+    insight_report: Optional[dict] = None
+    anomaly_report: Optional[dict] = None
+    cohort_analysis: Optional[dict] = None
+    benchmarks: Optional[dict] = None
+    export_result: Optional[dict] = None
 
 
 # ── Memory ────────────────────────────────────────────────────────────
