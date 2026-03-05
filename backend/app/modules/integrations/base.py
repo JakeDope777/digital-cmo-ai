@@ -3,13 +3,14 @@ Base Connector Interface
 
 All integration connectors inherit from this abstract class, ensuring
 a consistent API for authentication, data retrieval, data posting,
-error handling, and token refresh.
+error handling, rate limiting, retry logic, and demo/mock fallback.
 """
 
 import time
+import asyncio
 import logging
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, Any
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ class ConnectorInterface(ABC):
     Abstract base class for all external service connectors.
 
     Provides a unified interface for authentication, data operations,
-    error handling, and rate limiting.
+    error handling, rate limiting, retry logic, and demo/mock fallback.
     """
 
     def __init__(
@@ -53,14 +54,27 @@ class ConnectorInterface(ABC):
         service_name: str,
         api_key: Optional[str] = None,
         rate_limit: int = 100,
+        rate_window: int = 60,
+        max_retries: int = 3,
+        retry_backoff: float = 1.0,
     ):
         self.service_name = service_name
         self.api_key = api_key
-        self.rate_limiter = RateLimiter(max_requests=rate_limit)
+        self.rate_limiter = RateLimiter(
+            max_requests=rate_limit, window_seconds=rate_window
+        )
+        self.max_retries = max_retries
+        self.retry_backoff = retry_backoff
         self._access_token: Optional[str] = None
         self._refresh_token: Optional[str] = None
         self._token_expires_at: Optional[float] = None
         self._is_authenticated = False
+        self._demo_mode = False
+
+    @property
+    def demo_mode(self) -> bool:
+        """Whether the connector is running in demo/mock mode."""
+        return self._demo_mode
 
     @abstractmethod
     async def authenticate(self) -> None:
@@ -77,7 +91,7 @@ class ConnectorInterface(ABC):
         """Send data to a specific API endpoint."""
         pass
 
-    def handle_error(self, response: dict) -> Exception:
+    def handle_error(self, response: dict) -> "ConnectorError":
         """Convert API error responses into standardised exceptions."""
         status = response.get("status_code", 500)
         message = response.get("message", "Unknown error")
@@ -114,9 +128,97 @@ class ConnectorInterface(ABC):
             logger.warning(
                 f"[{self.service_name}] Rate limit reached. Waiting {wait:.1f}s."
             )
-            import asyncio
             await asyncio.sleep(wait)
         self.rate_limiter.record_request()
+
+    async def _request_with_retry(
+        self,
+        method: str,
+        url: str,
+        headers: Optional[dict] = None,
+        params: Optional[dict] = None,
+        json_data: Optional[dict] = None,
+    ) -> dict:
+        """
+        Execute an HTTP request with exponential-backoff retry logic.
+
+        Returns the parsed JSON response or raises ConnectorError.
+        """
+        import aiohttp
+
+        last_error: Optional[Exception] = None
+        for attempt in range(1, self.max_retries + 1):
+            try:
+                await self._check_rate_limit()
+                async with aiohttp.ClientSession() as session:
+                    async with session.request(
+                        method,
+                        url,
+                        headers=headers,
+                        params=params,
+                        json=json_data,
+                        timeout=aiohttp.ClientTimeout(total=30),
+                    ) as resp:
+                        body = await resp.json(content_type=None)
+                        if resp.status >= 400:
+                            # Retry on 429 (rate limit) and 5xx (server errors)
+                            if resp.status == 429 or resp.status >= 500:
+                                raise ConnectorError(
+                                    service=self.service_name,
+                                    status_code=resp.status,
+                                    message=str(body),
+                                    error_code="RETRYABLE",
+                                )
+                            # Non-retryable client error
+                            raise ConnectorError(
+                                service=self.service_name,
+                                status_code=resp.status,
+                                message=str(body),
+                                error_code="CLIENT_ERROR",
+                            )
+                        return body
+            except ConnectorError as e:
+                last_error = e
+                if e.error_code != "RETRYABLE":
+                    raise
+                wait = self.retry_backoff * (2 ** (attempt - 1))
+                logger.warning(
+                    f"[{self.service_name}] Attempt {attempt}/{self.max_retries} "
+                    f"failed ({e.status_code}). Retrying in {wait:.1f}s..."
+                )
+                await asyncio.sleep(wait)
+            except Exception as e:
+                last_error = e
+                wait = self.retry_backoff * (2 ** (attempt - 1))
+                logger.warning(
+                    f"[{self.service_name}] Attempt {attempt}/{self.max_retries} "
+                    f"error: {e}. Retrying in {wait:.1f}s..."
+                )
+                await asyncio.sleep(wait)
+
+        raise ConnectorError(
+            service=self.service_name,
+            status_code=0,
+            message=f"All {self.max_retries} retries exhausted. Last error: {last_error}",
+            error_code="MAX_RETRIES_EXCEEDED",
+        )
+
+    def _enter_demo_mode(self, reason: str = "No credentials configured"):
+        """Switch the connector to demo/mock mode."""
+        self._demo_mode = True
+        self._is_authenticated = False
+        logger.warning(
+            f"[{self.service_name}] {reason}. Running in DEMO mode."
+        )
+
+    def get_status(self) -> dict:
+        """Return the current status of this connector."""
+        return {
+            "service": self.service_name,
+            "authenticated": self._is_authenticated,
+            "demo_mode": self._demo_mode,
+            "token_expired": self.is_token_expired(),
+        }
 
 
 class ConnectorError(Exception):

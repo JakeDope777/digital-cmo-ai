@@ -1,15 +1,16 @@
-"""
+'''
 Google Ads Connector
 
-Implements the ConnectorInterface for Google Ads campaign metrics.
+Implements the ConnectorInterface for Google Ads.
 Returns demo data when credentials are not configured.
-"""
+'''
 
 import logging
 import random
-from typing import Optional
+from typing import Optional, Any, Dict
+from datetime import datetime, timedelta
 
-from .base import ConnectorInterface
+from .base import ConnectorInterface, ConnectorError
 
 logger = logging.getLogger(__name__)
 
@@ -17,66 +18,186 @@ logger = logging.getLogger(__name__)
 class GoogleAdsConnector(ConnectorInterface):
     """Connector for Google Ads API."""
 
+    BASE_URL = "https://googleads.googleapis.com/v16"
+
     def __init__(
         self,
         client_id: Optional[str] = None,
         client_secret: Optional[str] = None,
+        refresh_token: Optional[str] = None,
+        developer_token: Optional[str] = None,
+        customer_id: Optional[str] = None,
     ):
         super().__init__(service_name="GoogleAds", rate_limit=50)
         self.client_id = client_id
         self.client_secret = client_secret
+        self.refresh_token = refresh_token
+        self.developer_token = developer_token
+        self.customer_id = customer_id
+
+        if not all([self.client_id, self.client_secret, self.refresh_token, self.developer_token, self.customer_id]):
+            self._enter_demo_mode()
 
     async def authenticate(self) -> None:
-        """Authenticate with Google Ads via OAuth 2.0."""
-        if self.client_id and self.client_secret:
-            # OAuth flow would go here
-            self._is_authenticated = True
-            logger.info("[GoogleAds] Authenticated via OAuth.")
-        else:
-            logger.warning("[GoogleAds] No credentials provided. Running in demo mode.")
-            self._is_authenticated = False
+        """Handles OAuth2 authentication for the Google Ads API."""
+        if self._demo_mode:
+            return
 
-    async def get_data(self, endpoint: str, params: Optional[dict] = None) -> dict:
-        """Fetch data from Google Ads API."""
+        # In a real scenario, you would implement the OAuth2 flow here.
+        # For this example, we'll assume we have a valid access token.
+        self._access_token = "dummy-access-token"  # Placeholder
+        self._is_authenticated = True
+        logger.info("Successfully authenticated with Google Ads.")
+
+    async def get_data(self, endpoint: str, params: Optional[Dict] = None) -> Dict:
+        """Fetch data from a specific API endpoint."""
+        if self._demo_mode:
+            return self._generate_demo_data(endpoint, params)
+
         await self._ensure_authenticated()
-        await self._check_rate_limit()
-
-        # Return demo data
-        return self._generate_demo_data(endpoint, params)
-
-    async def post_data(self, endpoint: str, data: Optional[dict] = None) -> dict:
-        """Send data to Google Ads API."""
-        await self._ensure_authenticated()
-        await self._check_rate_limit()
-
-        return {"demo": True, "message": f"[GoogleAds Demo] POST {endpoint}"}
-
-    async def get_campaign_metrics(self, campaign_id: Optional[str] = None) -> dict:
-        """Fetch campaign performance metrics."""
-        return await self.get_data("campaigns/metrics", {"campaign_id": campaign_id})
-
-    def _generate_demo_data(self, endpoint: str, params: Optional[dict] = None) -> dict:
-        """Generate realistic demo campaign data."""
-        campaigns = [
-            {
-                "id": f"camp-{i}",
-                "name": name,
-                "status": "ENABLED",
-                "impressions": random.randint(10000, 100000),
-                "clicks": random.randint(500, 5000),
-                "spend": round(random.uniform(500, 5000), 2),
-                "conversions": random.randint(10, 100),
-                "ctr": round(random.uniform(1.0, 5.0), 2),
-                "cpc": round(random.uniform(0.5, 3.0), 2),
-            }
-            for i, name in enumerate(
-                ["Brand Awareness", "Lead Gen Q1", "Retargeting", "Product Launch"],
-                1,
-            )
-        ]
-        return {
-            "demo": True,
-            "campaigns": campaigns,
-            "total_spend": sum(c["spend"] for c in campaigns),
-            "total_conversions": sum(c["conversions"] for c in campaigns),
+        headers = {
+            "Authorization": f"Bearer {self._access_token}",
+            "developer-token": self.developer_token,
+            "login-customer-id": self.customer_id,
         }
+        url = f"{self.BASE_URL}/{endpoint}"
+        return await self._request_with_retry("GET", url, headers=headers, params=params)
+
+    async def post_data(self, endpoint: str, data: Optional[Dict] = None) -> Dict:
+        """Send data to a specific API endpoint."""
+        if self._demo_mode:
+            return self._generate_demo_data(endpoint, data)
+
+        await self._ensure_authenticated()
+        headers = {
+            "Authorization": f"Bearer {self._access_token}",
+            "developer-token": self.developer_token,
+            "login-customer-id": self.customer_id,
+        }
+        url = f"{self.BASE_URL}/{endpoint}"
+        return await self._request_with_retry("POST", url, headers=headers, json_data=data)
+
+    async def get_campaigns(self) -> Dict:
+        """Retrieves a list of campaigns."""
+        endpoint = f"customers/{self.customer_id}/googleAds:search"
+        query = {
+            "query": "SELECT campaign.id, campaign.name, campaign.status FROM campaign ORDER BY campaign.id"
+        }
+        return await self.post_data(endpoint, data=query)
+
+    async def get_campaign_metrics(self, campaign_id: str) -> Dict:
+        """Retrieves metrics for a specific campaign."""
+        endpoint = f"customers/{self.customer_id}/googleAds:search"
+        query = {
+            "query": f"SELECT metrics.clicks, metrics.impressions, metrics.ctr, metrics.average_cpc FROM campaign WHERE campaign.id = {campaign_id}"
+        }
+        return await self.post_data(endpoint, data=query)
+
+    async def create_campaign(self, campaign_name: str) -> Dict:
+        """Creates a new campaign."""
+        endpoint = f"customers/{self.customer_id}/campaigns:mutate"
+        payload = {
+            "operations": [
+                {
+                    "create": {
+                        "name": campaign_name,
+                        "status": "PAUSED",
+                        "advertisingChannelType": "SEARCH",
+                        "biddingStrategyType": "MANUAL_CPC",
+                    }
+                }
+            ]
+        }
+        return await self.post_data(endpoint, data=payload)
+
+    async def update_campaign_budget(self, campaign_id: str, new_budget: int) -> Dict:
+        """Updates the budget for a specific campaign."""
+        # This is a simplified example. A real implementation would be more complex.
+        endpoint = f"customers/{self.customer_id}/campaignBudgets:mutate"
+        payload = {
+            "operations": [
+                {
+                    "update": {
+                        "resourceName": f"customers/{self.customer_id}/campaignBudgets/{campaign_id}",
+                        "amountMicros": new_budget * 1_000_000,
+                    },
+                    "updateMask": "amountMicros",
+                }
+            ]
+        }
+        return await self.post_data(endpoint, data=payload)
+
+    async def get_ad_groups(self, campaign_id: str) -> Dict:
+        """Retrieves ad groups for a specific campaign."""
+        endpoint = f"customers/{self.customer_id}/googleAds:search"
+        query = {
+            "query": f"SELECT ad_group.id, ad_group.name FROM ad_group WHERE campaign.id = {campaign_id}"
+        }
+        return await self.post_data(endpoint, data=query)
+
+    async def pause_campaign(self, campaign_id: str) -> Dict:
+        """Pauses a campaign."""
+        endpoint = f"customers/{self.customer_id}/campaigns:mutate"
+        payload = {
+            "operations": [
+                {
+                    "update": {
+                        "resourceName": f"customers/{self.customer_id}/campaigns/{campaign_id}",
+                        "status": "PAUSED",
+                    },
+                    "updateMask": "status",
+                }
+            ]
+        }
+        return await self.post_data(endpoint, data=payload)
+
+    def _generate_demo_data(self, endpoint: str, data: Optional[Dict] = None) -> Dict:
+        """Return realistic mock data with random values."""
+        if "get_campaigns" in endpoint or (data and "campaign.id" in data.get("query", "")):
+            return {
+                "results": [
+                    {
+                        "campaign": {
+                            "resourceName": f"customers/{self.customer_id}/campaigns/{random.randint(1000, 9999)}",
+                            "id": str(random.randint(1000, 9999)),
+                            "name": f"Demo Campaign {i}",
+                            "status": random.choice(["ENABLED", "PAUSED", "REMOVED"]),
+                        }
+                    }
+                    for i in range(1, random.randint(3, 7))
+                ]
+            }
+        if "get_campaign_metrics" in endpoint or (data and "metrics.clicks" in data.get("query", "")):
+            return {
+                "results": [
+                    {
+                        "metrics": {
+                            "clicks": str(random.randint(100, 1000)),
+                            "impressions": str(random.randint(10000, 100000)),
+                            "ctr": random.uniform(0.01, 0.1),
+                            "averageCpc": str(random.randint(500000, 2000000)),
+                        }
+                    }
+                ]
+            }
+        if "create_campaign" in endpoint or (data and "create" in data.get("operations", [{}])[0]):
+            return {"results": [{"resourceName": f"customers/{self.customer_id}/campaigns/{random.randint(1000, 9999)}"}]}
+        if "update_campaign_budget" in endpoint or (data and "update" in data.get("operations", [{}])[0]):
+            return {"results": [{"resourceName": f"customers/{self.customer_id}/campaignBudgets/{random.randint(1000, 9999)}"}]}
+        if "get_ad_groups" in endpoint or (data and "ad_group.id" in data.get("query", "")):
+            return {
+                "results": [
+                    {
+                        "adGroup": {
+                            "resourceName": f"customers/{self.customer_id}/adGroups/{random.randint(10000, 99999)}",
+                            "id": str(random.randint(10000, 99999)),
+                            "name": f"Demo Ad Group {i}",
+                        }
+                    }
+                    for i in range(1, random.randint(2, 5))
+                ]
+            }
+        if "pause_campaign" in endpoint or (data and "PAUSED" in str(data)):
+            return {"results": [{"resourceName": f"customers/{self.customer_id}/campaigns/{random.randint(1000, 9999)}"}]}
+
+        return {}

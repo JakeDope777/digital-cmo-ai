@@ -23,6 +23,7 @@ openai==1.59.3
 
 # HTTP client
 httpx==0.28.1
+aiohttp>=3.9.0
 
 # Vector database (local)
 # faiss-cpu==1.9.0  # Uncomment for FAISS support

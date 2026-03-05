@@ -1,13 +1,14 @@
-"""
-Google Analytics 4 Connector
+'''
+Google Analytics Connector
 
-Implements the ConnectorInterface for Google Analytics data retrieval.
+Implements the ConnectorInterface for Google Analytics.
 Returns demo data when credentials are not configured.
-"""
+'''
 
 import logging
 import random
-from typing import Optional
+from typing import Optional, Any, Dict
+from datetime import datetime, timedelta
 
 from .base import ConnectorInterface
 
@@ -15,59 +16,126 @@ logger = logging.getLogger(__name__)
 
 
 class GoogleAnalyticsConnector(ConnectorInterface):
-    """Connector for Google Analytics 4 API."""
+    """Connector for Google Analytics API."""
 
-    def __init__(self, property_id: Optional[str] = None):
-        super().__init__(service_name="GoogleAnalytics", rate_limit=50)
+    BASE_URL = "https://analyticsdata.googleapis.com/v1beta"
+
+    def __init__(self, property_id: Optional[str] = None, access_token: Optional[str] = None):
+        super().__init__(service_name="GoogleAnalytics", rate_limit=50, rate_window=60)
         self.property_id = property_id
+        self._access_token = access_token
 
     async def authenticate(self) -> None:
-        """Authenticate with Google Analytics."""
-        if self.property_id:
+        """Authenticates with Google Analytics using OAuth2."""
+        if self._access_token and self.property_id:
             self._is_authenticated = True
-            logger.info("[GoogleAnalytics] Authenticated.")
+            logger.info("Google Analytics connector authenticated with provided token.")
         else:
-            logger.warning("[GoogleAnalytics] No property ID. Running in demo mode.")
-            self._is_authenticated = False
+            self._enter_demo_mode("Missing property_id or access_token.")
 
-    async def get_data(self, endpoint: str, params: Optional[dict] = None) -> dict:
-        """Fetch data from Google Analytics."""
+    async def get_data(self, endpoint: str, params: Optional[Dict] = None) -> Dict:
+        """Fetch data from a specific API endpoint."""
+        if self._demo_mode:
+            return self._generate_demo_data(endpoint, params)
+
         await self._ensure_authenticated()
-        await self._check_rate_limit()
+        headers = {"Authorization": f"Bearer {self._access_token}"}
+        url = f"{self.BASE_URL}/{endpoint}"
+        return await self._request_with_retry("GET", url, headers=headers, params=params)
 
-        return self._generate_demo_data(endpoint, params)
+    async def post_data(self, endpoint: str, data: Optional[Dict] = None) -> Dict:
+        """Send data to a specific API endpoint."""
+        if self._demo_mode:
+            return {"status": "success", "message": "Demo mode, no data posted."}
 
-    async def post_data(self, endpoint: str, data: Optional[dict] = None) -> dict:
-        """Not typically used for GA; returns a no-op."""
-        return {"demo": True, "message": "GA is read-only."}
+        await self._ensure_authenticated()
+        headers = {"Authorization": f"Bearer {self._access_token}"}
+        url = f"{self.BASE_URL}/{endpoint}"
+        return await self._request_with_retry("POST", url, headers=headers, json_data=data)
 
-    async def get_website_metrics(self, date_range: Optional[dict] = None) -> dict:
-        """Fetch website traffic and engagement metrics."""
-        return await self.get_data("website/metrics", date_range)
-
-    def _generate_demo_data(self, endpoint: str, params: Optional[dict] = None) -> dict:
-        """Generate realistic demo analytics data."""
-        return {
-            "demo": True,
-            "metrics": {
-                "active_users": random.randint(500, 5000),
-                "sessions": random.randint(1000, 10000),
-                "page_views": random.randint(3000, 30000),
-                "avg_session_duration": round(random.uniform(60, 300), 1),
-                "bounce_rate": round(random.uniform(30, 70), 1),
-                "new_users_percent": round(random.uniform(40, 80), 1),
-            },
-            "top_pages": [
-                {"path": "/", "views": random.randint(500, 2000)},
-                {"path": "/pricing", "views": random.randint(200, 800)},
-                {"path": "/blog", "views": random.randint(300, 1000)},
-                {"path": "/contact", "views": random.randint(100, 500)},
+    async def get_website_metrics(self, start_date: str, end_date: str) -> Dict:
+        """Retrieves core website metrics for a date range."""
+        endpoint = f"properties/{self.property_id}:runReport"
+        report_request = {
+            "dateRanges": [{"startDate": start_date, "endDate": end_date}],
+            "metrics": [
+                {"name": "activeUsers"},
+                {"name": "newUsers"},
+                {"name": "sessions"},
+                {"name": "bounceRate"},
+                {"name": "averageSessionDuration"},
             ],
-            "traffic_sources": {
-                "organic": round(random.uniform(30, 50), 1),
-                "direct": round(random.uniform(15, 30), 1),
-                "referral": round(random.uniform(5, 15), 1),
-                "social": round(random.uniform(10, 25), 1),
-                "paid": round(random.uniform(5, 20), 1),
-            },
         }
+        return await self.post_data(endpoint, data={"reportRequests": [report_request]})
+
+    async def get_realtime_data(self) -> Dict:
+        """Gets real-time active users."""
+        endpoint = f"properties/{self.property_id}:runRealtimeReport"
+        report_request = {"metrics": [{"name": "activeUsers"}]}
+        return await self.post_data(endpoint, data={"reportRequests": [report_request]})
+
+    async def get_audience_overview(self, start_date: str, end_date: str) -> Dict:
+        """Provides an overview of the audience demographics."""
+        endpoint = f"properties/{self.property_id}:runReport"
+        report_request = {
+            "dateRanges": [{"startDate": start_date, "endDate": end_date}],
+            "dimensions": [{"name": "country"}, {"name": "userAgeBracket"}],
+            "metrics": [{"name": "activeUsers"}],
+        }
+        return await self.post_data(endpoint, data={"reportRequests": [report_request]})
+
+    async def get_traffic_sources(self, start_date: str, end_date: str) -> Dict:
+        """Identifies the top traffic sources."""
+        endpoint = f"properties/{self.property_id}:runReport"
+        report_request = {
+            "dateRanges": [{"startDate": start_date, "endDate": end_date}],
+            "dimensions": [{"name": "sessionDefaultChannelGroup"}],
+            "metrics": [{"name": "sessions"}],
+            "orderBys": [{"metric": {"metricName": "sessions"}, "desc": True}],
+            "limit": 5,
+        }
+        return await self.post_data(endpoint, data={"reportRequests": [report_request]})
+
+    async def get_top_pages(self, start_date: str, end_date: str) -> Dict:
+        """Lists the most viewed pages."""
+        endpoint = f"properties/{self.property_id}:runReport"
+        report_request = {
+            "dateRanges": [{"startDate": start_date, "endDate": end_date}],
+            "dimensions": [{"name": "pagePath"}],
+            "metrics": [{"name": "screenPageViews"}],
+            "orderBys": [{"metric": {"metricName": "screenPageViews"}, "desc": True}],
+            "limit": 10,
+        }
+        return await self.post_data(endpoint, data={"reportRequests": [report_request]})
+
+    async def get_conversion_data(self, start_date: str, end_date: str) -> Dict:
+        """Retrieves data on goal completions."""
+        endpoint = f"properties/{self.property_id}:runReport"
+        report_request = {
+            "dateRanges": [{"startDate": start_date, "endDate": end_date}],
+            "dimensions": [{"name": "eventName"}],
+            "metrics": [{"name": "conversions"}],
+            "orderBys": [{"metric": {"metricName": "conversions"}, "desc": True}],
+        }
+        return await self.post_data(endpoint, data={"reportRequests": [report_request]})
+
+    def _generate_demo_data(self, endpoint: str, params: Optional[Dict] = None) -> Dict:
+        """Generates realistic mock data for Google Analytics."""
+        if "runReport" in endpoint:
+            return {
+                "kind": "analyticsData#runReport",
+                "rowCount": random.randint(50, 200),
+                "rows": [
+                    {
+                        "dimensionValues": [{"value": f"demo_{i}"} for i in range(random.randint(1, 3))],
+                        "metricValues": [{"value": str(random.randint(100, 10000))} for _ in range(random.randint(1, 5))]
+                    } for _ in range(10)
+                ],
+            }
+        if "runRealtimeReport" in endpoint:
+            return {
+                "kind": "analyticsData#runRealtimeReport",
+                "rowCount": 1,
+                "rows": [{"metricValues": [{"value": str(random.randint(5, 50))}]}],
+            }
+        return {}
