@@ -216,6 +216,10 @@ class LeadUpdateRequest(BaseModel):
     attributes: dict
 
 
+class LeadImportRequest(BaseModel):
+    leads: list[dict]
+
+
 class CampaignCreateRequest(BaseModel):
     name: str
     audience_query: Optional[dict] = None
@@ -224,14 +228,95 @@ class CampaignCreateRequest(BaseModel):
     channel: str = "email"
 
 
+class CampaignPredictRequest(BaseModel):
+    avg_order_value: float = 50.0
+
+
 class WorkflowTriggerRequest(BaseModel):
     workflow_id: str
     lead_id: str
 
 
+class WorkflowAdvanceRequest(BaseModel):
+    workflow_id: str
+    lead_id: str
+    condition_results: Optional[dict] = None
+
+
 class ComplianceCheckRequest(BaseModel):
     message: str
     channel: str
+
+
+class ConsentRequest(BaseModel):
+    lead_id: str
+    channel: str
+    consent_type: str = "express"
+    source: str = "web_form"
+
+
+class ConsentWithdrawRequest(BaseModel):
+    lead_id: str
+    channel: str
+
+
+class DataSubjectRequestSchema(BaseModel):
+    lead_id: str
+    right: str  # access, erasure, export, portability, restriction, objection
+
+
+class PreSendCheckRequest(BaseModel):
+    lead_id: str
+    channel: str
+    message: str
+
+
+class JourneyInitRequest(BaseModel):
+    lead_id: str
+    stage: str = "awareness"
+
+
+class TouchpointRequest(BaseModel):
+    lead_id: str
+    channel: str
+    action: str
+    details: Optional[dict] = None
+
+
+class JourneyAdvanceRequest(BaseModel):
+    lead_id: str
+    target_stage: Optional[str] = None
+
+
+class SegmentCreateRequest(BaseModel):
+    name: str
+    rules: list[dict]
+    logic: str = "and"
+    description: str = ""
+
+
+class SegmentEvaluateRequest(BaseModel):
+    lead_id: Optional[str] = None
+
+
+class ABTestCreateRequest(BaseModel):
+    campaign_id: str
+    name: str
+    variants: list[dict]
+    primary_metric: str = "click_rate"
+    confidence_threshold: float = 95.0
+
+
+class ABTestEventRequest(BaseModel):
+    variant_id: str
+    event_type: str  # send, open, click, conversion, unsubscribe
+    count: int = 1
+    revenue: float = 0.0
+
+
+class SampleSizeRequest(BaseModel):
+    baseline_rate: float
+    minimum_detectable_effect: float = 0.1
 
 
 class CRMResponse(BaseModel):
