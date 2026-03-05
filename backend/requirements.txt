@@ -25,8 +25,9 @@ openai==1.59.3
 httpx==0.28.1
 aiohttp>=3.9.0
 
-# Vector database (local)
-# faiss-cpu==1.9.0  # Uncomment for FAISS support
+# Vector database (local) - Brain & Memory module
+faiss-cpu>=1.7.4
+chromadb>=0.5.0
 
 # Data processing
 numpy==2.2.1
