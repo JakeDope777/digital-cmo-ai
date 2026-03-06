@@ -65,8 +65,8 @@ export const authService = {
     return data;
   },
 
-  async sendVerification(): Promise<{ message: string }> {
-    const { data } = await api.post<{ message: string }>('/auth/send-verification');
+  async sendVerification(email?: string): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/auth/send-verification', email ? { email } : {});
     return data;
   },
 

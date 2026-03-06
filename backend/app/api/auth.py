@@ -8,8 +8,9 @@ POST /auth/refresh - Refresh access token
 
 import secrets
 from datetime import datetime, timedelta, timezone
+from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy.orm import Session
 
 from ..core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
@@ -24,6 +25,7 @@ from ..db.schemas import (
     TokenResponse,
     ForgotPasswordRequest,
     ResetPasswordRequest,
+    SendVerificationRequest,
     VerifyEmailRequest,
     ProfileUpdateRequest,
     MessageResponse,
@@ -31,6 +33,25 @@ from ..db.schemas import (
 from ..services.emailer import send_email
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+def _optional_user(
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
+) -> Optional[models.User]:
+    """Resolve authenticated user when Authorization header is present."""
+    if not authorization:
+        return None
+    if not authorization.lower().startswith("bearer "):
+        return None
+    token = authorization.split(" ", 1)[1].strip()
+    payload = decode_token(token)
+    if not payload:
+        return None
+    user_id = payload.get("sub")
+    if not user_id:
+        return None
+    return db.query(models.User).filter(models.User.id == user_id).first()
 
 
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -177,15 +198,24 @@ async def reset_password(
 
 @router.post("/send-verification", response_model=MessageResponse)
 async def send_verification(
-    current_user: models.User = Depends(get_current_user),
+    request: Optional[SendVerificationRequest] = None,
+    current_user: Optional[models.User] = Depends(_optional_user),
     db: Session = Depends(get_db),
 ):
-    """Send a fresh email verification link for current user."""
-    if current_user.is_email_verified:
+    """Send a fresh email verification link."""
+    target_user = current_user
+    if target_user is None and request and request.email:
+        target_user = db.query(models.User).filter(models.User.email == request.email).first()
+
+    # For unauthenticated flows, keep response generic to avoid account enumeration.
+    if target_user is None:
+        return MessageResponse(message="If this email exists, a verification email was sent.")
+
+    if target_user.is_email_verified:
         return MessageResponse(message="Email already verified.")
 
-    verification_token = _create_email_verification_token(db, current_user.id)
-    _send_verification_email(current_user.email, verification_token)
+    verification_token = _create_email_verification_token(db, target_user.id)
+    _send_verification_email(target_user.email, verification_token)
     return MessageResponse(message="Verification email sent.")
 
 

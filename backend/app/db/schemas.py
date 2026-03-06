@@ -58,6 +58,10 @@ class VerifyEmailRequest(BaseModel):
     token: str
 
 
+class SendVerificationRequest(BaseModel):
+    email: Optional[EmailStr] = None
+
+
 class ProfileUpdateRequest(BaseModel):
     full_name: Optional[str] = None
     company: Optional[str] = None

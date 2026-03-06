@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
+import { isAxiosError } from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { trackEvent } from '../services/analytics';
 
@@ -21,7 +22,14 @@ export default function LoginPage() {
       await login(email, password);
       await trackEvent('login_completed');
       navigate('/app/dashboard');
-    } catch {
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const detail = (err.response?.data as { detail?: string } | undefined)?.detail;
+        if (detail) {
+          setError(detail);
+          return;
+        }
+      }
       setError('Login failed. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -70,6 +78,11 @@ export default function LoginPage() {
         <p className="mt-2 text-right">
           <Link to="/forgot-password" className="text-sm font-medium text-slate-700 hover:text-slate-900">
             Forgot password?
+          </Link>
+        </p>
+        <p className="mt-1 text-right">
+          <Link to="/verify-email" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+            Resend verification email
           </Link>
         </p>
 
