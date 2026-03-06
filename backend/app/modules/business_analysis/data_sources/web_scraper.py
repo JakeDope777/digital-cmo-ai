@@ -206,10 +206,10 @@ class WebScraper:
                 "url": url,
                 "status_code": status_code,
                 "title": self._regex_extract_title(html),
-                "meta_description": "",
+                "meta_description": self._regex_extract_meta_description(html),
                 "text_content": self._strip_tags(html)[:5000],
-                "headings": [],
-                "links": [],
+                "headings": self._regex_extract_headings(html),
+                "links": self._regex_extract_links(url, html),
             }
 
         title = soup.title.string.strip() if soup.title and soup.title.string else ""
@@ -293,6 +293,47 @@ class WebScraper:
         """Fallback title extraction using regex."""
         match = re.search(r"<title[^>]*>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
         return match.group(1).strip() if match else ""
+
+    @staticmethod
+    def _regex_extract_meta_description(html: str) -> str:
+        """Fallback meta description extraction using regex."""
+        pattern = (
+            r'<meta[^>]+name=["\']description["\'][^>]+content=["\'](.*?)["\']'
+            r"|<meta[^>]+content=[\"'](.*?)[\"'][^>]+name=[\"']description[\"']"
+        )
+        match = re.search(pattern, html, re.IGNORECASE | re.DOTALL)
+        if not match:
+            return ""
+        return (match.group(1) or match.group(2) or "").strip()
+
+    @staticmethod
+    def _regex_extract_headings(html: str) -> list[dict]:
+        """Fallback heading extraction for h1-h3 tags."""
+        headings = []
+        for level in range(1, 4):
+            pattern = rf"<h{level}[^>]*>(.*?)</h{level}>"
+            for match in re.findall(pattern, html, re.IGNORECASE | re.DOTALL):
+                text = re.sub(r"<[^>]+>", " ", match)
+                text = re.sub(r"\s+", " ", text).strip()
+                if text:
+                    headings.append({"level": level, "text": text})
+        return headings
+
+    @staticmethod
+    def _regex_extract_links(base_url: str, html: str) -> list[dict]:
+        """Fallback link extraction for anchor tags."""
+        links = []
+        pattern = r'<a[^>]+href=["\']([^"\']+)["\'][^>]*>(.*?)</a>'
+        for href, text in re.findall(pattern, html, re.IGNORECASE | re.DOTALL):
+            clean_text = re.sub(r"<[^>]+>", " ", text)
+            clean_text = re.sub(r"\s+", " ", clean_text).strip()[:100]
+            if href.startswith(("http://", "https://")):
+                links.append({"href": href, "text": clean_text})
+            elif href.startswith("/"):
+                links.append({"href": urljoin(base_url, href), "text": clean_text})
+            if len(links) >= 50:
+                break
+        return links
 
     @staticmethod
     def _strip_tags(html: str) -> str:

@@ -54,7 +54,13 @@ class HubSpotConnector(ConnectorInterface):
     async def post_data(self, endpoint: str, data: Optional[dict] = None) -> dict:
         """Send data to a specific HubSpot API endpoint."""
         if self._demo_mode:
-            return {"status": "success", "message": "Demo mode: Data processed."}
+            return {
+                "demo": True,
+                "status": "success",
+                "message": "Demo mode: Data processed.",
+                "endpoint": endpoint,
+                "data": data or {},
+            }
 
         await self._ensure_authenticated()
         headers = self._get_auth_headers()

@@ -86,6 +86,16 @@ async def create_personas(
 ):
     """Generate buyer personas based on data and context."""
     result = await module.create_personas(
-        request.data_source, request.num_personas, request.context
+        subject=request.data_source,
+        num_personas=request.num_personas,
+        context=request.context,
     )
-    return AnalysisResponse(**result)
+    personas_payload = result.get("personas")
+    if isinstance(personas_payload, dict):
+        personas_payload = personas_payload.get("personas", [])
+    return AnalysisResponse(
+        insights=result.get("insights"),
+        analysis=result.get("analysis"),
+        personas=personas_payload if isinstance(personas_payload, list) else [],
+        sources=result.get("sources"),
+    )

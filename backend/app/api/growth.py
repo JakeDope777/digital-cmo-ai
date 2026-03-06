@@ -2,6 +2,8 @@
 Growth / traffic-testing endpoints.
 """
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends
 from fastapi import Header
 from sqlalchemy.orm import Session
@@ -15,11 +17,30 @@ from ..services.growth import send_posthog_event
 router = APIRouter(prefix="/growth", tags=["Growth"])
 
 
+def _optional_user(
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(default=None),
+) -> Optional[models.User]:
+    """Resolve authenticated user when Authorization header is present."""
+    if not authorization:
+        return None
+    if not authorization.lower().startswith("bearer "):
+        return None
+    token = authorization.split(" ", 1)[1].strip()
+    payload = decode_token(token)
+    if not payload:
+        return None
+    user_id = payload.get("sub")
+    if not user_id:
+        return None
+    return db.query(models.User).filter(models.User.id == user_id).first()
+
+
 @router.post("/track", response_model=MessageResponse)
 async def track_event(
     request: GrowthEventRequest,
     db: Session = Depends(get_db),
-    current_user: models.User | None = Depends(_optional_user),
+    current_user: Optional[models.User] = Depends(_optional_user),
 ):
     """Track product and funnel events for hypothesis testing."""
     event = models.GrowthEvent(
@@ -80,22 +101,3 @@ async def join_waitlist(
         },
     )
     return MessageResponse(message="You are on the pilot waitlist.")
-
-
-def _optional_user(
-    db: Session = Depends(get_db),
-    authorization: str | None = Header(default=None),
-) -> models.User | None:
-    """Resolve authenticated user when Authorization header is present."""
-    if not authorization:
-        return None
-    if not authorization.lower().startswith("bearer "):
-        return None
-    token = authorization.split(" ", 1)[1].strip()
-    payload = decode_token(token)
-    if not payload:
-        return None
-    user_id = payload.get("sub")
-    if not user_id:
-        return None
-    return db.query(models.User).filter(models.User.id == user_id).first()

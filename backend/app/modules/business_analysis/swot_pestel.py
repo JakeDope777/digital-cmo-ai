@@ -248,7 +248,10 @@ class SWOTPESTELAnalyzer:
         }
 
         return {
-            "analysis": analysis,
+            "analysis": {
+                **analysis,
+                "swot": analysis,
+            },
             "type": "swot",
             "insights": self._extract_insights(analysis, "swot"),
         }
@@ -314,7 +317,10 @@ class SWOTPESTELAnalyzer:
         }
 
         return {
-            "analysis": analysis,
+            "analysis": {
+                **analysis,
+                "pestel": analysis,
+            },
             "type": "pestel",
             "insights": self._extract_insights(analysis, "pestel"),
         }
