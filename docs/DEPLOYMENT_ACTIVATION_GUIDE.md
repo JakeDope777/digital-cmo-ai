@@ -60,6 +60,12 @@ Run from repo root:
 ./scripts/smoke_check.sh https://<render-backend-domain> https://<vercel-domain>
 ```
 
+Or run GitHub Actions workflow:
+- Workflow: `Deploy Smoke Check`
+- Inputs:
+  - `backend_url`
+  - `frontend_url`
+
 ## 5) Demo URL Output
 After successful deploy, record:
 - Backend URL: `https://<render-backend-domain>`
