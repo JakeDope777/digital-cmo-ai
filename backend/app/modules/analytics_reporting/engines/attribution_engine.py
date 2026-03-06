@@ -67,9 +67,10 @@ class AttributionEngine:
         "last_touch",
         "linear",
         "time_decay",
-        "markov",
         "data_driven",
     ]
+
+    OPTIONAL_MODELS = ["markov"]
 
     def attribute(
         self,
@@ -105,7 +106,7 @@ class AttributionEngine:
         journeys: list[CustomerJourney],
         decay_half_life_days: float = 7.0,
     ) -> dict[str, AttributionResult]:
-        """Run all five attribution models and return results keyed by model name."""
+        """Run the default five-model bundle and return results keyed by model name."""
         return {
             m: self.attribute(journeys, model=m, decay_half_life_days=decay_half_life_days)
             for m in self.SUPPORTED_MODELS
