@@ -183,6 +183,11 @@ Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeh
 | `GET` | `/` | Health check |
 | `POST` | `/auth/signup` | Register a new user |
 | `POST` | `/auth/login` | Authenticate and get tokens |
+| `POST` | `/auth/forgot-password` | Send password reset email |
+| `POST` | `/auth/reset-password` | Reset password with token |
+| `POST` | `/auth/send-verification` | Send email verification link |
+| `POST` | `/auth/verify-email` | Verify email with token |
+| `PATCH` | `/auth/profile` | Update profile fields |
 | `POST` | `/chat` | Send a message to the AI assistant |
 | `GET` | `/chat/{id}` | Get conversation history |
 | `POST` | `/analysis/market` | Run market research |
@@ -201,8 +206,23 @@ Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeh
 | `GET` | `/analytics/dashboard` | Get dashboard metrics |
 | `POST` | `/analytics/forecast` | Generate metric forecast |
 | `POST` | `/analytics/experiment` | Record A/B experiment |
+| `POST` | `/billing/create-checkout-session` | Create Stripe checkout session (test mode) |
+| `POST` | `/billing/portal-session` | Open Stripe billing portal (test mode) |
+| `POST` | `/billing/webhook` | Stripe webhook receiver |
+| `GET` | `/billing/subscription` | Get current subscription state |
+| `GET` | `/billing/invoices` | List billing invoices |
+| `POST` | `/growth/track` | Track product funnel event |
+| `POST` | `/growth/waitlist` | Join pilot waitlist with UTM attribution |
 | `POST` | `/memory/store` | Save to memory |
 | `POST` | `/memory/retrieve` | Retrieve similar memories |
+
+## Deployment (Vercel + Render + Postgres)
+
+- Frontend config: `frontend/vercel.json` and root `vercel.json`
+- Backend infra: `render.yaml`
+- Launch docs:
+  - `docs/LAUNCH_CHECKLIST.md`
+  - `docs/RELEASE_RUNBOOK.md`
 
 ## Memory System
 

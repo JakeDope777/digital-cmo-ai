@@ -1,5 +1,8 @@
 import { ArrowRight, BarChart3, Bot, CreditCard, ShieldCheck, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { growthService } from '../services/api';
+import { getStoredUtm, trackEvent } from '../services/analytics';
 
 const features = [
   {
@@ -25,6 +28,41 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [company, setCompany] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    void trackEvent('landing_view');
+  }, []);
+
+  const submitWaitlist = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage('');
+    try {
+      const utm = getStoredUtm();
+      const response = await growthService.joinWaitlist({
+        name,
+        email,
+        company,
+        source: 'landing_page',
+        ...utm,
+      });
+      await trackEvent('waitlist_joined', { company });
+      setMessage(response.message);
+      setName('');
+      setEmail('');
+      setCompany('');
+    } catch {
+      setMessage('Unable to join waitlist at the moment.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_right,_#fed7aa,_transparent_45%),radial-gradient(circle_at_bottom_left,_#fde68a,_transparent_35%),linear-gradient(180deg,_#ffffff,_#f8fafc)]">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
@@ -111,6 +149,44 @@ export default function LandingPage() {
               <p className="mt-2 text-sm text-slate-600">{description}</p>
             </article>
           ))}
+        </section>
+
+        <section className="mt-16 rounded-2xl border border-slate-200 bg-white/90 p-6 shadow-sm">
+          <h3 className="text-xl font-semibold text-slate-900">Join pilot waitlist</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Get early access and help validate the MVP roadmap.
+          </p>
+          <form onSubmit={submitWaitlist} className="mt-4 grid gap-3 md:grid-cols-4">
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Name"
+              className="input-field"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Email"
+              className="input-field"
+            />
+            <input
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              placeholder="Company"
+              className="input-field"
+            />
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+            >
+              {submitting ? 'Submitting...' : 'Join Waitlist'}
+            </button>
+          </form>
+          {message && <p className="mt-3 text-sm text-slate-700">{message}</p>}
         </section>
       </main>
     </div>

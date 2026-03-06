@@ -25,6 +25,7 @@ import {
 } from 'recharts';
 import { analyticsService } from '../services/api';
 import type { ChartData, DashboardMetrics } from '../types';
+import { trackEvent } from '../services/analytics';
 
 const defaults: DashboardMetrics = {
   total_leads: 342,
@@ -63,6 +64,11 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
+    void trackEvent('dashboard_viewed');
+    if (!localStorage.getItem('onboarding_completed')) {
+      localStorage.setItem('onboarding_completed', '1');
+      void trackEvent('onboarding_completed');
+    }
     void fetchData();
   }, []);
 

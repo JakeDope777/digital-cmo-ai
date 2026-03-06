@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import clsx from 'clsx';
 
-const navItems = [
+export const navItems = [
   { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
   { label: 'Chat', path: '/app/chat', icon: MessageSquare },
   { label: 'Analysis', path: '/app/analysis', icon: Search },
@@ -23,9 +23,14 @@ const navItems = [
   { label: 'Settings', path: '/app/settings', icon: Settings },
 ];
 
-export default function Sidebar() {
+interface SidebarProps {
+  className?: string;
+  onNavigate?: () => void;
+}
+
+export default function Sidebar({ className, onNavigate }: SidebarProps) {
   return (
-    <aside className="w-72 bg-white/95 border-r border-slate-200 flex-col hidden lg:flex">
+    <aside className={clsx('w-72 bg-white/95 border-r border-slate-200 flex-col hidden lg:flex', className)}>
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-5 border-b border-slate-200">
         <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center shadow-lg shadow-orange-400/20">
@@ -43,6 +48,7 @@ export default function Sidebar() {
           <NavLink
             key={path}
             to={path}
+            onClick={onNavigate}
             className={({ isActive }) =>
               clsx(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',

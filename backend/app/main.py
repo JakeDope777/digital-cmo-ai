@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 
 from .core.config import settings
 from .db.session import init_db
-from .api import auth, chat, analysis, creative, crm, analytics, memory
+from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth
 
 
 @asynccontextmanager
@@ -39,7 +39,11 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=(
+        [origin.strip() for origin in settings.CORS_ORIGINS_CSV.split(",") if origin.strip()]
+        if settings.CORS_ORIGINS_CSV
+        else settings.CORS_ORIGINS
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +57,8 @@ app.include_router(creative.router)
 app.include_router(crm.router)
 app.include_router(analytics.router)
 app.include_router(memory.router)
+app.include_router(billing.router)
+app.include_router(growth.router)
 
 
 @app.get("/api/health", tags=["Health"])
@@ -81,6 +87,16 @@ async def health_check():
         "database": "connected",
         "llm_configured": bool(settings.OPENAI_API_KEY),
         "memory_path": settings.MEMORY_BASE_PATH,
+    }
+
+
+@app.get("/health/ready", tags=["Health"])
+async def readiness_check():
+    """Readiness probe for container/platform checks."""
+    return {
+        "status": "ready",
+        "database_url_configured": bool(settings.DATABASE_URL),
+        "jwt_secret_configured": settings.SECRET_KEY != "change-me-in-production-use-a-strong-random-key",
     }
 
 

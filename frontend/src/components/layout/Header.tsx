@@ -2,7 +2,11 @@ import { Bell, LogOut, Menu, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -14,7 +18,10 @@ export default function Header() {
   return (
     <header className="h-16 bg-white/90 backdrop-blur border-b border-slate-200 flex items-center justify-between px-4 sm:px-6">
       <div className="flex items-center gap-3">
-        <button className="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 lg:hidden">
+        <button
+          onClick={onMenuClick}
+          className="p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100 lg:hidden"
+        >
           <Menu className="w-5 h-5" />
         </button>
         <div>

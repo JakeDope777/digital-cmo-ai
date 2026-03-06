@@ -24,6 +24,10 @@ class UserResponse(BaseModel):
     id: str
     email: str
     role: str
+    full_name: Optional[str] = None
+    company: Optional[str] = None
+    timezone: Optional[str] = None
+    is_email_verified: bool = False
     created_at: datetime
 
     model_config = {"from_attributes": True}
@@ -39,6 +43,29 @@ class TokenBalance(BaseModel):
     balance: int
     tier: str
     reset_date: Optional[datetime] = None
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+class VerifyEmailRequest(BaseModel):
+    token: str
+
+
+class ProfileUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    company: Optional[str] = None
+    timezone: Optional[str] = None
+
+
+class MessageResponse(BaseModel):
+    message: str
 
 
 # ── Chat / Brain ──────────────────────────────────────────────────────
@@ -392,6 +419,70 @@ class AnalyticsResponse(BaseModel):
     cohort_analysis: Optional[dict] = None
     benchmarks: Optional[dict] = None
     export_result: Optional[dict] = None
+
+
+# ── Billing ───────────────────────────────────────────────────────────
+
+class CheckoutSessionRequest(BaseModel):
+    plan: str = "pro"
+    success_url: Optional[str] = None
+    cancel_url: Optional[str] = None
+
+
+class BillingSessionResponse(BaseModel):
+    checkout_url: Optional[str] = None
+    portal_url: Optional[str] = None
+    session_id: Optional[str] = None
+    status: str = "ok"
+    demo: bool = False
+
+
+class BillingSubscriptionResponse(BaseModel):
+    tier: str = "free"
+    status: str = "inactive"
+    stripe_subscription_id: Optional[str] = None
+    stripe_customer_id: Optional[str] = None
+    current_period_start: Optional[str] = None
+    current_period_end: Optional[str] = None
+    cancel_at_period_end: bool = False
+    demo: bool = False
+
+
+class BillingInvoiceItem(BaseModel):
+    id: str
+    amount_due: int
+    amount_paid: int
+    currency: str
+    status: str
+    hosted_invoice_url: Optional[str] = None
+    invoice_pdf: Optional[str] = None
+    period_start: Optional[str] = None
+    period_end: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+class BillingInvoicesResponse(BaseModel):
+    invoices: list[BillingInvoiceItem]
+    demo: bool = False
+
+
+# ── Growth ────────────────────────────────────────────────────────────
+
+class GrowthEventRequest(BaseModel):
+    event_name: str
+    source: str = "web"
+    properties: Optional[dict] = None
+
+
+class WaitlistRequest(BaseModel):
+    name: str
+    email: EmailStr
+    company: Optional[str] = None
+    note: Optional[str] = None
+    source: str = "landing_page"
+    utm_source: Optional[str] = None
+    utm_medium: Optional[str] = None
+    utm_campaign: Optional[str] = None
 
 
 # ── Memory ────────────────────────────────────────────────────────────

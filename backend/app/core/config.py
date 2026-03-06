@@ -4,7 +4,8 @@ Reads from environment variables and .env files.
 """
 
 from pydantic_settings import BaseSettings
-from typing import Optional
+from typing import Optional, Any
+from pydantic import field_validator
 
 
 class Settings(BaseSettings):
@@ -27,6 +28,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    REQUIRE_EMAIL_VERIFICATION: bool = False
+    EMAIL_VERIFICATION_EXPIRE_HOURS: int = 48
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 60
 
     # LLM Configuration
     OPENAI_API_KEY: Optional[str] = None
@@ -88,6 +92,9 @@ class Settings(BaseSettings):
     SHOPIFY_SHOP_NAME: Optional[str] = None
     SHOPIFY_ACCESS_TOKEN: Optional[str] = None
     STRIPE_SECRET_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
+    STRIPE_PRICE_PRO_MONTHLY: Optional[str] = None
+    STRIPE_PRICE_ENTERPRISE_MONTHLY: Optional[str] = None
 
     # Marketing Automation
     ACTIVECAMPAIGN_API_KEY: Optional[str] = None
@@ -110,12 +117,41 @@ class Settings(BaseSettings):
 
     # CORS
     CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS_CSV: Optional[str] = None
+
+    # URLs
+    APP_BASE_URL: str = "http://localhost:8000"
+    FRONTEND_BASE_URL: str = "http://localhost:3000"
+
+    # SMTP / Email
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM_EMAIL: str = "no-reply@digital-cmo-ai.local"
+    SMTP_USE_TLS: bool = True
+
+    # Growth analytics
+    POSTHOG_API_KEY: Optional[str] = None
+    POSTHOG_HOST: str = "https://app.posthog.com"
 
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": True,
     }
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, value: Any) -> Any:
+        if isinstance(value, str):
+            cleaned = value.strip()
+            if not cleaned:
+                return ["*"]
+            if cleaned.startswith("["):
+                return value
+            return [v.strip() for v in cleaned.split(",") if v.strip()]
+        return value
 
 
 settings = Settings()

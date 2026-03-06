@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react';
 import { ShieldCheck, UserCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/api';
+import { trackEvent } from '../services/analytics';
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
-  const [name, setName] = useState('Marketing Lead');
-  const [company, setCompany] = useState('Acme Growth Labs');
-  const [timezone, setTimezone] = useState('Europe/Madrid');
+  const [name, setName] = useState(user?.full_name || 'Marketing Lead');
+  const [company, setCompany] = useState(user?.company || 'Acme Growth Labs');
+  const [timezone, setTimezone] = useState(user?.timezone || 'Europe/Madrid');
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const initials = useMemo(() => {
     if (!user?.email) return 'U';
@@ -15,9 +19,24 @@ export default function ProfilePage() {
   }, [user?.email]);
 
   const saveProfile = async () => {
+    setSaving(true);
+    setError('');
     setSaved(true);
-    await refreshUser();
-    setTimeout(() => setSaved(false), 1400);
+    try {
+      await authService.updateProfile({
+        full_name: name,
+        company,
+        timezone,
+      });
+      await refreshUser();
+      await trackEvent('profile_updated');
+      setTimeout(() => setSaved(false), 1400);
+    } catch {
+      setError('Failed to save profile.');
+      setSaved(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -69,14 +88,16 @@ export default function ProfilePage() {
           <div className="mt-6 flex items-center gap-3">
             <button
               onClick={saveProfile}
+              disabled={saving}
               className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
             >
-              {saved ? 'Saved' : 'Save Profile'}
+              {saving ? 'Saving...' : saved ? 'Saved' : 'Save Profile'}
             </button>
             <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">
               Reset
             </button>
           </div>
+          {error && <p className="mt-3 text-sm text-red-700">{error}</p>}
         </article>
       </section>
     </div>

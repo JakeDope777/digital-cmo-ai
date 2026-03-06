@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Rocket } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { trackEvent } from '../services/analytics';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -15,6 +16,7 @@ export default function RegisterPage() {
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError('');
+    await trackEvent('signup_started');
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
@@ -28,6 +30,7 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       await signup(email, password);
+      await trackEvent('signup_completed');
       navigate('/app/dashboard');
     } catch {
       setError('Signup failed. Email may already exist.');

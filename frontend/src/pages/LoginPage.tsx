@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { trackEvent } from '../services/analytics';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -18,6 +19,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
+      await trackEvent('login_completed');
       navigate('/app/dashboard');
     } catch {
       setError('Login failed. Please check your credentials.');
@@ -65,6 +67,11 @@ export default function LoginPage() {
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+        <p className="mt-2 text-right">
+          <Link to="/forgot-password" className="text-sm font-medium text-slate-700 hover:text-slate-900">
+            Forgot password?
+          </Link>
+        </p>
 
         <p className="mt-4 text-sm text-slate-600">
           Need an account?{' '}

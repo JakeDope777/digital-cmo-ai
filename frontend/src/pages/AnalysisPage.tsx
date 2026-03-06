@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Search, Loader2, FileText } from 'lucide-react';
 import { analysisService } from '../services/api';
 import ReactMarkdown from 'react-markdown';
+import { trackEvent } from '../services/analytics';
 
 type AnalysisType = 'market' | 'swot' | 'pestel' | 'competitor' | 'persona';
 
@@ -24,6 +25,7 @@ export default function AnalysisPage() {
     setLoading(true);
     setResult(null);
     try {
+      await trackEvent('analysis_run', { analysis_type: selectedType });
       let response;
       switch (selectedType) {
         case 'market':
