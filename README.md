@@ -209,10 +209,12 @@ Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeh
 | `POST` | `/billing/create-checkout-session` | Create Stripe checkout session (test mode) |
 | `POST` | `/billing/portal-session` | Open Stripe billing portal (test mode) |
 | `POST` | `/billing/webhook` | Stripe webhook receiver |
+| `GET` | `/billing/health` | Billing integration readiness |
 | `GET` | `/billing/subscription` | Get current subscription state |
 | `GET` | `/billing/invoices` | List billing invoices |
 | `POST` | `/growth/track` | Track product funnel event |
 | `POST` | `/growth/waitlist` | Join pilot waitlist with UTM attribution |
+| `GET` | `/growth/funnel-summary` | Funnel conversion summary for pilot monitoring |
 | `POST` | `/memory/store` | Save to memory |
 | `POST` | `/memory/retrieve` | Retrieve similar memories |
 
@@ -223,6 +225,11 @@ Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeh
 - Launch docs:
   - `docs/LAUNCH_CHECKLIST.md`
   - `docs/RELEASE_RUNBOOK.md`
+  - `docs/DEPLOYMENT_ACTIVATION_GUIDE.md`
+  - `docs/ANALYTICS_QA_MATRIX_MAR6_2026.md`
+- Automation helpers:
+  - `scripts/validate_deploy_env.py`
+  - `scripts/smoke_check.sh`
 
 ## Memory System
 

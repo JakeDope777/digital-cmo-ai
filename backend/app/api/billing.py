@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 import hashlib
 import hmac
 import json
+import time
 from typing import Optional
 
 import httpx
@@ -100,15 +101,63 @@ async def stripe_webhook(
             raise HTTPException(status_code=400, detail="Invalid Stripe signature")
 
     event = json.loads(payload.decode("utf-8"))
+    event_id = event.get("id") or f"evt_fallback_{hashlib.sha256(payload).hexdigest()[:24]}"
     event_type = event.get("type", "")
     data_object = event.get("data", {}).get("object", {})
+    event_row = (
+        db.query(models.StripeWebhookEvent)
+        .filter(models.StripeWebhookEvent.stripe_event_id == event_id)
+        .first()
+    )
+    if event_row and event_row.status in {"processed", "processing"}:
+        return {"received": True, "duplicate": True}
 
-    if event_type in {"checkout.session.completed", "customer.subscription.updated", "customer.subscription.created"}:
-        await _sync_subscription(data_object, db)
-    elif event_type in {"invoice.paid", "invoice.payment_failed", "invoice.finalized"}:
-        await _sync_invoice(data_object, db)
+    if not event_row:
+        event_row = models.StripeWebhookEvent(
+            stripe_event_id=event_id,
+            event_type=event_type or "unknown",
+            payload_hash=hashlib.sha256(payload).hexdigest(),
+            status="processing",
+        )
+        db.add(event_row)
+        db.commit()
 
-    return {"received": True}
+    try:
+        if event_type == "checkout.session.completed":
+            subscription_id = data_object.get("subscription")
+            if subscription_id and settings.STRIPE_SECRET_KEY:
+                subscription_data = await _stripe_get(f"/v1/subscriptions/{subscription_id}")
+                if not subscription_data.get("customer") and data_object.get("customer"):
+                    subscription_data["customer"] = data_object.get("customer")
+                await _sync_subscription(subscription_data, db)
+            else:
+                await _sync_subscription(data_object, db)
+        elif event_type in {"customer.subscription.updated", "customer.subscription.created", "customer.subscription.deleted"}:
+            await _sync_subscription(data_object, db)
+        elif event_type in {"invoice.paid", "invoice.payment_failed", "invoice.finalized"}:
+            await _sync_invoice(data_object, db)
+
+        event_row.status = "processed"
+        event_row.processed_at = datetime.now(timezone.utc)
+        event_row.last_error = None
+        db.commit()
+    except Exception as exc:
+        event_row.status = "failed"
+        event_row.last_error = str(exc)[:2000]
+        db.commit()
+        raise
+
+    return {"received": True, "duplicate": False}
+
+
+@router.get("/health")
+async def billing_health():
+    """Expose billing integration readiness for deployment smoke checks."""
+    return {
+        "stripe_secret_configured": bool(settings.STRIPE_SECRET_KEY),
+        "stripe_webhook_secret_configured": bool(settings.STRIPE_WEBHOOK_SECRET),
+        "stripe_prices_configured": bool(settings.STRIPE_PRICE_PRO_MONTHLY and settings.STRIPE_PRICE_ENTERPRISE_MONTHLY),
+    }
 
 
 @router.get("/subscription", response_model=BillingSubscriptionResponse)
@@ -206,6 +255,17 @@ async def _stripe_form_post(path: str, data: dict) -> dict:
         return response.json()
 
 
+async def _stripe_get(path: str) -> dict:
+    if not settings.STRIPE_SECRET_KEY:
+        return {}
+
+    headers = {"Authorization": f"Bearer {settings.STRIPE_SECRET_KEY}"}
+    async with httpx.AsyncClient(base_url="https://api.stripe.com", timeout=25.0) as client:
+        response = await client.get(path, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+
 def _verify_signature(payload: bytes, header: str, secret: str) -> bool:
     # Simplified Stripe signature validation for MVP.
     # Header shape: t=timestamp,v1=signature,...
@@ -217,6 +277,12 @@ def _verify_signature(payload: bytes, header: str, secret: str) -> bool:
     timestamp = parts.get("t")
     signature = parts.get("v1")
     if not timestamp or not signature:
+        return False
+    try:
+        age_seconds = int(time.time()) - int(timestamp)
+    except ValueError:
+        return False
+    if age_seconds < 0 or age_seconds > 300:
         return False
     signed_payload = f"{timestamp}.{payload.decode('utf-8')}".encode("utf-8")
     expected = hmac.new(secret.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()

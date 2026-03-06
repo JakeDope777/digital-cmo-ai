@@ -23,7 +23,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
-import { analyticsService } from '../services/api';
+import { analyticsService, growthService } from '../services/api';
 import type { ChartData, DashboardMetrics } from '../types';
 import { trackEvent } from '../services/analytics';
 
@@ -46,6 +46,13 @@ const defaults: DashboardMetrics = {
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics>(defaults);
   const [charts, setCharts] = useState<ChartData[]>([]);
+  const [funnel, setFunnel] = useState<{
+    steps: Array<{ name: string; count: number }>;
+    conversion_signup_from_visitor: number;
+    conversion_verified_from_signup: number;
+    conversion_first_value_from_verified: number;
+    conversion_return_from_first_value: number;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string>('');
 
@@ -55,8 +62,11 @@ export default function DashboardPage() {
       const data = await analyticsService.getDashboard();
       setMetrics(data.metrics);
       setCharts(data.charts || []);
+      const funnelData = await growthService.getFunnelSummary(14);
+      setFunnel(funnelData);
     } catch {
       setMetrics(defaults);
+      setFunnel(null);
     } finally {
       setUpdatedAt(new Date().toLocaleString());
       setLoading(false);
@@ -222,6 +232,30 @@ export default function DashboardPage() {
             <Funnel className="h-3 w-3" /> open to click performance
           </p>
         </article>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-800">Pilot Funnel (Last 14 Days)</h3>
+        {funnel ? (
+          <div className="mt-3 grid gap-3 md:grid-cols-5">
+            {funnel.steps.map((step) => (
+              <article key={step.name} className="rounded-xl bg-slate-50 p-3">
+                <p className="text-xs uppercase tracking-wide text-slate-500">{step.name.replace(/_/g, ' ')}</p>
+                <p className="mt-2 text-xl font-bold text-slate-900">{step.count.toLocaleString()}</p>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-600">No funnel data available yet.</p>
+        )}
+        {funnel && (
+          <div className="mt-4 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
+            <p>Visitor -> Signup: {funnel.conversion_signup_from_visitor.toFixed(2)}%</p>
+            <p>Signup -> Verified: {funnel.conversion_verified_from_signup.toFixed(2)}%</p>
+            <p>Verified -> First Value: {funnel.conversion_first_value_from_verified.toFixed(2)}%</p>
+            <p>First Value -> Return: {funnel.conversion_return_from_first_value.toFixed(2)}%</p>
+          </div>
+        )}
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -489,6 +489,21 @@ class WaitlistRequest(BaseModel):
     utm_campaign: Optional[str] = None
 
 
+class GrowthFunnelStep(BaseModel):
+    name: str
+    count: int
+
+
+class GrowthFunnelSummaryResponse(BaseModel):
+    date_from: str
+    date_to: str
+    steps: list[GrowthFunnelStep]
+    conversion_signup_from_visitor: float
+    conversion_verified_from_signup: float
+    conversion_first_value_from_verified: float
+    conversion_return_from_first_value: float
+
+
 # ── Memory ────────────────────────────────────────────────────────────
 
 class MemoryStoreRequest(BaseModel):

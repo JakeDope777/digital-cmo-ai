@@ -3,6 +3,7 @@
 ## 1) Pre-deploy
 1. Ensure backend migrations are applied.
 2. Confirm required env vars are set on Render and Vercel.
+   - Run `./scripts/validate_deploy_env.py` with target env vars exported.
 3. Verify Stripe test keys and webhook signing secret.
 4. Verify SMTP credentials by sending a test verification email.
 
@@ -22,6 +23,7 @@
    - `/app/dashboard`
 
 ## 3) Smoke tests
+0. Run `./scripts/smoke_check.sh https://<backend-url> https://<frontend-url>`
 1. Signup user -> verification email -> verify.
 2. Login and open dashboard.
 3. Send one chat message and run one analysis.

@@ -296,6 +296,19 @@ export const growthService = {
     const { data } = await api.post('/growth/waitlist', payload);
     return data as { message: string };
   },
+
+  async getFunnelSummary(days: number = 14) {
+    const { data } = await api.get('/growth/funnel-summary', { params: { days } });
+    return data as {
+      date_from: string;
+      date_to: string;
+      steps: Array<{ name: string; count: number }>;
+      conversion_signup_from_visitor: number;
+      conversion_verified_from_signup: number;
+      conversion_first_value_from_verified: number;
+      conversion_return_from_first_value: number;
+    };
+  },
 };
 
 export default api;
