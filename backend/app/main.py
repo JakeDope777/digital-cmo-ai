@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 
 from .core.config import settings
 from .db.session import init_db
-from .api import auth, chat, analysis, creative, crm, analytics, memory
+from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth
 
 
 @asynccontextmanager
@@ -39,7 +39,11 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=(
+        [origin.strip() for origin in settings.CORS_ORIGINS_CSV.split(",") if origin.strip()]
+        if settings.CORS_ORIGINS_CSV
+        else settings.CORS_ORIGINS
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +57,8 @@ app.include_router(creative.router)
 app.include_router(crm.router)
 app.include_router(analytics.router)
 app.include_router(memory.router)
+app.include_router(billing.router)
+app.include_router(growth.router)
 
 
 @app.get("/api/health", tags=["Health"])
@@ -84,12 +90,28 @@ async def health_check():
     }
 
 
+@app.get("/health/ready", tags=["Health"])
+async def readiness_check():
+    """Readiness probe for container/platform checks."""
+    return {
+        "status": "ready",
+        "database_url_configured": bool(settings.DATABASE_URL),
+        "jwt_secret_configured": settings.SECRET_KEY != "change-me-in-production-use-a-strong-random-key",
+    }
+
+
 @app.get("/", tags=["Health"])
-async def root():
-    """Root endpoint - serve frontend if available, otherwise API info."""
+async def root(request: Request):
+    """Root endpoint.
+
+    Returns JSON for API clients by default and serves SPA only when
+    the client explicitly asks for HTML.
+    """
     static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
     index_path = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_path):
+    accept = request.headers.get("accept", "")
+    wants_html = "text/html" in accept and "application/json" not in accept
+    if os.path.exists(index_path) and wants_html:
         return FileResponse(index_path)
     return {
         "name": settings.APP_NAME,

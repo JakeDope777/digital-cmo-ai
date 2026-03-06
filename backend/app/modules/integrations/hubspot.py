@@ -54,7 +54,13 @@ class HubSpotConnector(ConnectorInterface):
     async def post_data(self, endpoint: str, data: Optional[dict] = None) -> dict:
         """Send data to a specific HubSpot API endpoint."""
         if self._demo_mode:
-            return {"status": "success", "message": "Demo mode: Data processed."}
+            return {
+                "demo": True,
+                "status": "success",
+                "message": "Demo mode: Data processed.",
+                "endpoint": endpoint,
+                "data": data or {},
+            }
 
         await self._ensure_authenticated()
         headers = self._get_auth_headers()
@@ -105,8 +111,10 @@ class HubSpotConnector(ConnectorInterface):
 
     def _generate_demo_data(self, endpoint: str, params: Optional[dict] = None) -> dict:
         """Generate realistic mock data for HubSpot endpoints."""
+        params = params or {}
         if "contacts" in endpoint:
             return {
+                "demo": True,
                 "results": [
                     {
                         "id": str(random.randint(1000, 9999)),
@@ -122,6 +130,7 @@ class HubSpotConnector(ConnectorInterface):
             }
         if "deals" in endpoint:
             return {
+                "demo": True,
                 "results": [
                     {
                         "id": str(random.randint(1000, 9999)),
@@ -136,6 +145,7 @@ class HubSpotConnector(ConnectorInterface):
             }
         if "companies" in endpoint:
             return {
+                "demo": True,
                 "results": [
                     {
                         "id": str(random.randint(1000, 9999)),
@@ -148,4 +158,4 @@ class HubSpotConnector(ConnectorInterface):
                     for i in range(params.get("limit", 10))
                 ]
             }
-        return {}
+        return {"demo": True}

@@ -186,7 +186,7 @@ class ForecastingEngine:
         seasonal_period: int,
     ) -> ForecastResult:
         if not HAS_STATSMODELS:
-            return self._moving_average_forecast(metric, data, horizon, confidence, seasonal_period)
+            return self._linear_trend_forecast(metric, data, horizon, confidence, seasonal_period)
 
         values = np.array([p.value for p in data], dtype=float)
         # Ensure positive values for multiplicative seasonality
@@ -255,7 +255,7 @@ class ForecastingEngine:
         seasonal_period: int,
     ) -> ForecastResult:
         if not HAS_STATSMODELS:
-            return self._moving_average_forecast(metric, data, horizon, confidence, seasonal_period)
+            return self._linear_trend_forecast(metric, data, horizon, confidence, seasonal_period)
 
         values = np.array([p.value for p in data], dtype=float)
 

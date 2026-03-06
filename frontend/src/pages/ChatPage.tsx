@@ -3,6 +3,7 @@ import { Send, Loader2, Trash2, Bot, UserCircle } from 'lucide-react';
 import { chatService } from '../services/api';
 import type { ChatMessage } from '../types';
 import ReactMarkdown from 'react-markdown';
+import { trackEvent } from '../services/analytics';
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -30,6 +31,7 @@ export default function ChatPage() {
     setLoading(true);
 
     try {
+      await trackEvent('chat_message_sent', { length: text.length });
       const response = await chatService.sendMessage({
         message: text,
         conversation_id: conversationId,

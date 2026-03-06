@@ -28,6 +28,11 @@ export interface User {
   id: string;
   email: string;
   role: string;
+  created_at?: string;
+  full_name?: string | null;
+  company?: string | null;
+  timezone?: string | null;
+  is_email_verified?: boolean;
 }
 
 export interface AuthTokens {

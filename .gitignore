@@ -31,6 +31,8 @@ frontend/.vite/
 # Testing
 .pytest_cache/
 test_data/
+backend/test_data/
+backend/test_memory/
 htmlcov/
 .coverage
 

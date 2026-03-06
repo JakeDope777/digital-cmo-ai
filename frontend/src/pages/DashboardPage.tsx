@@ -1,41 +1,53 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
-  TrendingUp, Users, DollarSign, Target, Eye, MousePointer,
-  Mail, BarChart3, RefreshCw, Loader2,
+  ArrowUpRight,
+  DollarSign,
+  Eye,
+  Funnel,
+  Loader2,
+  MousePointer,
+  RefreshCw,
+  Target,
+  TrendingUp,
+  Users,
 } from 'lucide-react';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, Legend,
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
 } from 'recharts';
 import { analyticsService } from '../services/api';
-import type { DashboardMetrics, ChartData } from '../types';
+import type { ChartData, DashboardMetrics } from '../types';
+import { trackEvent } from '../services/analytics';
 
-interface MetricCardProps {
-  label: string;
-  value: string | number;
-  icon: React.ReactNode;
-  change?: string;
-}
-
-function MetricCard({ label, value, icon, change }: MetricCardProps) {
-  return (
-    <div className="card flex items-start gap-4">
-      <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 flex-shrink-0">
-        {icon}
-      </div>
-      <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
-        {change && <p className="text-xs text-accent-600 mt-1">{change}</p>}
-      </div>
-    </div>
-  );
-}
+const defaults: DashboardMetrics = {
+  total_leads: 342,
+  new_leads_period: 47,
+  total_spend: 12450.0,
+  conversions: 28,
+  conversion_rate: 4.2,
+  cac: 125.5,
+  ltv: 1250.0,
+  roas: 5.3,
+  ctr: 3.1,
+  impressions: 125000,
+  clicks: 3875,
+  email_open_rate: 24.5,
+  email_click_rate: 4.8,
+};
 
 export default function DashboardPage() {
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [metrics, setMetrics] = useState<DashboardMetrics>(defaults);
   const [charts, setCharts] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [updatedAt, setUpdatedAt] = useState<string>('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -44,97 +56,191 @@ export default function DashboardPage() {
       setMetrics(data.metrics);
       setCharts(data.charts || []);
     } catch {
-      // Use placeholder data when backend is unavailable
-      setMetrics({
-        total_leads: 342, new_leads_period: 47, total_spend: 12450.00,
-        conversions: 28, conversion_rate: 4.2, cac: 125.50, ltv: 1250.00,
-        roas: 5.3, ctr: 3.1, impressions: 125000, clicks: 3875,
-        email_open_rate: 24.5, email_click_rate: 4.8,
-      });
+      setMetrics(defaults);
     } finally {
+      setUpdatedAt(new Date().toLocaleString());
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    void trackEvent('dashboard_viewed');
+    if (!localStorage.getItem('onboarding_completed')) {
+      localStorage.setItem('onboarding_completed', '1');
+      void trackEvent('onboarding_completed');
+    }
+    void fetchData();
+  }, []);
+
+  const spendSeries = useMemo(() => {
+    const spendChart = charts.find((c) => c.id === 'spend_over_time');
+    if (!spendChart?.data.x || !spendChart.data.y) return [];
+    return spendChart.data.x.map((date, index) => ({
+      date: date.slice(5),
+      spend: spendChart.data.y?.[index] ?? 0,
+    }));
+  }, [charts]);
+
+  const channelSeries = useMemo(() => {
+    const channelChart = charts.find((c) => c.id === 'conversions_by_channel');
+    if (!channelChart?.data.x || !channelChart.data.y) return [];
+    return channelChart.data.x.map((name, index) => ({
+      name,
+      conversions: channelChart.data.y?.[index] ?? 0,
+    }));
+  }, [charts]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="w-8 h-8 text-primary-500 animate-spin" />
+      <div className="flex min-h-[65vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-slate-700" />
       </div>
     );
   }
 
-  const m = metrics!;
-
-  // Transform chart data for Recharts
-  const spendChart = charts.find((c) => c.id === 'spend_over_time');
-  const spendData = spendChart
-    ? spendChart.data.x!.map((date, i) => ({ date: date.slice(5), spend: spendChart.data.y![i] }))
-    : [];
-
-  const channelChart = charts.find((c) => c.id === 'conversions_by_channel');
-  const channelData = channelChart
-    ? channelChart.data.x!.map((name, i) => ({ name, conversions: channelChart.data.y![i] }))
-    : [];
+  const cards = [
+    {
+      title: 'Revenue Efficiency (ROAS)',
+      value: `${metrics.roas.toFixed(2)}x`,
+      icon: <TrendingUp className="h-4 w-4" />,
+      note: 'Healthy return on paid channels',
+    },
+    {
+      title: 'Pipeline Leads',
+      value: metrics.total_leads.toLocaleString(),
+      icon: <Users className="h-4 w-4" />,
+      note: `+${metrics.new_leads_period} this period`,
+    },
+    {
+      title: 'Conversion Rate',
+      value: `${metrics.conversion_rate.toFixed(1)}%`,
+      icon: <Target className="h-4 w-4" />,
+      note: `${metrics.conversions} conversions`,
+    },
+    {
+      title: 'Paid Spend',
+      value: `$${metrics.total_spend.toLocaleString()}`,
+      icon: <DollarSign className="h-4 w-4" />,
+      note: `CAC $${metrics.cac.toFixed(2)} / LTV $${metrics.ltv.toFixed(0)}`,
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">Marketing Dashboard</h2>
-          <p className="text-sm text-gray-500">Overview of key marketing metrics (last 30 days)</p>
+      <section className="rounded-2xl border border-slate-200 bg-slate-900 p-6 text-white shadow-xl shadow-slate-300/40">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-orange-300">Executive View</p>
+            <h2 className="mt-2 text-2xl font-bold">Growth command dashboard</h2>
+            <p className="mt-1 text-sm text-slate-300">Last sync: {updatedAt || 'just now'}</p>
+          </div>
+          <button
+            onClick={() => void fetchData()}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm text-slate-100 hover:bg-slate-700"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh Data
+          </button>
         </div>
-        <button onClick={fetchData} className="btn-secondary flex items-center gap-2 text-sm">
-          <RefreshCw className="w-4 h-4" /> Refresh
-        </button>
-      </div>
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard label="Total Leads" value={m.total_leads} icon={<Users className="w-5 h-5" />} change={`+${m.new_leads_period} this period`} />
-        <MetricCard label="Total Spend" value={`$${m.total_spend.toLocaleString()}`} icon={<DollarSign className="w-5 h-5" />} />
-        <MetricCard label="Conversions" value={m.conversions} icon={<Target className="w-5 h-5" />} change={`${m.conversion_rate}% rate`} />
-        <MetricCard label="ROAS" value={`${m.roas}x`} icon={<TrendingUp className="w-5 h-5" />} />
-        <MetricCard label="Impressions" value={m.impressions.toLocaleString()} icon={<Eye className="w-5 h-5" />} />
-        <MetricCard label="Clicks" value={m.clicks.toLocaleString()} icon={<MousePointer className="w-5 h-5" />} change={`${m.ctr}% CTR`} />
-        <MetricCard label="Email Open Rate" value={`${m.email_open_rate}%`} icon={<Mail className="w-5 h-5" />} />
-        <MetricCard label="CAC / LTV" value={`$${m.cac} / $${m.ltv}`} icon={<BarChart3 className="w-5 h-5" />} />
-      </div>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {cards.map((card) => (
+            <article key={card.title} className="rounded-xl bg-white/10 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-slate-300">{card.title}</p>
+                <span className="rounded-md bg-white/15 p-1.5 text-orange-200">{card.icon}</span>
+              </div>
+              <p className="mt-3 text-2xl font-bold">{card.value}</p>
+              <p className="mt-1 text-xs text-slate-300">{card.note}</p>
+            </article>
+          ))}
+        </div>
+      </section>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {spendData.length > 0 && (
-          <div className="card">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Marketing Spend Over Time</h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <LineChart data={spendData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+      <section className="grid gap-6 lg:grid-cols-2">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-800">Marketing Spend Over Time</h3>
+          <p className="text-xs text-slate-500">Detect efficiency drift before it hurts acquisition.</p>
+          <div className="mt-4 h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={spendSeries}>
+                <defs>
+                  <linearGradient id="spendGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.6} />
+                    <stop offset="95%" stopColor="#f97316" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />
-                <Line type="monotone" dataKey="spend" stroke="#2563eb" strokeWidth={2} dot={false} />
-              </LineChart>
+                <Area type="monotone" dataKey="spend" stroke="#ea580c" fill="url(#spendGradient)" strokeWidth={2} />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
-        )}
+        </article>
 
-        {channelData.length > 0 && (
-          <div className="card">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Conversions by Channel</h3>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={channelData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-800">Conversions by Channel</h3>
+          <p className="text-xs text-slate-500">Focus spend where contribution margin is strongest.</p>
+          <div className="mt-4 h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={channelSeries}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                 <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />
-                <Bar dataKey="conversions" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                <Legend />
+                <Bar dataKey="conversions" fill="#0f172a" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        )}
-      </div>
+        </article>
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs text-slate-500">Audience Reach</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{metrics.impressions.toLocaleString()}</p>
+          <p className="mt-1 inline-flex items-center gap-1 text-xs text-emerald-700">
+            <Eye className="h-3 w-3" /> high visibility across channels
+          </p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs text-slate-500">Click Through Rate</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{metrics.ctr.toFixed(2)}%</p>
+          <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-700">
+            <MousePointer className="h-3 w-3" /> {metrics.clicks.toLocaleString()} clicks
+          </p>
+        </article>
+        <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <p className="text-xs text-slate-500">Email Funnel</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">
+            {metrics.email_open_rate.toFixed(1)}% / {metrics.email_click_rate.toFixed(1)}%
+          </p>
+          <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-700">
+            <Funnel className="h-3 w-3" /> open to click performance
+          </p>
+        </article>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-800">Recommended Next Actions</h3>
+        <ul className="mt-3 space-y-2 text-sm text-slate-700">
+          <li className="inline-flex items-start gap-2">
+            <ArrowUpRight className="mt-0.5 h-4 w-4 text-orange-600" />
+            Shift 10% budget from lowest-performing channel into high-conversion campaigns.
+          </li>
+          <li className="inline-flex items-start gap-2">
+            <ArrowUpRight className="mt-0.5 h-4 w-4 text-orange-600" />
+            Launch two creative variants for underperforming ad sets this week.
+          </li>
+          <li className="inline-flex items-start gap-2">
+            <ArrowUpRight className="mt-0.5 h-4 w-4 text-orange-600" />
+            Tighten onboarding email sequence to improve click-to-demo progression.
+          </li>
+        </ul>
+      </section>
     </div>
   );
 }

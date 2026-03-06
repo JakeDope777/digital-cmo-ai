@@ -3,6 +3,7 @@ import type {
   ChatRequest,
   ChatResponse,
   AuthTokens,
+  User,
   DashboardData,
   AnalysisResponse,
   CreativeResponse,
@@ -38,6 +39,43 @@ export const authService = {
     const { data } = await api.post<AuthTokens>('/auth/login', { email, password });
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('refresh_token', data.refresh_token);
+    return data;
+  },
+
+  async me(): Promise<User> {
+    const { data } = await api.get<User>('/auth/me');
+    return data;
+  },
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/auth/forgot-password', { email });
+    return data;
+  },
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/auth/reset-password', {
+      token,
+      new_password: newPassword,
+    });
+    return data;
+  },
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/auth/verify-email', { token });
+    return data;
+  },
+
+  async sendVerification(email?: string): Promise<{ message: string }> {
+    const { data } = await api.post<{ message: string }>('/auth/send-verification', email ? { email } : {});
+    return data;
+  },
+
+  async updateProfile(payload: {
+    full_name?: string;
+    company?: string;
+    timezone?: string;
+  }): Promise<User> {
+    const { data } = await api.patch<User>('/auth/profile', payload);
     return data;
   },
 
@@ -171,6 +209,92 @@ export const crmService = {
   async checkCompliance(message: string, channel: string = 'email') {
     const { data } = await api.post('/crm/compliance', { message, channel });
     return data;
+  },
+};
+
+// ── Billing ─────────────────────────────────────────────────
+
+export const billingService = {
+  async createCheckoutSession(plan: string = 'pro') {
+    const { data } = await api.post('/billing/create-checkout-session', { plan });
+    return data as {
+      checkout_url?: string;
+      portal_url?: string;
+      session_id?: string;
+      status: string;
+      demo?: boolean;
+    };
+  },
+
+  async createPortalSession() {
+    const { data } = await api.post('/billing/portal-session');
+    return data as {
+      checkout_url?: string;
+      portal_url?: string;
+      session_id?: string;
+      status: string;
+      demo?: boolean;
+    };
+  },
+
+  async getSubscription() {
+    const { data } = await api.get('/billing/subscription');
+    return data as {
+      tier: string;
+      status: string;
+      stripe_subscription_id?: string;
+      stripe_customer_id?: string;
+      current_period_start?: string;
+      current_period_end?: string;
+      cancel_at_period_end: boolean;
+      demo?: boolean;
+    };
+  },
+
+  async getInvoices() {
+    const { data } = await api.get('/billing/invoices');
+    return data as {
+      invoices: Array<{
+        id: string;
+        amount_due: number;
+        amount_paid: number;
+        currency: string;
+        status: string;
+        hosted_invoice_url?: string;
+        invoice_pdf?: string;
+        period_start?: string;
+        period_end?: string;
+        created_at?: string;
+      }>;
+      demo?: boolean;
+    };
+  },
+};
+
+// ── Growth / Tracking ──────────────────────────────────────
+
+export const growthService = {
+  async trackEvent(eventName: string, properties?: Record<string, unknown>, source: string = 'web') {
+    const { data } = await api.post('/growth/track', {
+      event_name: eventName,
+      source,
+      properties: properties ?? {},
+    });
+    return data;
+  },
+
+  async joinWaitlist(payload: {
+    name: string;
+    email: string;
+    company?: string;
+    note?: string;
+    source?: string;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+  }) {
+    const { data } = await api.post('/growth/waitlist', payload);
+    return data as { message: string };
   },
 };
 

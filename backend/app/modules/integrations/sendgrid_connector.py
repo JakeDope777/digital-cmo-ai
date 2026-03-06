@@ -23,6 +23,8 @@ class SendGridConnector(ConnectorInterface):
     def __init__(self, api_key: Optional[str] = None):
         super().__init__(service_name="SendGrid", rate_limit=100)
         self.api_key = api_key
+        if not self.api_key:
+            self._enter_demo_mode()
 
     async def authenticate(self) -> None:
         """Authenticate with SendGrid using the API key."""
@@ -45,7 +47,7 @@ class SendGridConnector(ConnectorInterface):
     async def post_data(self, endpoint: str, data: Optional[dict] = None) -> dict:
         """Send data to a specific API endpoint."""
         if self._demo_mode:
-            return {"status": "success", "message": "Demo request sent"}
+            return {"demo": True, "status": "success", "message": "Demo request sent"}
 
         await self._ensure_authenticated()
         headers = {"Authorization": f"Bearer {self.api_key}"}
@@ -98,6 +100,7 @@ class SendGridConnector(ConnectorInterface):
         """Generates realistic mock data for demo mode."""
         if endpoint == "stats":
             return {
+                "demo": True,
                 "stats": [
                     {
                         "metrics": {
@@ -123,6 +126,7 @@ class SendGridConnector(ConnectorInterface):
             }
         if endpoint == "suppression/bounces":
             return {
+                "demo": True,
                 "bounces": [
                     {
                         "created": int((datetime.now() - timedelta(days=random.randint(1, 30))).timestamp()),
@@ -135,6 +139,7 @@ class SendGridConnector(ConnectorInterface):
             }
         if endpoint == "marketing/contacts":
             return {
+                "demo": True,
                 "result": [
                     {
                         "id": f"contact-id-{i}",
@@ -145,4 +150,4 @@ class SendGridConnector(ConnectorInterface):
                     for i in range(random.randint(5, 20))
                 ]
             }
-        return {}
+        return {"demo": True}

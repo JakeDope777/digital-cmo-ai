@@ -41,6 +41,11 @@ class User(Base):
         default="user",
         nullable=False,
     )
+    full_name = Column(String, nullable=True)
+    company = Column(String, nullable=True)
+    timezone = Column(String, nullable=True)
+    is_email_verified = Column(Boolean, default=False, nullable=False)
+    stripe_customer_id = Column(String, nullable=True, index=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(
         DateTime,
@@ -184,3 +189,88 @@ class Experiment(Base):
         default=lambda: datetime.now(timezone.utc),
         onupdate=lambda: datetime.now(timezone.utc),
     )
+
+
+class EmailVerificationToken(Base):
+    __tablename__ = "email_verification_tokens"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    consumed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    token = Column(String, unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    consumed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class BillingSubscription(Base):
+    __tablename__ = "billing_subscriptions"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, unique=True, index=True)
+    stripe_subscription_id = Column(String, nullable=True, index=True)
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    stripe_price_id = Column(String, nullable=True)
+    status = Column(String, default="inactive", nullable=False)
+    current_period_start = Column(DateTime, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
+    cancel_at_period_end = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
+class BillingInvoice(Base):
+    __tablename__ = "billing_invoices"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    stripe_invoice_id = Column(String, nullable=True, unique=True, index=True)
+    amount_due = Column(Integer, default=0, nullable=False)
+    amount_paid = Column(Integer, default=0, nullable=False)
+    currency = Column(String, default="usd", nullable=False)
+    status = Column(String, default="draft", nullable=False)
+    hosted_invoice_url = Column(Text, nullable=True)
+    invoice_pdf = Column(Text, nullable=True)
+    period_start = Column(DateTime, nullable=True)
+    period_end = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class GrowthEvent(Base):
+    __tablename__ = "growth_events"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)
+    event_name = Column(String, nullable=False, index=True)
+    source = Column(String, default="web", nullable=False)
+    properties = Column(JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class WaitlistLead(Base):
+    __tablename__ = "waitlist_leads"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String, nullable=False)
+    email = Column(String, nullable=False, unique=True, index=True)
+    company = Column(String, nullable=True)
+    note = Column(Text, nullable=True)
+    source = Column(String, default="landing_page", nullable=False)
+    utm_source = Column(String, nullable=True)
+    utm_medium = Column(String, nullable=True)
+    utm_campaign = Column(String, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
