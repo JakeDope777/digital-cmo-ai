@@ -85,11 +85,17 @@ async def health_check():
 
 
 @app.get("/", tags=["Health"])
-async def root():
-    """Root endpoint - serve frontend if available, otherwise API info."""
+async def root(request: Request):
+    """Root endpoint.
+
+    Returns JSON for API clients by default and serves SPA only when
+    the client explicitly asks for HTML.
+    """
     static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
     index_path = os.path.join(static_dir, "index.html")
-    if os.path.exists(index_path):
+    accept = request.headers.get("accept", "")
+    wants_html = "text/html" in accept and "application/json" not in accept
+    if os.path.exists(index_path) and wants_html:
         return FileResponse(index_path)
     return {
         "name": settings.APP_NAME,

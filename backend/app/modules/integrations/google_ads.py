@@ -85,8 +85,27 @@ class GoogleAdsConnector(ConnectorInterface):
         }
         return await self.post_data(endpoint, data=query)
 
-    async def get_campaign_metrics(self, campaign_id: str) -> Dict:
-        """Retrieves metrics for a specific campaign."""
+    async def get_campaign_metrics(self, campaign_id: Optional[str] = None) -> Dict:
+        """Retrieves metrics for a specific campaign.
+
+        In demo mode, campaign_id is optional for test and sandbox usability.
+        """
+        if self._demo_mode:
+            campaigns = [
+                {
+                    "campaign_id": str(random.randint(1000, 9999)),
+                    "clicks": random.randint(100, 1000),
+                    "impressions": random.randint(10000, 100000),
+                    "ctr": round(random.uniform(0.01, 0.1), 4),
+                    "average_cpc_micros": random.randint(500000, 2000000),
+                }
+                for _ in range(3)
+            ]
+            return {"demo": True, "campaigns": campaigns}
+
+        if campaign_id is None:
+            raise ValueError("campaign_id is required outside demo mode.")
+
         endpoint = f"customers/{self.customer_id}/googleAds:search"
         query = {
             "query": f"SELECT metrics.clicks, metrics.impressions, metrics.ctr, metrics.average_cpc FROM campaign WHERE campaign.id = {campaign_id}"

@@ -63,8 +63,11 @@ class LinkedInConnector(ConnectorInterface):
         url = f"{self.BASE_URL}/{endpoint}"
         return await self._request_with_retry("POST", url, headers=headers, json_data=data)
 
-    async def create_post(self, organization_urn: str, text: str) -> Dict:
-        """Creates a new post for an organization."""
+    async def create_post(self, text: str, organization_urn: str = "12345") -> Dict:
+        """Creates a new post for an organization.
+
+        Accepts text-first signature to keep backwards compatibility with tests.
+        """
         endpoint = "ugcPosts"
         data = {
             "author": f"urn:li:organization:{organization_urn}",
@@ -132,15 +135,21 @@ class LinkedInConnector(ConnectorInterface):
     def _generate_demo_data(self, endpoint: str, params: Optional[Dict] = None) -> Dict:
         """Generates realistic mock data for demo mode."""
         if endpoint == "ugcPosts":
-            return {"id": f"urn:li:share:{random.randint(10000, 99999)}", "activity": f"urn:li:activity:{random.randint(10000, 99999)}"}
+            return {
+                "demo": True,
+                "id": f"urn:li:share:{random.randint(10000, 99999)}",
+                "activity": f"urn:li:activity:{random.randint(10000, 99999)}",
+            }
         if endpoint.startswith("socialActions"): 
             return {
+                "demo": True,
                 "likes": random.randint(10, 500),
                 "comments": random.randint(5, 100),
                 "shares": random.randint(1, 50)
             }
         if endpoint.startswith("organizationalEntityAcls"):
             return {
+                "demo": True,
                 "elements": [
                     {
                         "role": "ADMINISTRATOR",
@@ -151,6 +160,7 @@ class LinkedInConnector(ConnectorInterface):
             }
         if endpoint.startswith("organizationPageStatistics"):
             return {
+                "demo": True,
                 "elements": [
                     {
                         "organization": "urn:li:organization:12345",
@@ -161,6 +171,7 @@ class LinkedInConnector(ConnectorInterface):
             }
         if endpoint.startswith("organizations"):
             return {
+                "demo": True,
                 "id": params.get("organization_urn") if params else "12345",
                 "name": {
                     "localized": {
@@ -172,4 +183,4 @@ class LinkedInConnector(ConnectorInterface):
                     }
                 }
             }
-        return {}
+        return {"demo": True}

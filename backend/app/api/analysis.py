@@ -46,7 +46,10 @@ async def analyze_competitors(
     module: BusinessAnalysisModule = Depends(get_module),
 ):
     """Analyse competitors and produce a comparative matrix."""
-    result = await module.analyze_competitors(request.company_names, request.context)
+    result = await module.analyze_competitors(
+        company_names=request.company_names,
+        context=request.context,
+    )
     return AnalysisResponse(**result)
 
 
@@ -56,7 +59,10 @@ async def generate_swot(
     module: BusinessAnalysisModule = Depends(get_module),
 ):
     """Generate a SWOT analysis for the specified subject."""
-    result = await module.generate_swot(request.subject, request.context)
+    result = await module.generate_swot(
+        subject=request.subject,
+        context=request.context,
+    )
     return AnalysisResponse(**result)
 
 
@@ -66,7 +72,10 @@ async def generate_pestel(
     module: BusinessAnalysisModule = Depends(get_module),
 ):
     """Generate a PESTEL analysis for the specified subject."""
-    result = await module.generate_pestel(request.subject, request.context)
+    result = await module.generate_pestel(
+        subject=request.subject,
+        context=request.context,
+    )
     return AnalysisResponse(**result)
 
 

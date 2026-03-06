@@ -105,8 +105,10 @@ class HubSpotConnector(ConnectorInterface):
 
     def _generate_demo_data(self, endpoint: str, params: Optional[dict] = None) -> dict:
         """Generate realistic mock data for HubSpot endpoints."""
+        params = params or {}
         if "contacts" in endpoint:
             return {
+                "demo": True,
                 "results": [
                     {
                         "id": str(random.randint(1000, 9999)),
@@ -122,6 +124,7 @@ class HubSpotConnector(ConnectorInterface):
             }
         if "deals" in endpoint:
             return {
+                "demo": True,
                 "results": [
                     {
                         "id": str(random.randint(1000, 9999)),
@@ -136,6 +139,7 @@ class HubSpotConnector(ConnectorInterface):
             }
         if "companies" in endpoint:
             return {
+                "demo": True,
                 "results": [
                     {
                         "id": str(random.randint(1000, 9999)),
@@ -148,4 +152,4 @@ class HubSpotConnector(ConnectorInterface):
                     for i in range(params.get("limit", 10))
                 ]
             }
-        return {}
+        return {"demo": True}

@@ -24,6 +24,8 @@ class GoogleAnalyticsConnector(ConnectorInterface):
         super().__init__(service_name="GoogleAnalytics", rate_limit=50, rate_window=60)
         self.property_id = property_id
         self._access_token = access_token
+        if not self.property_id or not self._access_token:
+            self._enter_demo_mode("Missing property_id or access_token.")
 
     async def authenticate(self) -> None:
         """Authenticates with Google Analytics using OAuth2."""
@@ -53,8 +55,28 @@ class GoogleAnalyticsConnector(ConnectorInterface):
         url = f"{self.BASE_URL}/{endpoint}"
         return await self._request_with_retry("POST", url, headers=headers, json_data=data)
 
-    async def get_website_metrics(self, start_date: str, end_date: str) -> Dict:
+    async def get_website_metrics(
+        self,
+        start_date: str = "30daysAgo",
+        end_date: str = "today",
+    ) -> Dict:
         """Retrieves core website metrics for a date range."""
+        if self._demo_mode:
+            return {
+                "demo": True,
+                "metrics": {
+                    "active_users": random.randint(1000, 10000),
+                    "new_users": random.randint(300, 4000),
+                    "sessions": random.randint(1500, 15000),
+                    "bounce_rate": round(random.uniform(0.2, 0.6), 4),
+                },
+                "top_pages": [
+                    {"path": "/", "views": random.randint(1000, 5000)},
+                    {"path": "/pricing", "views": random.randint(500, 2500)},
+                    {"path": "/blog/ai-marketing", "views": random.randint(300, 2000)},
+                ],
+            }
+
         endpoint = f"properties/{self.property_id}:runReport"
         report_request = {
             "dateRanges": [{"startDate": start_date, "endDate": end_date}],
