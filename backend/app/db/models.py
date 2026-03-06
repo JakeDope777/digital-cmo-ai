@@ -250,6 +250,24 @@ class BillingInvoice(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
+class StripeWebhookEvent(Base):
+    __tablename__ = "stripe_webhook_events"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    stripe_event_id = Column(String, nullable=False, unique=True, index=True)
+    event_type = Column(String, nullable=False, index=True)
+    payload_hash = Column(String, nullable=False)
+    status = Column(String, default="processing", nullable=False, index=True)
+    processed_at = Column(DateTime, nullable=True)
+    last_error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+
 class GrowthEvent(Base):
     __tablename__ = "growth_events"
 

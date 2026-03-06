@@ -70,6 +70,8 @@ class AttributionEngine:
         "data_driven",
     ]
 
+    OPTIONAL_MODELS = ["markov"]
+
     def attribute(
         self,
         journeys: list[CustomerJourney],
@@ -92,6 +94,7 @@ class AttributionEngine:
             "last_touch": self._last_touch,
             "linear": self._linear,
             "time_decay": self._time_decay,
+            "markov": self._markov,
             "data_driven": self._data_driven,
         }
 
@@ -103,7 +106,7 @@ class AttributionEngine:
         journeys: list[CustomerJourney],
         decay_half_life_days: float = 7.0,
     ) -> dict[str, AttributionResult]:
-        """Run all five attribution models and return results keyed by model name."""
+        """Run the default five-model bundle and return results keyed by model name."""
         return {
             m: self.attribute(journeys, model=m, decay_half_life_days=decay_half_life_days)
             for m in self.SUPPORTED_MODELS
@@ -227,6 +230,133 @@ class AttributionEngine:
                 costs[tp.channel] += tp.cost
 
         return self._build_result("time_decay", scores, conv_counts, costs, journeys)
+
+    # ------------------------------------------------------------------
+    # Markov Chain Attribution
+    # ------------------------------------------------------------------
+
+    def _markov(
+        self,
+        journeys: list[CustomerJourney],
+        _half_life: float,
+    ) -> AttributionResult:
+        """
+        Markov chain attribution via removal effect.
+
+        For each channel, compute the drop in overall conversion rate when
+        that channel is removed from all journeys (its transitions replaced
+        with a null/absorbing state). The removal effect is used to weight
+        attributed conversions and revenue.
+
+        Steps:
+        1. Build a transition probability matrix from observed sequences.
+        2. Compute the baseline conversion probability (reach CONVERSION state).
+        3. For each channel, remove it and recompute conversion probability.
+        4. Removal effect = baseline_prob - removal_prob.
+        5. Normalise removal effects → attribution weights.
+        """
+        START = "__start__"
+        CONV = "__conversion__"
+        NULL = "__null__"
+
+        scores: dict[str, float] = defaultdict(float)
+        conv_counts: dict[str, float] = defaultdict(float)
+        costs: dict[str, float] = defaultdict(float)
+
+        # Gather all channels
+        all_channels: set[str] = set()
+        for j in journeys:
+            for tp in j.touchpoints:
+                all_channels.add(tp.channel)
+                costs[tp.channel] += tp.cost
+
+        # Build transition counts: from_state -> to_state -> count
+        trans_counts: dict[str, dict[str, float]] = defaultdict(lambda: defaultdict(float))
+        total_conversions = sum(1 for j in journeys if j.converted)
+        total_value = sum(j.conversion_value for j in journeys if j.converted)
+
+        for j in journeys:
+            path = [tp.channel for tp in j.touchpoints]
+            if not path:
+                continue
+            # START -> first channel
+            trans_counts[START][path[0]] += 1
+            # channel -> channel transitions
+            for i in range(len(path) - 1):
+                trans_counts[path[i]][path[i + 1]] += 1
+            # last channel -> CONV or NULL
+            if j.converted:
+                trans_counts[path[-1]][CONV] += 1
+            else:
+                trans_counts[path[-1]][NULL] += 1
+
+        def _build_probs(
+            excluded: Optional[str] = None,
+        ) -> dict[str, dict[str, float]]:
+            """Convert counts to transition probabilities, optionally excluding a channel."""
+            probs: dict[str, dict[str, float]] = {}
+            for from_state, to_counts in trans_counts.items():
+                if from_state == excluded:
+                    # Redirect all transitions from excluded channel to NULL
+                    probs[from_state] = {NULL: 1.0}
+                    continue
+                filtered = {
+                    to: cnt
+                    for to, cnt in to_counts.items()
+                    if to != excluded
+                }
+                if not filtered:
+                    probs[from_state] = {NULL: 1.0}
+                    continue
+                # Replace excluded destination with NULL
+                adjusted: dict[str, float] = defaultdict(float)
+                for to, cnt in to_counts.items():
+                    if to == excluded:
+                        adjusted[NULL] += cnt
+                    else:
+                        adjusted[to] += cnt
+                total = sum(adjusted.values())
+                probs[from_state] = {k: v / total for k, v in adjusted.items()}
+            return probs
+
+        def _conversion_probability(probs: dict[str, dict[str, float]]) -> float:
+            """Compute P(reach CONV | start) via iterative value propagation."""
+            # States we need to evaluate
+            states = set(probs.keys()) | {CONV, NULL}
+            # P(CONV | state): CONV=1, NULL=0, others iterative
+            p: dict[str, float] = {CONV: 1.0, NULL: 0.0}
+            for _ in range(100):  # fixed-point iteration
+                new_p: dict[str, float] = {CONV: 1.0, NULL: 0.0}
+                for state in states - {CONV, NULL}:
+                    transitions = probs.get(state, {NULL: 1.0})
+                    new_p[state] = sum(
+                        prob * p.get(to, 0.0) for to, prob in transitions.items()
+                    )
+                if all(abs(new_p.get(s, 0) - p.get(s, 0)) < 1e-6 for s in states):
+                    p = new_p
+                    break
+                p = new_p
+            return p.get(START, 0.0)
+
+        # Baseline conversion probability
+        baseline_probs = _build_probs()
+        baseline_conv = _conversion_probability(baseline_probs)
+
+        # Compute removal effect for each channel
+        removal_effects: dict[str, float] = {}
+        for channel in all_channels:
+            removal_probs = _build_probs(excluded=channel)
+            removal_conv = _conversion_probability(removal_probs)
+            removal_effects[channel] = max(baseline_conv - removal_conv, 0.0)
+
+        # Normalise removal effects into attribution weights
+        total_effect = sum(removal_effects.values()) or 1.0
+        for channel, effect in removal_effects.items():
+            weight = effect / total_effect
+            scores[channel] = total_value * weight
+            conv_counts[channel] = total_conversions * weight
+
+        return self._build_result("markov", scores, conv_counts, costs, journeys)
 
     # ------------------------------------------------------------------
     # Data-Driven Attribution (Shapley Value Approximation)

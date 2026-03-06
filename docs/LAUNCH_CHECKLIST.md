@@ -17,14 +17,17 @@
 ## Billing (Stripe Test Mode)
 - [ ] `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` configured
 - [ ] Stripe test products/prices created (`STRIPE_PRICE_PRO_MONTHLY`, `STRIPE_PRICE_ENTERPRISE_MONTHLY`)
+- [ ] Billing readiness endpoint healthy (`GET /billing/health`)
 - [ ] Checkout session opens from billing page
 - [ ] Webhook endpoint receives events (`/billing/webhook`)
+- [ ] Webhook replay is idempotent (duplicate event is ignored)
 - [ ] Subscription status reflects in billing UI
 - [ ] Invoice list renders for test invoices
 
 ## Growth + Hypothesis Testing
 - [ ] `POSTHOG_API_KEY` configured
 - [ ] `VITE_GA_MEASUREMENT_ID` configured
+- [ ] Funnel summary endpoint healthy (`GET /growth/funnel-summary?days=14`)
 - [ ] Landing view, signup_started/completed, verification_completed events captured
 - [ ] onboarding_completed, dashboard_viewed, analysis_run, chat_message_sent captured
 - [ ] checkout_started/completed captured

@@ -2,6 +2,8 @@
 from .router import IntentRouter
 from .prompt_builder import PromptBuilder
 from .memory_manager import MemoryManager
+from .memory import ContextMemory, MultiSessionMemory
+from .skill_registry import SkillRegistry, SkillMetadata
 from .orchestrator import BrainOrchestrator, LLMClient
 from .vector_store import (
     VectorStoreBase,
@@ -27,6 +29,10 @@ __all__ = [
     "IntentRouter",
     "PromptBuilder",
     "MemoryManager",
+    "ContextMemory",
+    "MultiSessionMemory",
+    "SkillRegistry",
+    "SkillMetadata",
     "BrainOrchestrator",
     "LLMClient",
     "VectorStoreBase",
