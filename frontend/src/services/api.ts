@@ -3,6 +3,7 @@ import type {
   ChatRequest,
   ChatResponse,
   AuthTokens,
+  User,
   DashboardData,
   AnalysisResponse,
   CreativeResponse,
@@ -38,6 +39,11 @@ export const authService = {
     const { data } = await api.post<AuthTokens>('/auth/login', { email, password });
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('refresh_token', data.refresh_token);
+    return data;
+  },
+
+  async me(): Promise<User> {
+    const { data } = await api.get<User>('/auth/me');
     return data;
   },
 
