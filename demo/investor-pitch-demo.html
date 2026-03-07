@@ -266,6 +266,10 @@ section{padding:100px 40px}
 .live-list{margin-top:12px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .live-item{font-size:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:8px 10px;color:#cbd5e1}
 .live-item b{color:#fff}
+.run-feed{margin-top:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.run-item{font-size:11px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 9px;color:#cbd5e1}
+.run-item b{color:#fff;font-size:11px}
+.run-item .meta{color:#94a3b8;font-size:10px;margin-top:4px}
 
 /* ── PRICING ── */
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:60px;align-items:stretch}
@@ -611,6 +615,8 @@ Are you using AI to go faster, or to think better?
         <span class="live-status" id="integrationsLiveStatus">Waiting for first sync…</span>
       </div>
       <div class="live-list" id="integrationsLiveList"></div>
+      <div class="market-summary" id="integrationRunSummary"></div>
+      <div class="run-feed" id="integrationRunsFeed"></div>
     </div>
   </div>
 </section>
@@ -897,6 +903,54 @@ function renderIntegrationRun(items) {
     .join('');
 }
 
+function renderIntegrationRunSummary(summary) {
+  const box = document.getElementById('integrationRunSummary');
+  if (!box) return;
+  if (!summary || !summary.total_runs) {
+    box.innerHTML = '<span class="market-chip">No runs yet</span>';
+    return;
+  }
+  box.innerHTML = [
+    `<span class="market-chip">Runs: ${summary.total_runs}</span>`,
+    `<span class="market-chip">Success: ${summary.success_count}</span>`,
+    `<span class="market-chip">Errors: ${summary.error_count}</span>`,
+    `<span class="market-chip">Avg: ${summary.avg_duration_ms} ms</span>`,
+  ].join('');
+}
+
+function renderIntegrationRunsFeed(runs) {
+  const box = document.getElementById('integrationRunsFeed');
+  if (!box) return;
+  const rows = runs || [];
+  if (!rows.length) {
+    box.innerHTML = '<div class="run-item">No recent runs yet.</div>';
+    return;
+  }
+  box.innerHTML = rows.map((row) => `
+    <div class="run-item">
+      <b>${row.connector} · ${row.event}</b>
+      <div class="meta">${row.status} · ${row.duration_ms} ms</div>
+      <div class="meta">${row.timestamp}</div>
+      ${row.error ? `<div class="meta">error: ${row.error}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function refreshRunHistory() {
+  if (!apiBase()) return;
+  try {
+    const [runsData, summaryData] = await Promise.all([
+      apiRequest('/integrations/runs?limit=8'),
+      apiRequest('/integrations/runs/summary'),
+    ]);
+    renderIntegrationRunSummary(summaryData);
+    renderIntegrationRunsFeed(runsData.runs || []);
+  } catch {
+    renderIntegrationRunSummary(null);
+    renderIntegrationRunsFeed([]);
+  }
+}
+
 async function apiRequest(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   const token = localStorage.getItem('access_token');
@@ -1095,6 +1149,8 @@ async function refreshIntegrationState() {
       { name: 'Connector Sync', status: 'Waiting for backend API URL' },
       { name: 'Tip', status: 'Use ?api=https://your-backend-url for shared demo links' },
     ]);
+    renderIntegrationRunSummary(null);
+    renderIntegrationRunsFeed([]);
     return;
   }
 
@@ -1158,6 +1214,7 @@ async function refreshIntegrationState() {
       { name: 'Native Live', status: `${liveCount} authenticated` },
       { name: 'Native Demo', status: `${demoCount} fallback` },
     ]);
+    await refreshRunHistory();
     setIntegrationStatus(`Sync complete · ${connectors.length} native + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace`, 'ok');
   } catch (error) {
     setIntegrationStatus(`Sync failed: ${error.message}. Check API URL/CORS/server.`, 'err');
@@ -1191,6 +1248,8 @@ async function triggerN8NWorkflow() {
     setIntegrationStatus('n8n workflow triggered successfully.', 'ok');
   } catch (error) {
     setIntegrationStatus(`n8n trigger failed: ${error.message}`, 'err');
+  } finally {
+    await refreshRunHistory();
   }
 }
 
@@ -1223,6 +1282,8 @@ if (apiBase()) {
 } else {
   setIntegrationStatus('Demo loaded. Enter backend API URL to start integration sync.', 'warn');
   renderIntegrationRun([{ name: 'Status', status: 'Idle until backend API URL is provided' }]);
+  renderIntegrationRunSummary(null);
+  renderIntegrationRunsFeed([]);
 }
 
 // ── Waitlist ──

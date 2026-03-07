@@ -4,8 +4,12 @@ Integration service layer for connector lifecycle and execution.
 
 from __future__ import annotations
 
+import datetime as dt
+from collections import deque
 import inspect
+import time
 from typing import Any, Optional
+import uuid
 
 from ...core.config import settings
 from . import ConnectorRegistry
@@ -19,6 +23,7 @@ class IntegrationService:
     def __init__(self) -> None:
         self.registry = ConnectorRegistry()
         self._active_connectors: dict[str, ConnectorInterface] = {}
+        self._run_history: deque[dict[str, Any]] = deque(maxlen=2000)
 
     def list_catalog(self) -> dict[str, Any]:
         marketplace = n8n_catalog_stats()
@@ -234,6 +239,65 @@ class IntegrationService:
             )
         return rows
 
+    def list_runs(
+        self,
+        limit: int = 50,
+        connector: Optional[str] = None,
+        status: Optional[str] = None,
+        event: Optional[str] = None,
+    ) -> dict[str, Any]:
+        connector_filter = (connector or "").strip().lower()
+        status_filter = (status or "").strip().lower()
+        event_filter = (event or "").strip().lower()
+
+        rows = list(reversed(self._run_history))
+        if connector_filter:
+            rows = [row for row in rows if row.get("connector", "").lower() == connector_filter]
+        if status_filter:
+            rows = [row for row in rows if row.get("status", "").lower() == status_filter]
+        if event_filter:
+            rows = [row for row in rows if row.get("event", "").lower() == event_filter]
+
+        safe_limit = max(1, limit)
+        clipped = rows[:safe_limit]
+        return {
+            "runs": clipped,
+            "returned": len(clipped),
+            "total_filtered": len(rows),
+            "limit": safe_limit,
+            "connector": connector_filter,
+            "status": status_filter,
+            "event": event_filter,
+        }
+
+    def get_run_summary(self, connector: Optional[str] = None) -> dict[str, Any]:
+        connector_filter = (connector or "").strip().lower()
+        rows = list(self._run_history)
+        if connector_filter:
+            rows = [row for row in rows if row.get("connector", "").lower() == connector_filter]
+
+        success_count = sum(1 for row in rows if row.get("status") == "success")
+        error_count = sum(1 for row in rows if row.get("status") == "error")
+        by_connector: dict[str, int] = {}
+        for row in rows:
+            key = row.get("connector", "unknown")
+            by_connector[key] = by_connector.get(key, 0) + 1
+
+        avg_duration_ms = (
+            sum(float(row.get("duration_ms", 0)) for row in rows) / len(rows)
+            if rows
+            else 0.0
+        )
+        return {
+            "connector": connector_filter,
+            "total_runs": len(rows),
+            "success_count": success_count,
+            "error_count": error_count,
+            "success_rate": round(success_count / len(rows), 4) if rows else 0.0,
+            "avg_duration_ms": round(avg_duration_ms, 2),
+            "by_connector": by_connector,
+        }
+
     @staticmethod
     def _humanize_connector_key(key: str) -> str:
         if key == "n8n":
@@ -289,33 +353,113 @@ class IntegrationService:
             return defaults
         return {}
 
+    def _record_run(
+        self,
+        connector: str,
+        event: str,
+        status: str,
+        duration_ms: float,
+        *,
+        error: Optional[str] = None,
+        metadata: Optional[dict[str, Any]] = None,
+    ) -> None:
+        self._run_history.append(
+            {
+                "id": f"run_{uuid.uuid4().hex[:12]}",
+                "timestamp": dt.datetime.utcnow().isoformat() + "Z",
+                "connector": connector,
+                "event": event,
+                "status": status,
+                "duration_ms": round(duration_ms, 2),
+                "error": error,
+                "metadata": metadata or {},
+            }
+        )
+
     async def connect(
         self,
         name: str,
         credentials: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
-        connector = self._resolve(name, credentials)
-        await connector.authenticate()
-        return connector.get_status()
+        start = time.perf_counter()
+        try:
+            connector = self._resolve(name, credentials)
+            await connector.authenticate()
+            details = connector.get_status()
+            self._record_run(
+                name,
+                "connect",
+                "success",
+                (time.perf_counter() - start) * 1000,
+                metadata={"demo_mode": details.get("demo_mode", False)},
+            )
+            return details
+        except Exception as exc:
+            self._record_run(
+                name,
+                "connect",
+                "error",
+                (time.perf_counter() - start) * 1000,
+                error=str(exc),
+            )
+            raise
 
     async def status(self, name: str) -> dict[str, Any]:
-        connector = self._resolve(name)
-        if not connector.get_status().get("authenticated") and not connector.demo_mode:
-            await connector.authenticate()
-        return connector.get_status()
+        start = time.perf_counter()
+        try:
+            connector = self._resolve(name)
+            if not connector.get_status().get("authenticated") and not connector.demo_mode:
+                await connector.authenticate()
+            details = connector.get_status()
+            self._record_run(
+                name,
+                "status",
+                "success",
+                (time.perf_counter() - start) * 1000,
+                metadata={"demo_mode": details.get("demo_mode", False)},
+            )
+            return details
+        except Exception as exc:
+            self._record_run(
+                name,
+                "status",
+                "error",
+                (time.perf_counter() - start) * 1000,
+                error=str(exc),
+            )
+            raise
 
     async def test(
         self,
         name: str,
         credentials: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
-        connector = self._resolve(name, credentials)
-        await connector.authenticate()
-        return {
-            "status": "ok",
-            "connector_status": connector.get_status(),
-            "message": "Connection test completed",
-        }
+        start = time.perf_counter()
+        try:
+            connector = self._resolve(name, credentials)
+            await connector.authenticate()
+            details = {
+                "status": "ok",
+                "connector_status": connector.get_status(),
+                "message": "Connection test completed",
+            }
+            self._record_run(
+                name,
+                "test",
+                "success",
+                (time.perf_counter() - start) * 1000,
+                metadata={"demo_mode": connector.get_status().get("demo_mode", False)},
+            )
+            return details
+        except Exception as exc:
+            self._record_run(
+                name,
+                "test",
+                "error",
+                (time.perf_counter() - start) * 1000,
+                error=str(exc),
+            )
+            raise
 
     async def run_action(
         self,
@@ -328,35 +472,55 @@ class IntegrationService:
         data: Optional[dict[str, Any]] = None,
         credentials: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
-        connector = self._resolve(name, credentials)
-        await connector.authenticate()
+        start = time.perf_counter()
+        event_name = action or f"{method.upper()} {endpoint or ''}".strip()
+        try:
+            connector = self._resolve(name, credentials)
+            await connector.authenticate()
 
-        result: Any
-        if action:
-            if not hasattr(connector, action):
-                raise ValueError(f"Unsupported action '{action}' for connector '{name}'.")
-            fn = getattr(connector, action)
-            if not callable(fn):
-                raise ValueError(f"Connector action '{action}' is not callable.")
-            result = fn(**(payload or {}))
-            if inspect.isawaitable(result):
-                result = await result
-        else:
-            if not endpoint:
-                raise ValueError("Either 'action' or 'endpoint' must be provided.")
-            upper_method = method.upper()
-            if upper_method == "GET":
-                result = await connector.get_data(endpoint, params=params)
-            elif upper_method == "POST":
-                request_body = data if data is not None else payload
-                result = await connector.post_data(endpoint, data=request_body)
+            result: Any
+            if action:
+                if not hasattr(connector, action):
+                    raise ValueError(f"Unsupported action '{action}' for connector '{name}'.")
+                fn = getattr(connector, action)
+                if not callable(fn):
+                    raise ValueError(f"Connector action '{action}' is not callable.")
+                result = fn(**(payload or {}))
+                if inspect.isawaitable(result):
+                    result = await result
             else:
-                raise ValueError(
-                    f"Unsupported method '{method}'. Supported methods: GET, POST."
-                )
+                if not endpoint:
+                    raise ValueError("Either 'action' or 'endpoint' must be provided.")
+                upper_method = method.upper()
+                if upper_method == "GET":
+                    result = await connector.get_data(endpoint, params=params)
+                elif upper_method == "POST":
+                    request_body = data if data is not None else payload
+                    result = await connector.post_data(endpoint, data=request_body)
+                else:
+                    raise ValueError(
+                        f"Unsupported method '{method}'. Supported methods: GET, POST."
+                    )
 
-        return {
-            "status": "success",
-            "connector_status": connector.get_status(),
-            "result": result,
-        }
+            details = {
+                "status": "success",
+                "connector_status": connector.get_status(),
+                "result": result,
+            }
+            self._record_run(
+                name,
+                event_name,
+                "success",
+                (time.perf_counter() - start) * 1000,
+                metadata={"demo_mode": connector.get_status().get("demo_mode", False)},
+            )
+            return details
+        except Exception as exc:
+            self._record_run(
+                name,
+                event_name,
+                "error",
+                (time.perf_counter() - start) * 1000,
+                error=str(exc),
+            )
+            raise

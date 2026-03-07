@@ -98,3 +98,22 @@ class TestIntegrationsAPI:
         data = response.json()
         assert data["status"] == "success"
         assert data["details"]["result"]["demo"] is True
+
+    def test_connector_runs_feed(self, client):
+        response = client.get("/integrations/runs?limit=20")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["returned"] >= 1
+        assert len(data["runs"]) >= 1
+        latest = data["runs"][0]
+        assert "connector" in latest
+        assert "status" in latest
+        assert "duration_ms" in latest
+
+    def test_connector_runs_summary(self, client):
+        response = client.get("/integrations/runs/summary")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_runs"] >= 1
+        assert data["success_count"] >= 1
+        assert "avg_duration_ms" in data

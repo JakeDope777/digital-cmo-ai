@@ -7,6 +7,8 @@ GET  /integrations/marketplace/providers - List marketplace provider metadata
 GET  /integrations/marketplace/summary - List marketplace counts by provider/category
 GET  /integrations/marketplace/connectors/{connector_key} - Get connector detail
 GET  /integrations/marketplace/stats - Marketplace metadata
+GET  /integrations/runs            - List recent connector runs
+GET  /integrations/runs/summary    - Aggregate connector run stats
 POST /integrations/{name}/connect  - Initialize/authenticate connector
 POST /integrations/{name}/test     - Test connector connectivity
 GET  /integrations/{name}/status   - Get connector status
@@ -118,6 +120,32 @@ async def get_n8n_catalog_alias(
 async def get_n8n_stats_alias():
     """Backward-compatible alias for marketplace stats endpoint."""
     return n8n_catalog_stats()
+
+
+@router.get("/runs")
+async def get_connector_runs(
+    limit: int = Query(default=50, ge=1, le=500),
+    connector: str = Query(default=""),
+    status: str = Query(default=""),
+    event: str = Query(default=""),
+    service: IntegrationService = Depends(get_service),
+):
+    """Return recent connector runs for observability widgets."""
+    return service.list_runs(
+        limit=limit,
+        connector=connector or None,
+        status=status or None,
+        event=event or None,
+    )
+
+
+@router.get("/runs/summary")
+async def get_connector_runs_summary(
+    connector: str = Query(default=""),
+    service: IntegrationService = Depends(get_service),
+):
+    """Return aggregate run metrics for connector operations."""
+    return service.get_run_summary(connector=connector or None)
 
 
 @router.post("/{name}/connect", response_model=IntegrationResponse)
