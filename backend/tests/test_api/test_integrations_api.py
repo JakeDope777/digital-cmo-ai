@@ -21,6 +21,18 @@ class TestIntegrationsAPI:
         data = response.json()
         assert data["returned"] == 200
         assert len(data["connectors"]) == 200
+        assert data["offset"] == 0
+        assert data["total_filtered"] >= 200
+
+    def test_marketplace_pagination(self, client):
+        response = client.get("/integrations/marketplace?provider=n8n&limit=15&offset=10")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["returned"] == 15
+        assert data["offset"] == 10
+        assert data["next_offset"] == 25
+        assert len(data["connectors"]) == 15
+        assert all(row["provider"] == "n8n" for row in data["connectors"])
 
     def test_marketplace_search(self, client):
         response = client.get("/integrations/marketplace?search=hubspot&limit=20")
@@ -55,6 +67,15 @@ class TestIntegrationsAPI:
         assert "native" in provider_keys
         assert "n8n" in provider_keys
         assert data["total_visible"] >= 200
+
+    def test_marketplace_summary(self, client):
+        response = client.get("/integrations/marketplace/summary?provider=all")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_filtered"] >= 200
+        assert isinstance(data["providers"], list)
+        assert any(row["key"] == "n8n" for row in data["providers"])
+        assert isinstance(data["categories"], list)
 
     def test_marketplace_connector_detail(self, client):
         response = client.get("/integrations/marketplace/connectors/n8n")

@@ -4,6 +4,7 @@ Integrations API endpoints.
 GET  /integrations/catalog         - List available connectors and categories
 GET  /integrations/marketplace     - List 200+ connector marketplace entries
 GET  /integrations/marketplace/providers - List marketplace provider metadata
+GET  /integrations/marketplace/summary - List marketplace counts by provider/category
 GET  /integrations/marketplace/connectors/{connector_key} - Get connector detail
 GET  /integrations/marketplace/stats - Marketplace metadata
 POST /integrations/{name}/connect  - Initialize/authenticate connector
@@ -40,6 +41,7 @@ async def get_catalog(service: IntegrationService = Depends(get_service)):
 @router.get("/marketplace")
 async def get_marketplace_catalog(
     limit: int = Query(default=200, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
     search: str = Query(default=""),
     provider: str = Query(default="all"),
     category: str = Query(default=""),
@@ -48,6 +50,7 @@ async def get_marketplace_catalog(
     """List connector marketplace templates (snapshot)."""
     return service.list_marketplace_catalog(
         limit=limit,
+        offset=offset,
         search=search or None,
         provider=provider or "all",
         category=category or None,
@@ -60,6 +63,21 @@ async def get_marketplace_providers(
 ):
     """List provider metadata for connector marketplace filters."""
     return service.list_marketplace_providers()
+
+
+@router.get("/marketplace/summary")
+async def get_marketplace_summary(
+    search: str = Query(default=""),
+    provider: str = Query(default="all"),
+    category: str = Query(default=""),
+    service: IntegrationService = Depends(get_service),
+):
+    """Return marketplace counts grouped by provider and category."""
+    return service.get_marketplace_summary(
+        search=search or None,
+        provider=provider or "all",
+        category=category or None,
+    )
 
 
 @router.get("/marketplace/connectors/{connector_key}")

@@ -35,6 +35,7 @@ class IntegrationService:
     def list_marketplace_catalog(
         self,
         limit: int = 200,
+        offset: int = 0,
         search: Optional[str] = None,
         provider: Optional[str] = None,
         category: Optional[str] = None,
@@ -42,28 +43,22 @@ class IntegrationService:
         requested_provider = (provider or "all").strip().lower()
         requested_category = (category or "").strip().lower()
 
-        rows: list[dict[str, Any]] = []
-        if requested_provider in {"all", "native"}:
-            rows.extend(
-                self._list_native_marketplace(
-                    search=search,
-                    category=requested_category or None,
-                )
-            )
-        if requested_provider in {"all", "n8n", "n8n_snapshot"}:
-            rows.extend(
-                list_n8n_connectors(
-                    limit=limit,
-                    search=search,
-                    category=requested_category or None,
-                )
-            )
-
-        max_rows = max(1, min(limit, len(rows)))
-        clipped = rows[:max_rows]
+        rows = self._collect_marketplace_rows(
+            search=search,
+            provider=requested_provider,
+            category=requested_category or None,
+        )
+        safe_offset = max(0, offset)
+        safe_limit = max(1, limit)
+        clipped = rows[safe_offset : safe_offset + safe_limit]
+        next_offset = safe_offset + len(clipped)
         return {
             "connectors": clipped,
             "returned": len(clipped),
+            "offset": safe_offset,
+            "next_offset": next_offset,
+            "has_more": next_offset < len(rows),
+            "total_filtered": len(rows),
             "search": search or "",
             "provider": requested_provider,
             "category": requested_category,
@@ -73,6 +68,50 @@ class IntegrationService:
                 "available_providers": ["all", "native", "n8n"],
                 **n8n_catalog_stats(),
             },
+        }
+
+    def get_marketplace_summary(
+        self,
+        search: Optional[str] = None,
+        provider: Optional[str] = None,
+        category: Optional[str] = None,
+    ) -> dict[str, Any]:
+        requested_provider = (provider or "all").strip().lower()
+        requested_category = (category or "").strip().lower()
+        rows = self._collect_marketplace_rows(
+            search=search,
+            provider=requested_provider,
+            category=requested_category or None,
+        )
+        provider_counts: dict[str, int] = {}
+        category_counts: dict[str, int] = {}
+        for row in rows:
+            provider_key = row.get("provider") or "unknown"
+            provider_counts[provider_key] = provider_counts.get(provider_key, 0) + 1
+            category_key = row.get("category") or "other"
+            category_counts[category_key] = category_counts.get(category_key, 0) + 1
+
+        top_categories = sorted(
+            (
+                {"key": key, "count": count}
+                for key, count in category_counts.items()
+            ),
+            key=lambda item: item["count"],
+            reverse=True,
+        )
+        return {
+            "provider": requested_provider,
+            "category": requested_category,
+            "search": search or "",
+            "total_filtered": len(rows),
+            "providers": sorted(
+                (
+                    {"key": key, "count": count}
+                    for key, count in provider_counts.items()
+                ),
+                key=lambda item: item["key"],
+            ),
+            "categories": top_categories,
         }
 
     def list_marketplace_providers(self) -> dict[str, Any]:
@@ -168,6 +207,30 @@ class IntegrationService:
                     "base_url": connector.get("base_url"),
                     "source_url": None,
                 }
+            )
+        return rows
+
+    def _collect_marketplace_rows(
+        self,
+        search: Optional[str] = None,
+        provider: str = "all",
+        category: Optional[str] = None,
+    ) -> list[dict[str, Any]]:
+        rows: list[dict[str, Any]] = []
+        if provider in {"all", "native"}:
+            rows.extend(
+                self._list_native_marketplace(
+                    search=search,
+                    category=category,
+                )
+            )
+        if provider in {"all", "n8n", "n8n_snapshot"}:
+            rows.extend(
+                list_n8n_connectors(
+                    limit=5000,
+                    search=search,
+                    category=category,
+                )
             )
         return rows
 

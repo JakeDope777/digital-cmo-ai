@@ -241,6 +241,8 @@ section{padding:100px 40px}
 .marketplace-detail p{margin:0 0 8px;color:#94a3b8;font-size:12px;line-height:1.6}
 .market-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .market-chip{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);font-size:11px;color:#cbd5e1}
+.market-summary{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.load-more-row{display:flex;justify-content:center;margin-top:12px}
 
 /* ── Live integrations block ── */
 .mod-live-box{margin-top:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:18px}
@@ -619,6 +621,10 @@ Are you using AI to go faster, or to think better?
     <div class="reveal"><p style="font-size:12px;color:#475569;letter-spacing:.1em;text-transform:uppercase;font-weight:600">Connects with your existing stack</p></div>
     <div class="int-grid marketplace reveal" id="marketplaceGrid"></div>
     <p class="reveal" id="marketplaceNote" style="margin-top:16px;font-size:12px;color:#334155">Loading connector marketplace...</p>
+    <div class="market-summary reveal" id="marketplaceSummary"></div>
+    <div class="load-more-row reveal">
+      <button class="live-btn ghost" id="loadMoreConnectorsBtn" onclick="loadMoreMarketplace()">Load More Connectors</button>
+    </div>
     <div class="marketplace-detail hidden reveal" id="marketplaceDetail"></div>
   </div>
 </section>
@@ -902,16 +908,24 @@ let marketplaceConnectors = [];
 let coreStatusMap = {};
 let coreConnectorKeys = new Set();
 let marketplaceStats = null;
+let marketplaceSummary = null;
 let marketplaceProvider = 'all';
 let marketplaceCategory = '';
+let marketplaceOffset = 0;
+let marketplaceHasMore = false;
+let marketplaceTotalFiltered = 0;
+const marketplacePageSize = 120;
 let selectedMarketplaceKey = '';
 let selectedMarketplaceProvider = '';
+let searchDebounceTimer = null;
 
 const connectorSearchInput = document.getElementById('connectorSearchInput');
 const providerFilterInput = document.getElementById('providerFilterInput');
 const categoryFilterInput = document.getElementById('categoryFilterInput');
 const marketplaceGrid = document.getElementById('marketplaceGrid');
 const marketplaceDetail = document.getElementById('marketplaceDetail');
+const marketplaceSummaryEl = document.getElementById('marketplaceSummary');
+const loadMoreConnectorsBtn = document.getElementById('loadMoreConnectorsBtn');
 
 function connectorPillClass(key) {
   if (!coreConnectorKeys.has(key)) return '';
@@ -926,22 +940,19 @@ function renderMarketplacePills() {
   const note = document.getElementById('marketplaceNote');
   if (!marketplaceGrid) return;
 
-  const query = (connectorSearchInput?.value || '').trim().toLowerCase();
-  const filtered = marketplaceConnectors.filter((c) => {
-    if (!query) return true;
-    return c.name.toLowerCase().includes(query) || c.key.toLowerCase().includes(query);
-  });
-
-  marketplaceGrid.innerHTML = filtered
+  marketplaceGrid.innerHTML = marketplaceConnectors
     .map((row) => {
       const isActive = row.key === selectedMarketplaceKey && row.provider === selectedMarketplaceProvider;
       return `<span class="int-pill ${connectorPillClass(row.key)} marketplace-pill ${isActive ? 'active' : ''}" data-key="${row.key}" data-provider="${row.provider}" title="${row.key} · ${row.provider}">${row.name}</span>`;
     })
     .join('');
 
-  if (note && marketplaceStats) {
+  if (note) {
     const scope = [marketplaceProvider, marketplaceCategory].filter(Boolean).join(' / ');
-    note.textContent = `Showing ${filtered.length} connectors (${scope || 'all'}) from a ${marketplaceStats.snapshot_connectors}+ catalog snapshot (source reports ${marketplaceStats.source_total_connectors} integrations). n8n is one native connector in the core set.`;
+    const sourceText = marketplaceStats
+      ? `Source snapshot ${marketplaceStats.snapshot_connectors}+ (reports ${marketplaceStats.source_total_connectors} integrations).`
+      : '';
+    note.textContent = `Loaded ${marketplaceConnectors.length} of ${marketplaceTotalFiltered || marketplaceConnectors.length} connectors (${scope || 'all'}). ${sourceText} n8n is one native connector in the core set.`;
   }
 }
 
@@ -981,12 +992,24 @@ async function fetchMarketplaceDetail(connectorKey, provider) {
   }
 }
 
-function updateCategoryOptions(rows) {
+function renderMarketplaceSummary(summary) {
+  if (!marketplaceSummaryEl) return;
+  const providerRows = summary?.providers || [];
+  const categoryRows = (summary?.categories || []).slice(0, 6);
+  const chips = [
+    `<span class="market-chip">Filtered: ${summary?.total_filtered || 0}</span>`,
+    ...providerRows.map((row) => `<span class="market-chip">${row.key}: ${row.count}</span>`),
+    ...categoryRows.map((row) => `<span class="market-chip">${row.key}: ${row.count}</span>`),
+  ];
+  marketplaceSummaryEl.innerHTML = chips.join('');
+}
+
+function updateCategoryOptions(summary) {
   if (!categoryFilterInput) return;
   const selected = categoryFilterInput.value || '';
-  const categories = [...new Set((rows || []).map((row) => row.category).filter(Boolean))];
-  if (selected) categories.push(selected);
-  categories.sort();
+  const summaryCategories = (summary?.categories || []).map((row) => row.key);
+  const categories = [...new Set(summaryCategories)];
+  if (selected && !categories.includes(selected)) categories.push(selected);
   categoryFilterInput.innerHTML = [
     '<option value="">All categories</option>',
     ...categories.map((category) => `<option value="${category}">${category}</option>`),
@@ -994,27 +1017,97 @@ function updateCategoryOptions(rows) {
   categoryFilterInput.value = selected;
 }
 
+function buildMarketplaceParams(offsetValue = 0, limitValue = marketplacePageSize) {
+  const params = new URLSearchParams({
+    limit: String(limitValue),
+    offset: String(offsetValue),
+    provider: marketplaceProvider || 'all',
+  });
+  if (marketplaceCategory) params.set('category', marketplaceCategory);
+  const search = (connectorSearchInput?.value || '').trim();
+  if (search) params.set('search', search);
+  return params;
+}
+
+function renderLoadMoreState() {
+  if (!loadMoreConnectorsBtn) return;
+  if (marketplaceTotalFiltered <= 0) {
+    loadMoreConnectorsBtn.style.display = 'none';
+    return;
+  }
+  loadMoreConnectorsBtn.style.display = 'inline-flex';
+  loadMoreConnectorsBtn.disabled = !marketplaceHasMore;
+  loadMoreConnectorsBtn.textContent = marketplaceHasMore
+    ? `Load More Connectors (${marketplaceConnectors.length}/${marketplaceTotalFiltered})`
+    : `All Connectors Loaded (${marketplaceConnectors.length})`;
+}
+
+async function fetchMarketplacePage({ reset = false } = {}) {
+  if (reset) {
+    marketplaceOffset = 0;
+    marketplaceHasMore = false;
+    marketplaceTotalFiltered = 0;
+    marketplaceConnectors = [];
+  }
+
+  const data = await apiRequest(`/integrations/marketplace?${buildMarketplaceParams(marketplaceOffset).toString()}`);
+  const rows = data.connectors || [];
+  if (reset) {
+    marketplaceConnectors = rows;
+  } else {
+    const existing = new Set(marketplaceConnectors.map((row) => `${row.provider}:${row.key}`));
+    for (const row of rows) {
+      const dedupeKey = `${row.provider}:${row.key}`;
+      if (!existing.has(dedupeKey)) {
+        existing.add(dedupeKey);
+        marketplaceConnectors.push(row);
+      }
+    }
+  }
+
+  marketplaceOffset = data.next_offset || (marketplaceOffset + rows.length);
+  marketplaceHasMore = Boolean(data.has_more);
+  marketplaceTotalFiltered = data.total_filtered || marketplaceConnectors.length;
+  marketplaceStats = data.stats || marketplaceStats;
+  renderMarketplacePills();
+  renderLoadMoreState();
+  return data;
+}
+
+async function loadMoreMarketplace() {
+  if (!marketplaceHasMore) return;
+  try {
+    setIntegrationStatus('Loading more marketplace connectors…', 'warn');
+    await fetchMarketplacePage({ reset: false });
+    setIntegrationStatus(`Loaded ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace connectors`, 'ok');
+  } catch (error) {
+    setIntegrationStatus(`Load more failed: ${error.message}`, 'err');
+  }
+}
+
 async function refreshIntegrationState() {
   setIntegrationStatus('Syncing native connectors + marketplace catalog…', 'warn');
   try {
     marketplaceProvider = (providerFilterInput?.value || 'all').trim().toLowerCase();
     marketplaceCategory = (categoryFilterInput?.value || '').trim().toLowerCase();
-    const params = new URLSearchParams({
-      limit: '240',
+    const summaryQuery = new URLSearchParams({
       provider: marketplaceProvider || 'all',
     });
-    if (marketplaceCategory) params.set('category', marketplaceCategory);
+    if (marketplaceCategory) summaryQuery.set('category', marketplaceCategory);
+    const search = (connectorSearchInput?.value || '').trim();
+    if (search) summaryQuery.set('search', search);
 
-    const [catalogData, marketplaceData] = await Promise.all([
+    const [catalogData, summaryData] = await Promise.all([
       apiRequest('/integrations/catalog'),
-      apiRequest(`/integrations/marketplace?${params.toString()}`),
+      apiRequest(`/integrations/marketplace/summary?${summaryQuery.toString()}`),
     ]);
 
     const connectors = catalogData.connectors || [];
     coreConnectorKeys = new Set(connectors.map((c) => c.key));
-    marketplaceConnectors = marketplaceData.connectors || [];
-    marketplaceStats = marketplaceData.stats || null;
-    updateCategoryOptions(marketplaceConnectors);
+    marketplaceSummary = summaryData;
+    updateCategoryOptions(marketplaceSummary);
+    renderMarketplaceSummary(marketplaceSummary);
+    const marketplaceData = await fetchMarketplacePage({ reset: true });
 
     const statusEntries = await Promise.all(
       connectors.map(async (connector) => {
@@ -1034,21 +1127,26 @@ async function refreshIntegrationState() {
 
     const moduleDesc = document.getElementById('integrationsModuleDesc');
     if (moduleDesc) {
-      moduleDesc.textContent = `${connectors.length} native connectors + ${marketplaceData.returned} marketplace connectors rendered (${marketplaceProvider}${marketplaceCategory ? `/${marketplaceCategory}` : ''}). ${liveCount} native live, ${demoCount} native demo mode.`;
+      moduleDesc.textContent = `${connectors.length} native connectors + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace loaded (${marketplaceProvider}${marketplaceCategory ? `/${marketplaceCategory}` : ''}). ${liveCount} native live, ${demoCount} native demo mode.`;
     }
 
-    renderMarketplacePills();
     if (marketplaceConnectors.length > 0) {
-      const first = marketplaceConnectors[0];
-      await fetchMarketplaceDetail(first.key, first.provider);
+      const active = marketplaceConnectors.find(
+        (row) => row.key === selectedMarketplaceKey && row.provider === selectedMarketplaceProvider
+      );
+      const target = active || marketplaceConnectors[0];
+      await fetchMarketplaceDetail(target.key, target.provider);
+    } else if (marketplaceDetail) {
+      marketplaceDetail.classList.add('hidden');
+      marketplaceDetail.innerHTML = '';
     }
     renderIntegrationRun([
       { name: 'Native', status: `${connectors.length} connectors` },
-      { name: 'Marketplace', status: `${marketplaceData.returned} shown` },
+      { name: 'Marketplace', status: `${marketplaceConnectors.length}/${marketplaceTotalFiltered} loaded` },
       { name: 'Native Live', status: `${liveCount} authenticated` },
       { name: 'Native Demo', status: `${demoCount} fallback` },
     ]);
-    setIntegrationStatus(`Sync complete · ${connectors.length} native + ${marketplaceData.returned} marketplace`, 'ok');
+    setIntegrationStatus(`Sync complete · ${connectors.length} native + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace`, 'ok');
   } catch (error) {
     setIntegrationStatus(`Sync failed: ${error.message}. Check API URL/CORS/server.`, 'err');
     renderIntegrationRun([{ name: 'Error', status: 'Unable to load integrations catalog' }]);
@@ -1086,8 +1184,14 @@ async function triggerN8NWorkflow() {
 
 window.refreshIntegrationState = refreshIntegrationState;
 window.triggerN8NWorkflow = triggerN8NWorkflow;
+window.loadMoreMarketplace = loadMoreMarketplace;
 if (connectorSearchInput) {
-  connectorSearchInput.addEventListener('input', renderMarketplacePills);
+  connectorSearchInput.addEventListener('input', () => {
+    if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = window.setTimeout(() => {
+      refreshIntegrationState();
+    }, 350);
+  });
 }
 if (providerFilterInput) {
   providerFilterInput.addEventListener('change', refreshIntegrationState);
