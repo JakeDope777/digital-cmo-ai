@@ -173,6 +173,7 @@ All configuration is managed through environment variables. Copy `backend/.env.e
 | `GOOGLE_ADS_CLIENT_ID` | No | Google Ads integration |
 | `GOOGLE_ANALYTICS_PROPERTY_ID` | No | Google Analytics integration |
 | `LINKEDIN_CLIENT_ID` | No | LinkedIn integration |
+| `N8N_BASE_URL` / `N8N_API_KEY` | No | n8n workflow and webhook integration |
 
 Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeholder responses for all AI-powered features. All integration connectors also fall back to demo data when their respective API keys are not configured.
 

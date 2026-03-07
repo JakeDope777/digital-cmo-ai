@@ -9,6 +9,7 @@ from app.modules.integrations.sendgrid_connector import SendGridConnector
 from app.modules.integrations.google_ads import GoogleAdsConnector
 from app.modules.integrations.google_analytics import GoogleAnalyticsConnector
 from app.modules.integrations.linkedin import LinkedInConnector
+from app.modules.integrations.n8n import N8NConnector
 
 
 class TestRateLimiter:
@@ -131,3 +132,32 @@ class TestLinkedInConnector:
         connector = LinkedInConnector()
         result = await connector.get_post_analytics("post-123")
         assert result["demo"] is True
+
+
+class TestN8NConnector:
+    """Tests for n8n connector in demo mode and configured mode."""
+
+    @pytest.mark.asyncio
+    async def test_authenticate_demo_without_config(self):
+        connector = N8NConnector()
+        await connector.authenticate()
+        assert connector._is_authenticated is False
+        assert connector.demo_mode is True
+
+    @pytest.mark.asyncio
+    async def test_authenticate_with_webhook_path(self):
+        connector = N8NConnector(
+            base_url="https://n8n.example.com",
+            default_webhook_path="/webhook/demo",
+        )
+        await connector.authenticate()
+        assert connector._is_authenticated is True
+        assert connector.demo_mode is False
+
+    @pytest.mark.asyncio
+    async def test_trigger_workflow_demo(self):
+        connector = N8NConnector()
+        result = await connector.trigger_workflow(payload={"hello": "world"})
+        assert result["demo"] is True
+        assert result["status"] == "triggered"
+        assert "execution_id" in result

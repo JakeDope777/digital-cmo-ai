@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 
 from .core.config import settings
 from .db.session import init_db
-from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth
+from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth, integrations
 
 
 @asynccontextmanager
@@ -59,6 +59,7 @@ app.include_router(analytics.router)
 app.include_router(memory.router)
 app.include_router(billing.router)
 app.include_router(growth.router)
+app.include_router(integrations.router)
 
 
 @app.get("/api/health", tags=["Health"])

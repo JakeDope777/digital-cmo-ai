@@ -2,7 +2,7 @@
 Integrations & Connectors Module
 =================================
 
-Provides unified API connectors for 20 major marketing, advertising,
+Provides unified API connectors for 21 major marketing, advertising,
 CRM, analytics, e-commerce, SEO, communication, and payment platforms.
 
 Each connector inherits from ConnectorInterface and supports:
@@ -51,6 +51,7 @@ from .stripe import StripeConnector
 # --- Marketing Automation ---
 from .activecampaign import ActiveCampaignConnector
 from .klaviyo import KlaviyoConnector
+from .n8n import N8NConnector
 
 # --- SEO Tools ---
 from .semrush import SEMrushConnector
@@ -97,6 +98,7 @@ class ConnectorRegistry:
         # Marketing Automation
         "activecampaign": ActiveCampaignConnector,
         "klaviyo": KlaviyoConnector,
+        "n8n": N8NConnector,
         # SEO
         "semrush": SEMrushConnector,
         # Communication
@@ -111,7 +113,7 @@ class ConnectorRegistry:
         "crm": ["hubspot", "salesforce", "zoho_crm"],
         "analytics": ["google_analytics", "mixpanel"],
         "ecommerce_payments": ["shopify", "stripe"],
-        "marketing_automation": ["activecampaign", "klaviyo"],
+        "marketing_automation": ["activecampaign", "klaviyo", "n8n"],
         "seo": ["semrush"],
         "communication": ["slack", "twilio"],
     }
@@ -201,6 +203,7 @@ __all__ = [
     # Marketing Automation
     "ActiveCampaignConnector",
     "KlaviyoConnector",
+    "N8NConnector",
     # SEO
     "SEMrushConnector",
     # Communication

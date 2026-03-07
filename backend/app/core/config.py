@@ -100,6 +100,10 @@ class Settings(BaseSettings):
     ACTIVECAMPAIGN_API_KEY: Optional[str] = None
     ACTIVECAMPAIGN_ACCOUNT_URL: Optional[str] = None
     KLAVIYO_API_KEY: Optional[str] = None
+    N8N_BASE_URL: str = "http://localhost:5678"
+    N8N_API_KEY: Optional[str] = None
+    N8N_DEFAULT_WEBHOOK_URL: Optional[str] = None
+    N8N_DEFAULT_WEBHOOK_PATH: Optional[str] = None
 
     # SEO Tools
     SEMRUSH_API_KEY: Optional[str] = None

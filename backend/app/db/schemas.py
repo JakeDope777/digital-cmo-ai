@@ -356,6 +356,28 @@ class CRMResponse(BaseModel):
     logs: Optional[list[str]] = None
 
 
+# ── Integrations ─────────────────────────────────────────────────────
+
+class IntegrationConnectRequest(BaseModel):
+    credentials: Optional[dict[str, Any]] = None
+
+
+class IntegrationActionRequest(BaseModel):
+    action: Optional[str] = None
+    payload: Optional[dict[str, Any]] = None
+    endpoint: Optional[str] = None
+    method: str = "GET"
+    params: Optional[dict[str, Any]] = None
+    data: Optional[dict[str, Any]] = None
+    credentials: Optional[dict[str, Any]] = None
+
+
+class IntegrationResponse(BaseModel):
+    connector: str
+    status: str
+    details: Optional[dict[str, Any]] = None
+
+
 # ── Analytics & Reporting ─────────────────────────────────────────────
 
 class DashboardRequest(BaseModel):
