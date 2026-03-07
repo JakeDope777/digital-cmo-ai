@@ -3,6 +3,8 @@ Integrations API endpoints.
 
 GET  /integrations/catalog         - List available connectors and categories
 GET  /integrations/marketplace     - List 200+ connector marketplace entries
+GET  /integrations/marketplace/providers - List marketplace provider metadata
+GET  /integrations/marketplace/connectors/{connector_key} - Get connector detail
 GET  /integrations/marketplace/stats - Marketplace metadata
 POST /integrations/{name}/connect  - Initialize/authenticate connector
 POST /integrations/{name}/test     - Test connector connectivity
@@ -50,6 +52,32 @@ async def get_marketplace_catalog(
         provider=provider or "all",
         category=category or None,
     )
+
+
+@router.get("/marketplace/providers")
+async def get_marketplace_providers(
+    service: IntegrationService = Depends(get_service),
+):
+    """List provider metadata for connector marketplace filters."""
+    return service.list_marketplace_providers()
+
+
+@router.get("/marketplace/connectors/{connector_key}")
+async def get_marketplace_connector_detail(
+    connector_key: str,
+    provider: str = Query(default="all"),
+    service: IntegrationService = Depends(get_service),
+):
+    """Get marketplace connector details for UI drawer and demo actions."""
+    try:
+        return service.get_marketplace_connector_detail(
+            connector_key=connector_key,
+            provider=provider,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.get("/marketplace/stats")

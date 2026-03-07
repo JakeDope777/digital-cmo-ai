@@ -47,6 +47,23 @@ class TestIntegrationsAPI:
         assert all(row["provider"] == "n8n" for row in data["connectors"])
         assert all(row["category"] == "triggers" for row in data["connectors"])
 
+    def test_marketplace_providers(self, client):
+        response = client.get("/integrations/marketplace/providers")
+        assert response.status_code == 200
+        data = response.json()
+        provider_keys = {item["key"] for item in data["providers"]}
+        assert "native" in provider_keys
+        assert "n8n" in provider_keys
+        assert data["total_visible"] >= 200
+
+    def test_marketplace_connector_detail(self, client):
+        response = client.get("/integrations/marketplace/connectors/n8n")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["key"] == "n8n"
+        assert "suggested_actions" in data
+        assert "trigger_workflow" in data["suggested_actions"]
+
     def test_n8n_trigger_workflow_demo(self, client):
         response = client.post(
             "/integrations/n8n/action",

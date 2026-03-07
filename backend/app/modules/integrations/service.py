@@ -75,6 +75,68 @@ class IntegrationService:
             },
         }
 
+    def list_marketplace_providers(self) -> dict[str, Any]:
+        native_rows = self._list_native_marketplace()
+        n8n_rows = list_n8n_connectors(limit=5000)
+        native_categories = sorted({row["category"] for row in native_rows if row.get("category")})
+        n8n_categories = sorted({row["category"] for row in n8n_rows if row.get("category")})
+        return {
+            "providers": [
+                {
+                    "key": "native",
+                    "name": "Native Connectors",
+                    "count": len(native_rows),
+                    "categories": native_categories,
+                },
+                {
+                    "key": "n8n",
+                    "name": "n8n Templates",
+                    "count": len(n8n_rows),
+                    "categories": n8n_categories,
+                    "source": n8n_catalog_stats(),
+                },
+            ],
+            "total_visible": len(native_rows) + len(n8n_rows),
+        }
+
+    def get_marketplace_connector_detail(
+        self,
+        connector_key: str,
+        provider: Optional[str] = None,
+    ) -> dict[str, Any]:
+        requested_provider = (provider or "all").strip().lower()
+        key = (connector_key or "").strip().lower()
+        if not key:
+            raise ValueError("Connector key is required.")
+
+        matches: list[dict[str, Any]] = []
+        if requested_provider in {"all", "native"}:
+            matches.extend(
+                [row for row in self._list_native_marketplace() if row["key"].lower() == key]
+            )
+        if requested_provider in {"all", "n8n", "n8n_snapshot"}:
+            matches.extend(
+                [row for row in list_n8n_connectors(limit=5000) if row["key"].lower() == key]
+            )
+
+        if not matches:
+            raise ValueError(f"Unknown marketplace connector '{connector_key}'.")
+
+        primary = matches[0]
+        native_variant = next((row for row in matches if row["provider"] == "native"), None)
+        n8n_variant = next((row for row in matches if row["provider"] == "n8n"), None)
+        return {
+            "key": key,
+            "display_name": primary["name"],
+            "requested_provider": requested_provider,
+            "providers_available": sorted({row["provider"] for row in matches}),
+            "category": primary.get("category"),
+            "native_connector": native_variant,
+            "n8n_template": n8n_variant,
+            "suggested_actions": self._suggested_actions(key, providers=matches),
+            "variants": matches,
+        }
+
     def _list_native_marketplace(
         self,
         search: Optional[str] = None,
@@ -102,6 +164,8 @@ class IntegrationService:
                     "provider": "native",
                     "type": "connector_native",
                     "category": connector_category,
+                    "class": connector.get("class"),
+                    "base_url": connector.get("base_url"),
                     "source_url": None,
                 }
             )
@@ -112,6 +176,25 @@ class IntegrationService:
         if key == "n8n":
             return "n8n"
         return " ".join(part.upper() if part == "crm" else part.capitalize() for part in key.split("_"))
+
+    @staticmethod
+    def _suggested_actions(key: str, providers: list[dict[str, Any]]) -> list[str]:
+        suggestions: list[str] = []
+        if any(row.get("provider") == "native" for row in providers):
+            suggestions.extend(["connect", "test", "status", "action"])
+        if key == "n8n":
+            suggestions.extend(
+                [
+                    "trigger_workflow",
+                    "send_event",
+                    "sync_contact",
+                    "sync_campaign_metrics",
+                ]
+            )
+        if any(row.get("provider") == "n8n" for row in providers):
+            suggestions.append("create workflow in n8n")
+        # preserve order, remove duplicates
+        return list(dict.fromkeys(suggestions))
 
     def _resolve(
         self,
