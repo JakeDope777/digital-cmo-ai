@@ -7,11 +7,6 @@ import type {
   DashboardData,
   AnalysisResponse,
   CreativeResponse,
-  RestaurantControlTowerResponse,
-  RestaurantFinanceMarginResponse,
-  RestaurantIngestResponse,
-  RestaurantInventoryAlertsResponse,
-  RestaurantRecommendationsResponse,
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
@@ -351,75 +346,6 @@ export const growthService = {
       conversion_first_value_from_verified: number;
       conversion_return_from_first_value: number;
     };
-  },
-};
-
-// ── TablePilot Restaurant Ops ──────────────────────────────
-
-export const restaurantService = {
-  async ingestPosCsv(file: File): Promise<RestaurantIngestResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const { data } = await api.post<RestaurantIngestResponse>('/restaurant/ingest/pos-csv', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
-  },
-
-  async ingestPurchasesCsv(file: File): Promise<RestaurantIngestResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const { data } = await api.post<RestaurantIngestResponse>('/restaurant/ingest/purchases-csv', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
-  },
-
-  async ingestLaborCsv(file: File): Promise<RestaurantIngestResponse> {
-    const formData = new FormData();
-    formData.append('file', file);
-    const { data } = await api.post<RestaurantIngestResponse>('/restaurant/ingest/labor-csv', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
-    return data;
-  },
-
-  async ingestRecipes(recipes: Array<{
-    dish_name: string;
-    selling_price?: number;
-    portion_price?: number;
-    ingredients: Array<{ name: string; quantity: number; unit_cost: number }>;
-  }>): Promise<RestaurantIngestResponse> {
-    const { data } = await api.post<RestaurantIngestResponse>('/restaurant/ingest/recipes', { recipes });
-    return data;
-  },
-
-  async getControlTowerDaily(date: string): Promise<RestaurantControlTowerResponse> {
-    const { data } = await api.get<RestaurantControlTowerResponse>('/restaurant/control-tower/daily', {
-      params: { date },
-    });
-    return data;
-  },
-
-  async getFinanceMargin(fromDate: string, toDate: string): Promise<RestaurantFinanceMarginResponse> {
-    const { data } = await api.get<RestaurantFinanceMarginResponse>('/restaurant/finance/margin', {
-      params: { from: fromDate, to: toDate },
-    });
-    return data;
-  },
-
-  async getInventoryAlerts(date: string): Promise<RestaurantInventoryAlertsResponse> {
-    const { data } = await api.get<RestaurantInventoryAlertsResponse>('/restaurant/inventory/alerts', {
-      params: { date },
-    });
-    return data;
-  },
-
-  async getDailyRecommendations(date: string): Promise<RestaurantRecommendationsResponse> {
-    const { data } = await api.get<RestaurantRecommendationsResponse>('/restaurant/recommendations/daily', {
-      params: { date },
-    });
-    return data;
   },
 };
 

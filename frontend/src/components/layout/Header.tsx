@@ -26,7 +26,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         </button>
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Control Center</p>
-          <h2 className="text-sm sm:text-base font-semibold text-slate-900">TablePilot AI Manager</h2>
+          <h2 className="text-sm sm:text-base font-semibold text-slate-900">Digital CMO AI Buddy</h2>
         </div>
       </div>
       <div className="flex items-center gap-4">
