@@ -14,12 +14,13 @@ export default function LoginPage() {
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (loading) return;
     setError('');
     setLoading(true);
 
     try {
-      await login(email, password);
-      await trackEvent('login_completed');
+      await login(email.trim(), password);
+      await trackEvent('login_completed', { method: 'password' });
       navigate('/app/dashboard');
     } catch (err) {
       if (isAxiosError(err)) {
@@ -29,7 +30,7 @@ export default function LoginPage() {
           return;
         }
       }
-      setError('Login failed. Please check your credentials.');
+      setError('Login failed. Please check your credentials or try again in a minute.');
     } finally {
       setLoading(false);
     }

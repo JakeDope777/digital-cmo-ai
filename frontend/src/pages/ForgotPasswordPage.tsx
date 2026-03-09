@@ -6,15 +6,19 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [isError, setIsError] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (loading) return;
     setLoading(true);
     setMessage('');
+    setIsError(false);
     try {
-      const response = await authService.forgotPassword(email);
+      const response = await authService.forgotPassword(email.trim());
       setMessage(response.message);
     } catch {
+      setIsError(true);
       setMessage('Unable to send reset email right now.');
     } finally {
       setLoading(false);
@@ -46,7 +50,11 @@ export default function ForgotPasswordPage() {
             {loading ? 'Sending...' : 'Send reset link'}
           </button>
         </form>
-        {message && <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700">{message}</p>}
+        {message && (
+          <p className={`mt-4 rounded-lg px-3 py-2 text-sm ${isError ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-slate-50 text-slate-700'}`}>
+            {message}
+          </p>
+        )}
         <p className="mt-4 text-sm text-slate-600">
           Back to{' '}
           <Link to="/login" className="font-semibold text-orange-600 hover:text-orange-700">

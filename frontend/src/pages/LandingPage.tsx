@@ -817,9 +817,20 @@ export default function LandingPage() {
           </form>
 
           {message && (
-            <p className={`mt-4 text-sm font-medium ${message.startsWith('Unable') ? 'text-rose-400' : 'text-emerald-400'}`}>
-              {message.startsWith('Unable') ? message : `✓ ${message}`}
-            </p>
+            <div className="mt-4 space-y-2">
+              <p className={`text-sm font-medium ${waitlistStatus === 'error' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                {waitlistStatus === 'error' ? message : `✓ ${message}`}
+              </p>
+              {waitlistStatus === 'error' && (
+                <button
+                  type="button"
+                  onClick={() => setMessage('')}
+                  className="text-xs text-slate-400 underline hover:text-slate-200"
+                >
+                  Dismiss and try again
+                </button>
+              )}
+            </div>
           )}
         </div>
       </section>

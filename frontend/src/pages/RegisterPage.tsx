@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { trackEvent } from '../services/analytics';
+import { trackOnboardingStep } from '../services/analytics';
 
 const BENEFITS = [
   'AI chat, analysis & creative studio — free',
@@ -25,8 +26,8 @@ export default function RegisterPage() {
 
   const onSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (loading) return;
     setError('');
-    await trackEvent('signup_started');
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
@@ -37,13 +38,21 @@ export default function RegisterPage() {
       return;
     }
 
+    await trackOnboardingStep('signup_started', { method: 'email' });
     setLoading(true);
     try {
-      await signup(email, password);
-      await trackEvent('signup_completed');
+      await signup(email.trim(), password);
+      await trackOnboardingStep('signup_completed', { method: 'email' });
       navigate('/verify-email?pending=1');
-    } catch {
-      setError('Signup failed. This email may already have an account.');
+    } catch (err) {
+      if (isAxiosError(err)) {
+        const detail = (err.response?.data as { detail?: string } | undefined)?.detail;
+        if (detail) {
+          setError(detail);
+          return;
+        }
+      }
+      setError('Signup failed. This email may already have an account, or the service is temporarily unavailable.');
     } finally {
       setLoading(false);
     }

@@ -25,6 +25,18 @@ function readStoredState(): DemoModeState {
     return { enabled: false, source: null };
   }
 
+  // Check URL param synchronously so ProtectedRoute sees demo mode on first render
+  const search = new URLSearchParams(window.location.search);
+  if (search.get('demo') === '1') {
+    const state: DemoModeState = {
+      enabled: true,
+      source: 'query',
+      enabled_at: new Date().toISOString(),
+    };
+    persistState(state);
+    return state;
+  }
+
   try {
     const raw = localStorage.getItem(DEMO_MODE_STATE_KEY);
     if (raw) {

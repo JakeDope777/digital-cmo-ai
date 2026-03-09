@@ -51,7 +51,7 @@ export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gradient-to-b from-orange-50 via-amber-50 to-slate-100">
+    <div className="flex h-screen overflow-hidden bg-slate-950">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
         <DemoBanner />

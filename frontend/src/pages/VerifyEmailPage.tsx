@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../services/api';
-import { trackEvent } from '../services/analytics';
+import { trackEvent, trackOnboardingStep } from '../services/analytics';
 import { useAuth } from '../context/AuthContext';
 
 type VerifyStatus = 'idle' | 'loading' | 'success' | 'error' | 'expired' | 'already_used';
@@ -53,7 +53,7 @@ export default function VerifyEmailPage() {
         const response = await authService.verifyEmail(token);
         setStatus('success');
         setMessage(response.message || 'Your email is verified. You can now log in.');
-        await trackEvent('verification_completed');
+        await trackOnboardingStep('verification_completed', { method: 'token_link' });
         // Auto-redirect to dashboard after short delay
         setTimeout(() => navigate('/app/dashboard'), 2000);
       } catch (err: unknown) {

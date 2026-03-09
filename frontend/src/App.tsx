@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import BillingPage from './pages/BillingPage';
 import GrowthPage from './pages/GrowthPage';
+import DemoEntryPage from './pages/DemoEntryPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicOnlyRoute from './components/auth/PublicOnlyRoute';
@@ -34,6 +35,7 @@ export default function App() {
       </Route>
 
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/demo" element={<DemoEntryPage />} />
       <Route path="/industries/:slug" element={<IndustryPage />} />
 
       <Route element={<ProtectedRoute />}>
