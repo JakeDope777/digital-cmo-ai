@@ -13,13 +13,19 @@ from ..db.schemas import ChatRequest, ChatResponse
 from ..brain.orchestrator import BrainOrchestrator, LLMClient
 from ..brain.memory_manager import MemoryManager
 from ..core.config import settings
+from ..modules.restaurant_ops import RestaurantOpsModule
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
 # Initialize brain components
-_llm_client = LLMClient(api_key=settings.OPENAI_API_KEY, model=settings.OPENAI_MODEL)
+_llm_client = LLMClient(
+    api_key=settings.OPENAI_API_KEY,
+    model=settings.OPENAI_MODEL,
+    telegram_fallback_bot=settings.TELEGRAM_FALLBACK_BOT,
+)
 _memory_manager = MemoryManager()
 _brain = BrainOrchestrator(llm_client=_llm_client, memory_manager=_memory_manager)
+_brain.register_skill("restaurant_ops", RestaurantOpsModule())
 
 
 def get_brain() -> BrainOrchestrator:
@@ -33,7 +39,7 @@ async def send_message(
     brain: BrainOrchestrator = Depends(get_brain),
 ):
     """
-    Send a message to the Digital CMO AI and receive a response.
+    Send a message to TablePilot AI and receive a response.
 
     The brain will classify the intent, retrieve relevant context,
     and route to the appropriate skill module.

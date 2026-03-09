@@ -50,7 +50,7 @@ class ExportConfig:
     format: str = "pdf"  # "pdf", "csv", "json"
     title: str = "Marketing Analytics Report"
     subtitle: str = ""
-    company_name: str = "Digital CMO AI"
+    company_name: str = "TablePilot AI"
     period: str = "Last 30 Days"
     include_charts: bool = True
     include_insights: bool = True
@@ -483,7 +483,7 @@ class ExportEngine:
                 "personalizations": [
                     {"to": [{"email": r} for r in schedule.recipients]}
                 ],
-                "from": {"email": "reports@digitalcmo.ai", "name": "Digital CMO AI"},
+                "from": {"email": "reports@tablepilot.ai", "name": "TablePilot AI"},
                 "subject": schedule.subject,
                 "content": [
                     {
@@ -492,7 +492,7 @@ class ExportEngine:
                             f"<h2>{schedule.subject}</h2>"
                             f"<p>Please find your scheduled marketing analytics report attached.</p>"
                             f"<p>Generated: {datetime.now(timezone.utc).strftime('%B %d, %Y %H:%M UTC')}</p>"
-                            f"<p><em>This is an automated report from Digital CMO AI.</em></p>"
+                            f"<p><em>This is an automated report from TablePilot AI.</em></p>"
                         ),
                     }
                 ],

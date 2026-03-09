@@ -43,7 +43,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[radial-gradient(circle_at_bottom_right,_#c7d2fe,_transparent_35%),linear-gradient(180deg,_#ffffff,_#f8fafc)] px-4 py-10">
       <div className="mx-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white/95 p-8 shadow-xl shadow-slate-300/40">
         <h1 className="text-2xl font-bold text-slate-900">Create workspace</h1>
-        <p className="mt-1 text-sm text-slate-600">Set up your CMO AI Buddy account in under a minute.</p>
+        <p className="mt-1 text-sm text-slate-600">Set up your TablePilot AI account in under a minute.</p>
 
         <form className="mt-6 space-y-4" onSubmit={onSubmit}>
           <div>

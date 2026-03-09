@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models for Digital CMO AI.
+SQLAlchemy ORM models for TablePilot AI.
 
 Schema as defined in the specification:
 - users, tokens, usage_logs, contexts, memory_files, api_credentials
@@ -305,3 +305,188 @@ class IntegrationRun(Base):
     error = Column(Text, nullable=True)
     meta_payload = Column("metadata", JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+# --- Restaurant operations tables (TablePilot) ---
+
+
+class RestaurantVenue(Base):
+    __tablename__ = "restaurant_venues"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String, nullable=False)
+    currency = Column(String, default="EUR", nullable=False)
+    timezone = Column(String, default="Europe/Madrid", nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    sales = relationship("RestaurantSale", back_populates="venue")
+    purchases = relationship("RestaurantPurchase", back_populates="venue")
+    labor_shifts = relationship("RestaurantLaborShift", back_populates="venue")
+    recipes = relationship("RestaurantRecipe", back_populates="venue")
+    stock_snapshots = relationship("RestaurantStockSnapshot", back_populates="venue")
+    reviews = relationship("RestaurantReview", back_populates="venue")
+    anomalies = relationship("RestaurantAnomaly", back_populates="venue")
+    recommendations = relationship("RestaurantRecommendation", back_populates="venue")
+
+
+class RestaurantSale(Base):
+    __tablename__ = "restaurant_sales"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    sale_date = Column(String, nullable=False, index=True)
+    channel = Column(String, default="in_store", nullable=False)
+    menu_item = Column(String, nullable=False)
+    quantity = Column(Integer, default=0, nullable=False)
+    covers = Column(Integer, default=0, nullable=False)
+    net_sales = Column(Float, default=0.0, nullable=False)
+    forecast_revenue = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    venue = relationship("RestaurantVenue", back_populates="sales")
+
+
+class RestaurantPurchase(Base):
+    __tablename__ = "restaurant_purchases"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    purchase_date = Column(String, nullable=False, index=True)
+    item_name = Column(String, nullable=False, index=True)
+    supplier = Column(String, nullable=True, index=True)
+    quantity = Column(Float, default=0.0, nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)
+    total_cost = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    venue = relationship("RestaurantVenue", back_populates="purchases")
+
+
+class RestaurantLaborShift(Base):
+    __tablename__ = "restaurant_labor_shifts"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    shift_date = Column(String, nullable=False, index=True)
+    staff_name = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    hours_worked = Column(Float, default=0.0, nullable=False)
+    hourly_rate = Column(Float, default=0.0, nullable=False)
+    labor_cost = Column(Float, default=0.0, nullable=False)
+    scheduled_covers = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    venue = relationship("RestaurantVenue", back_populates="labor_shifts")
+
+
+class RestaurantRecipe(Base):
+    __tablename__ = "restaurant_recipes"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    dish_name = Column(String, nullable=False, index=True)
+    selling_price = Column(Float, default=0.0, nullable=False)
+    portion_price = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    venue = relationship("RestaurantVenue", back_populates="recipes")
+    ingredients = relationship(
+        "RestaurantRecipeIngredient",
+        back_populates="recipe",
+        cascade="all, delete-orphan",
+    )
+
+
+class RestaurantRecipeIngredient(Base):
+    __tablename__ = "restaurant_recipe_ingredients"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    recipe_id = Column(String, ForeignKey("restaurant_recipes.id"), nullable=False, index=True)
+    ingredient_name = Column(String, nullable=False)
+    quantity_per_dish = Column(Float, default=0.0, nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    recipe = relationship("RestaurantRecipe", back_populates="ingredients")
+
+
+class RestaurantStockSnapshot(Base):
+    __tablename__ = "restaurant_stock_snapshots"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    snapshot_date = Column(String, nullable=False, index=True)
+    item_name = Column(String, nullable=False, index=True)
+    on_hand_qty = Column(Float, default=0.0, nullable=False)
+    par_level = Column(Float, default=0.0, nullable=False)
+    waste_qty = Column(Float, default=0.0, nullable=False)
+    theoretical_usage = Column(Float, default=0.0, nullable=False)
+    actual_usage = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    venue = relationship("RestaurantVenue", back_populates="stock_snapshots")
+
+
+class RestaurantReview(Base):
+    __tablename__ = "restaurant_reviews"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    review_date = Column(String, nullable=False, index=True)
+    source = Column(String, default="google", nullable=False)
+    rating = Column(Float, default=0.0, nullable=False)
+    sentiment_score = Column(Float, default=0.0, nullable=False)
+    text = Column(Text, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    venue = relationship("RestaurantVenue", back_populates="reviews")
+
+
+class RestaurantAnomaly(Base):
+    __tablename__ = "restaurant_anomalies"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    anomaly_date = Column(String, nullable=False, index=True)
+    category = Column(String, nullable=False, index=True)
+    severity = Column(String, nullable=False)
+    title = Column(String, nullable=False)
+    why = Column(Text, nullable=False)
+    metric_value = Column(Float, default=0.0, nullable=False)
+    threshold = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    venue = relationship("RestaurantVenue", back_populates="anomalies")
+
+
+class RestaurantRecommendation(Base):
+    __tablename__ = "restaurant_recommendations"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    rec_date = Column(String, nullable=False, index=True)
+    category = Column(String, nullable=False, index=True)
+    title = Column(String, nullable=False)
+    warning = Column(Text, nullable=False)
+    why = Column(Text, nullable=False)
+    next_action = Column(Text, nullable=False)
+    automatable = Column(Boolean, default=False, nullable=False)
+    status = Column(String, default="open", nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    venue = relationship("RestaurantVenue", back_populates="recommendations")

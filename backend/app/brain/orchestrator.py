@@ -1,5 +1,5 @@
 """
-Brain Orchestrator - the central coordinator of Digital CMO AI.
+Brain Orchestrator - the central coordinator of TablePilot AI.
 
 Receives user inputs, determines which module to invoke via the Router,
 assembles context via the Prompt Builder, manages memory via the Memory Manager,
@@ -39,9 +39,15 @@ class LLMClient:
     Replace with actual implementation when API keys are configured.
     """
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gpt-4"):
+    def __init__(
+        self,
+        api_key: Optional[str] = None,
+        model: str = "gpt-4",
+        telegram_fallback_bot: Optional[str] = None,
+    ):
         self.api_key = api_key
         self.model = model
+        self.telegram_fallback_bot = telegram_fallback_bot
         self._client = None
 
     async def generate(self, messages: list[dict] | str) -> str:
@@ -73,11 +79,16 @@ class LLMClient:
         else:
             # Placeholder response for demo / development
             user_msg = messages[-1]["content"] if messages else ""
+            fallback_hint = (
+                f"\n\nFallback option: you can route long-form tasks through Telegram bot {self.telegram_fallback_bot}."
+                if self.telegram_fallback_bot
+                else ""
+            )
             return (
                 f"[Demo Mode] I received your message about: '{user_msg[:100]}...'\n\n"
                 "To enable full AI responses, please configure your OPENAI_API_KEY "
                 "in the .env file. The system has routed your request and is ready "
-                "to process it once an LLM provider is connected."
+                f"to process it once an LLM provider is connected.{fallback_hint}"
             )
 
 

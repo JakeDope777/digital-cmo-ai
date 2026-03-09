@@ -1,10 +1,10 @@
-# Digital CMO AI
+# TablePilot AI
 
 An AI-powered Chief Marketing Officer that plans, executes, and analyses marketing campaigns through a conversational interface. Built with a modular **brain-skills-roles** architecture, the system routes natural-language requests to specialised skill modules while maintaining persistent, multi-layered memory.
 
 ## Architecture Overview
 
-The project follows the architecture defined in the Digital CMO AI specification document and is organised into six core modules coordinated by a central **Brain & Memory** layer.
+The project follows the architecture defined in the TablePilot AI specification document and is organised into six core modules coordinated by a central **Brain & Memory** layer.
 
 | Module | Responsibility |
 |--------|---------------|

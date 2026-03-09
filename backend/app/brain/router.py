@@ -27,6 +27,7 @@ SKILL_CREATIVE_DESIGN = "creative_design"
 SKILL_CRM_CAMPAIGN = "crm_campaign"
 SKILL_ANALYTICS_REPORTING = "analytics_reporting"
 SKILL_INTEGRATIONS = "integrations"
+SKILL_RESTAURANT_OPS = "restaurant_ops"
 SKILL_SYSTEM = "system"
 SKILL_GENERAL = "general"
 
@@ -36,6 +37,7 @@ ALL_SKILLS = [
     SKILL_CRM_CAMPAIGN,
     SKILL_ANALYTICS_REPORTING,
     SKILL_INTEGRATIONS,
+    SKILL_RESTAURANT_OPS,
     SKILL_SYSTEM,
     SKILL_GENERAL,
 ]
@@ -104,6 +106,16 @@ SKILL_EXEMPLARS: dict[str, list[str]] = {
         "Enable two-way sync with Salesforce",
         "Install the Slack notification integration",
     ],
+    SKILL_RESTAURANT_OPS: [
+        "Why was profit weak last week?",
+        "Lunch sales are below forecast, what should I do?",
+        "What should I reorder tomorrow?",
+        "Which shift is inefficient?",
+        "How much waste did we have this week?",
+        "What is margin by dish and channel?",
+        "Why are Google reviews dropping?",
+        "Can I afford one more chef?",
+    ],
     SKILL_SYSTEM: [
         "Change my account settings and preferences",
         "Update my password",
@@ -155,6 +167,11 @@ INTENT_PATTERNS: dict[str, list[str]] = {
     SKILL_INTEGRATIONS: [
         r"\b(connect|integration|api|oauth|google\s*ads|meta\s*ads|"
         r"sendgrid|linkedin|webhook|sync|connector)\b",
+    ],
+    SKILL_RESTAURANT_OPS: [
+        r"\b(restaurant|table|covers|avg\s*check|labor\s*cost|food\s*cost|"
+        r"inventory|waste|supplier|reorder|portion|dish|menu|service|"
+        r"kitchen|gm|shift|payroll|p&l|profit|margin|review|sentiment|complaint)\b",
     ],
     SKILL_SYSTEM: [
         r"\b(settings|account|subscription|token|usage|password|"

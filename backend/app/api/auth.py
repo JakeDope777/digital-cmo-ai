@@ -10,6 +10,13 @@ import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+
+def _utc(dt: datetime) -> datetime:
+    """Return a timezone-aware UTC datetime, adding UTC info to naive values."""
+    if dt.tzinfo is None:
+        return dt.replace(tzinfo=timezone.utc)
+    return dt
+
 from fastapi import APIRouter, Depends, HTTPException, Header, status
 from sqlalchemy.orm import Session
 
@@ -31,6 +38,7 @@ from ..db.schemas import (
     MessageResponse,
 )
 from ..services.emailer import send_email
+from ..services.email_templates import verification_email_html, password_reset_email_html
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -183,7 +191,7 @@ async def reset_password(
     now = datetime.now(timezone.utc)
     if token_record.consumed_at is not None:
         raise HTTPException(status_code=400, detail="Reset token already used")
-    if token_record.expires_at < now:
+    if _utc(token_record.expires_at) < now:
         raise HTTPException(status_code=400, detail="Reset token expired")
 
     user = db.query(models.User).filter(models.User.id == token_record.user_id).first()
@@ -236,7 +244,7 @@ async def verify_email(
     now = datetime.now(timezone.utc)
     if token_record.consumed_at is not None:
         raise HTTPException(status_code=400, detail="Verification token already used")
-    if token_record.expires_at < now:
+    if _utc(token_record.expires_at) < now:
         raise HTTPException(status_code=400, detail="Verification token expired")
 
     user = db.query(models.User).filter(models.User.id == token_record.user_id).first()
@@ -293,8 +301,10 @@ def _send_verification_email(email: str, token: str) -> None:
         body_text=(
             "Welcome to Digital CMO AI.\n\n"
             f"Verify your email by opening:\n{verify_url}\n\n"
-            "If you did not request this, you can ignore this email."
+            "If you did not request this, you can ignore this email.\n"
+            "Link expires in 48 hours."
         ),
+        body_html=verification_email_html(verify_url),
     )
 
 
@@ -306,6 +316,8 @@ def _send_password_reset_email(email: str, token: str) -> None:
         body_text=(
             "We received a request to reset your password.\n\n"
             f"Reset link:\n{reset_url}\n\n"
-            "If you did not request this, you can ignore this email."
+            "If you did not request this, you can ignore this email.\n"
+            "Link expires in 60 minutes."
         ),
+        body_html=password_reset_email_html(reset_url),
     )

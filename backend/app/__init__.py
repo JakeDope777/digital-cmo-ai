@@ -1,2 +1,2 @@
-# Digital CMO AI - Backend Application
+# TablePilot AI - Backend Application
 __version__ = "0.1.0"

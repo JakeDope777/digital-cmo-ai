@@ -5,7 +5,7 @@ Pydantic schemas for API request/response validation.
 from datetime import datetime
 from typing import Optional, Any
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 # ── Auth ──────────────────────────────────────────────────────────────
@@ -51,7 +51,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    new_password: str
+    new_password: str = Field(min_length=8)
 
 
 class VerifyEmailRequest(BaseModel):
@@ -378,6 +378,33 @@ class IntegrationResponse(BaseModel):
     connector: str
     status: str
     details: Optional[dict[str, Any]] = None
+
+
+# ── Restaurant Ops ────────────────────────────────────────────────────
+
+class RecipeIngredientInput(BaseModel):
+    name: str
+    quantity: float
+    unit_cost: float
+
+
+class RecipeInput(BaseModel):
+    dish_name: str
+    selling_price: float
+    portion_price: float = 0.0
+    ingredients: list[RecipeIngredientInput]
+
+
+class RecipeBatchRequest(BaseModel):
+    recipes: list[RecipeInput]
+
+
+class HireScenarioRequest(BaseModel):
+    from_date: str
+    to_date: str
+    additional_weekly_cost: float
+    fixed_cost_per_day: float = 3000.0
+    venue_id: Optional[str] = None
 
 
 # ── Analytics & Reporting ─────────────────────────────────────────────

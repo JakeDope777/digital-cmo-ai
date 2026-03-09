@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # Database
-    DATABASE_URL: str = "sqlite:///./data/digital_cmo.db"
+    DATABASE_URL: str = "sqlite:///./data/tablepilot.db"
 
     # JWT Authentication
     SECRET_KEY: str = "change-me-in-production-use-a-strong-random-key"
@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-4.1-mini"
     OPENAI_BASE_URL: Optional[str] = None
+    TELEGRAM_FALLBACK_BOT: Optional[str] = "@baltazar_loco_bot"
 
     # Vector Database (FAISS)
     VECTOR_DB_PATH: str = "./data/vector_store"
@@ -132,7 +133,7 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
-    SMTP_FROM_EMAIL: str = "no-reply@digital-cmo-ai.local"
+    SMTP_FROM_EMAIL: str = "no-reply@digitalcmo.ai"
     SMTP_USE_TLS: bool = True
 
     # Growth analytics

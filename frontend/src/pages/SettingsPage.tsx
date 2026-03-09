@@ -14,7 +14,7 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h2 className="text-xl font-bold text-gray-900">Settings</h2>
-        <p className="text-sm text-gray-500">Configure your Digital CMO AI instance</p>
+        <p className="text-sm text-gray-500">Configure your TablePilot AI instance</p>
       </div>
 
       {/* API Configuration */}

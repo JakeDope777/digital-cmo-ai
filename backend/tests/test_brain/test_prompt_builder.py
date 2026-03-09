@@ -77,7 +77,7 @@ class TestBasicPromptStructure:
 
     def test_system_instruction_included(self, builder):
         messages = builder.build("Test")
-        assert "Digital CMO AI" in messages[0]["content"]
+        assert ("TablePilot AI" in messages[0]["content"]) or ("Digital CMO AI" in messages[0]["content"])
 
     def test_custom_system_instruction(self):
         custom = "You are a custom assistant."
