@@ -3,7 +3,7 @@ import {
   ArrowUpRight,
   DollarSign,
   Eye,
-  Funnel,
+  Filter,
   Loader2,
   MousePointer,
   RefreshCw,
@@ -229,7 +229,7 @@ export default function DashboardPage() {
             {metrics.email_open_rate.toFixed(1)}% / {metrics.email_click_rate.toFixed(1)}%
           </p>
           <p className="mt-1 inline-flex items-center gap-1 text-xs text-slate-700">
-            <Funnel className="h-3 w-3" /> open to click performance
+            <Filter className="h-3 w-3" /> open to click performance
           </p>
         </article>
       </section>
@@ -250,10 +250,10 @@ export default function DashboardPage() {
         )}
         {funnel && (
           <div className="mt-4 grid gap-2 text-sm text-slate-700 md:grid-cols-2">
-            <p>Visitor -> Signup: {funnel.conversion_signup_from_visitor.toFixed(2)}%</p>
-            <p>Signup -> Verified: {funnel.conversion_verified_from_signup.toFixed(2)}%</p>
-            <p>Verified -> First Value: {funnel.conversion_first_value_from_verified.toFixed(2)}%</p>
-            <p>First Value -> Return: {funnel.conversion_return_from_first_value.toFixed(2)}%</p>
+            <p>Visitor -&gt; Signup: {funnel.conversion_signup_from_visitor.toFixed(2)}%</p>
+            <p>Signup -&gt; Verified: {funnel.conversion_verified_from_signup.toFixed(2)}%</p>
+            <p>Verified -&gt; First Value: {funnel.conversion_first_value_from_verified.toFixed(2)}%</p>
+            <p>First Value -&gt; Return: {funnel.conversion_return_from_first_value.toFixed(2)}%</p>
           </div>
         )}
       </section>
