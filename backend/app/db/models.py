@@ -305,3 +305,152 @@ class IntegrationRun(Base):
     error = Column(Text, nullable=True)
     meta_payload = Column("metadata", JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+# --- TablePilot Restaurant UDM (Week-1 Pilot) ---
+
+
+class RestaurantVenue(Base):
+    __tablename__ = "restaurant_venues"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String, nullable=False)
+    currency = Column(String, default="EUR", nullable=False)
+    timezone = Column(String, default="Europe/Madrid", nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantSale(Base):
+    __tablename__ = "restaurant_sales"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    sale_date = Column(String, nullable=False, index=True)  # YYYY-MM-DD
+    channel = Column(String, nullable=True)
+    menu_item = Column(String, nullable=False)
+    quantity = Column(Integer, default=0, nullable=False)
+    covers = Column(Integer, default=0, nullable=False)
+    net_sales = Column(Float, default=0.0, nullable=False)
+    forecast_revenue = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantPurchase(Base):
+    __tablename__ = "restaurant_purchases"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    purchase_date = Column(String, nullable=False, index=True)  # YYYY-MM-DD
+    item_name = Column(String, nullable=False, index=True)
+    supplier = Column(String, nullable=True)
+    quantity = Column(Float, default=0.0, nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)
+    total_cost = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantLaborShift(Base):
+    __tablename__ = "restaurant_labor_shifts"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    shift_date = Column(String, nullable=False, index=True)  # YYYY-MM-DD
+    staff_name = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    hours_worked = Column(Float, default=0.0, nullable=False)
+    hourly_rate = Column(Float, default=0.0, nullable=False)
+    labor_cost = Column(Float, default=0.0, nullable=False)
+    scheduled_covers = Column(Integer, default=0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantRecipe(Base):
+    __tablename__ = "restaurant_recipes"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    dish_name = Column(String, nullable=False, index=True)
+    portion_price = Column(Float, default=0.0, nullable=False)
+    selling_price = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    ingredients = relationship(
+        "RestaurantRecipeIngredient",
+        cascade="all, delete-orphan",
+        lazy="joined",
+    )
+
+
+class RestaurantRecipeIngredient(Base):
+    __tablename__ = "restaurant_recipe_ingredients"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    recipe_id = Column(String, ForeignKey("restaurant_recipes.id"), nullable=False, index=True)
+    ingredient_name = Column(String, nullable=False)
+    quantity_per_dish = Column(Float, default=0.0, nullable=False)
+    unit_cost = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantStockSnapshot(Base):
+    __tablename__ = "restaurant_stock_snapshots"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    snapshot_date = Column(String, nullable=False, index=True)  # YYYY-MM-DD
+    item_name = Column(String, nullable=False, index=True)
+    on_hand_qty = Column(Float, default=0.0, nullable=False)
+    par_level = Column(Float, default=0.0, nullable=False)
+    waste_qty = Column(Float, default=0.0, nullable=False)
+    theoretical_usage = Column(Float, default=0.0, nullable=False)
+    actual_usage = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantReview(Base):
+    __tablename__ = "restaurant_reviews"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    review_date = Column(String, nullable=False, index=True)  # YYYY-MM-DD
+    source = Column(String, default="google", nullable=False)
+    rating = Column(Float, default=0.0, nullable=False)
+    sentiment_score = Column(Float, default=0.0, nullable=False)  # -1..1
+    text = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantAnomaly(Base):
+    __tablename__ = "restaurant_anomalies"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    anomaly_date = Column(String, nullable=False, index=True)  # YYYY-MM-DD
+    category = Column(String, nullable=False, index=True)
+    severity = Column(String, nullable=False, index=True)
+    title = Column(String, nullable=False)
+    why = Column(Text, nullable=True)
+    metric_value = Column(Float, default=0.0, nullable=False)
+    threshold = Column(Float, default=0.0, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class RestaurantRecommendation(Base):
+    __tablename__ = "restaurant_recommendations"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    venue_id = Column(String, ForeignKey("restaurant_venues.id"), nullable=False, index=True)
+    rec_date = Column(String, nullable=False, index=True)  # YYYY-MM-DD
+    category = Column(String, nullable=False, index=True)
+    title = Column(String, nullable=False)
+    warning = Column(Text, nullable=True)
+    why = Column(Text, nullable=True)
+    next_action = Column(Text, nullable=True)
+    automatable = Column(Boolean, default=False, nullable=False)
+    status = Column(String, default="open", nullable=False, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)

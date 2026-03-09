@@ -543,3 +543,62 @@ class MemoryRetrieveRequest(BaseModel):
 class MemoryResponse(BaseModel):
     status: str
     data: Optional[Any] = None
+
+
+# ── TablePilot Restaurant Ops ─────────────────────────────────────────
+
+class RecipeIngredientPayload(BaseModel):
+    name: str
+    quantity: float
+    unit_cost: float
+
+
+class RecipePayload(BaseModel):
+    dish_name: str
+    selling_price: Optional[float] = 0.0
+    portion_price: Optional[float] = 0.0
+    ingredients: list[RecipeIngredientPayload] = []
+
+
+class RecipeIngestRequest(BaseModel):
+    venue_id: Optional[str] = None
+    recipes: list[RecipePayload]
+
+
+class RestaurantIngestResponse(BaseModel):
+    status: str
+    venue_id: Optional[str] = None
+    rows_ingested: Optional[int] = None
+    recipes_upserted: Optional[int] = None
+    date_range: Optional[dict[str, Optional[str]]] = None
+    totals: Optional[dict[str, Any]] = None
+
+
+class RestaurantControlTowerResponse(BaseModel):
+    date: str
+    venue_id: str
+    kpis: dict[str, Any]
+    anomalies: list[dict[str, Any]]
+    stock_alerts: list[dict[str, Any]]
+
+
+class RestaurantFinanceMarginResponse(BaseModel):
+    date_range: dict[str, str]
+    venue_id: str
+    summary: dict[str, Any]
+    items: list[dict[str, Any]]
+    channel_sales: list[dict[str, Any]]
+
+
+class RestaurantInventoryAlertsResponse(BaseModel):
+    date: str
+    venue_id: str
+    alerts: list[dict[str, Any]]
+    summary: dict[str, Any]
+
+
+class RestaurantRecommendationsResponse(BaseModel):
+    date: str
+    venue_id: str
+    recommendations: list[dict[str, Any]]
+    kpi_snapshot: dict[str, Any]

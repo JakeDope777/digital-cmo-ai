@@ -15,7 +15,7 @@ from fastapi.responses import FileResponse
 
 from .core.config import settings
 from .db.session import init_db
-from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth, integrations
+from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth, integrations, restaurant
 
 
 @asynccontextmanager
@@ -30,8 +30,8 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=(
-        "AI-powered Chief Marketing Officer that plans, executes, "
-        "and analyses marketing campaigns."
+        "AI operating partner for restaurants with control tower, "
+        "margin intelligence, inventory/waste alerts, and manager chat."
     ),
     lifespan=lifespan,
 )
@@ -60,6 +60,7 @@ app.include_router(memory.router)
 app.include_router(billing.router)
 app.include_router(growth.router)
 app.include_router(integrations.router)
+app.include_router(restaurant.router)
 
 
 @app.get("/api/health", tags=["Health"])
@@ -76,6 +77,7 @@ async def api_health():
             "crm_campaign",
             "analytics_reporting",
             "integrations",
+            "restaurant_ops",
         ],
     }
 
@@ -125,6 +127,7 @@ async def root(request: Request):
             "crm_campaign",
             "analytics_reporting",
             "integrations",
+            "restaurant_ops",
         ],
     }
 

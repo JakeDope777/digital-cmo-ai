@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     """Global application settings loaded from environment variables."""
 
     # Application
-    APP_NAME: str = "Digital CMO AI"
+    APP_NAME: str = "TablePilot AI"
     APP_VERSION: str = "0.2.0"
     DEBUG: bool = True
 

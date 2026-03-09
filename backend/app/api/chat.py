@@ -13,6 +13,7 @@ from ..db.schemas import ChatRequest, ChatResponse
 from ..brain.orchestrator import BrainOrchestrator, LLMClient
 from ..brain.memory_manager import MemoryManager
 from ..core.config import settings
+from ..modules.restaurant_ops import RestaurantOpsModule
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -20,6 +21,7 @@ router = APIRouter(prefix="/chat", tags=["Chat"])
 _llm_client = LLMClient(api_key=settings.OPENAI_API_KEY, model=settings.OPENAI_MODEL)
 _memory_manager = MemoryManager()
 _brain = BrainOrchestrator(llm_client=_llm_client, memory_manager=_memory_manager)
+_brain.register_skill("restaurant_ops", RestaurantOpsModule())
 
 
 def get_brain() -> BrainOrchestrator:

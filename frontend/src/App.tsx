@@ -2,12 +2,10 @@ import { Routes, Route } from 'react-router-dom';
 import { Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import ChatPage from './pages/ChatPage';
-import DashboardPage from './pages/DashboardPage';
-import AnalysisPage from './pages/AnalysisPage';
-import CreativePage from './pages/CreativePage';
-import CRMPage from './pages/CRMPage';
+import ControlTowerPage from './pages/ControlTowerPage';
+import MarginBrainPage from './pages/MarginBrainPage';
+import InventoryWastePage from './pages/InventoryWastePage';
 import SettingsPage from './pages/SettingsPage';
-import IntegrationsPage from './pages/IntegrationsPage';
 import IndustryPage from './pages/IndustryPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
@@ -37,15 +35,17 @@ export default function App() {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<Layout />}>
-          <Route index element={<DashboardPage />} />
+          <Route index element={<Navigate to="/app/control-tower" replace />} />
+          <Route path="control-tower" element={<ControlTowerPage />} />
+          <Route path="margin-brain" element={<MarginBrainPage />} />
+          <Route path="inventory-waste" element={<InventoryWastePage />} />
+          <Route path="manager-chat" element={<ChatPage />} />
           <Route path="chat" element={<ChatPage />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="analysis" element={<AnalysisPage />} />
-          <Route path="creative" element={<CreativePage />} />
-          <Route path="crm" element={<CRMPage />} />
+          <Route path="dashboard" element={<ControlTowerPage />} />
+          <Route path="analysis" element={<MarginBrainPage />} />
+          <Route path="crm" element={<InventoryWastePage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="profile" element={<ProfilePage />} />
-          <Route path="integrations" element={<IntegrationsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>

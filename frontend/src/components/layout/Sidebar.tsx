@@ -3,24 +3,18 @@ import {
   MessageSquare,
   LayoutDashboard,
   Search,
-  Palette,
-  Users,
-  CreditCard,
+  AlertTriangle,
   Settings,
   Brain,
   UserCircle2,
-  Plug,
 } from 'lucide-react';
 import clsx from 'clsx';
 
 export const navItems = [
-  { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
-  { label: 'Chat', path: '/app/chat', icon: MessageSquare },
-  { label: 'Analysis', path: '/app/analysis', icon: Search },
-  { label: 'Creative', path: '/app/creative', icon: Palette },
-  { label: 'CRM', path: '/app/crm', icon: Users },
-  { label: 'Integrations', path: '/app/integrations', icon: Plug },
-  { label: 'Billing', path: '/app/billing', icon: CreditCard },
+  { label: 'Control Tower', path: '/app/control-tower', icon: LayoutDashboard },
+  { label: 'Margin Brain', path: '/app/margin-brain', icon: Search },
+  { label: 'Inventory & Waste', path: '/app/inventory-waste', icon: AlertTriangle },
+  { label: 'Manager Chat', path: '/app/manager-chat', icon: MessageSquare },
   { label: 'Profile', path: '/app/profile', icon: UserCircle2 },
   { label: 'Settings', path: '/app/settings', icon: Settings },
 ];
@@ -39,8 +33,8 @@ export default function Sidebar({ className, onNavigate }: SidebarProps) {
           <Brain className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-slate-900 leading-tight">CMO Buddy</h1>
-          <p className="text-xs text-slate-500">Revenue Operating System</p>
+          <h1 className="text-lg font-bold text-slate-900 leading-tight">TablePilot</h1>
+          <p className="text-xs text-slate-500">AI Restaurant OS</p>
         </div>
       </div>
 
@@ -68,7 +62,7 @@ export default function Sidebar({ className, onNavigate }: SidebarProps) {
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-slate-200">
-        <p className="text-xs text-slate-500">Digital CMO AI v0.2.0</p>
+        <p className="text-xs text-slate-500">TablePilot AI v0.2.0</p>
       </div>
     </aside>
   );
