@@ -120,7 +120,11 @@ async def stripe_webhook(
             status="processing",
         )
         db.add(event_row)
-        db.commit()
+    else:
+        # Retrying a previously failed event — mark as processing to prevent
+        # concurrent delivery races while we re-process.
+        event_row.status = "processing"
+    db.commit()
 
     try:
         if event_type == "checkout.session.completed":
