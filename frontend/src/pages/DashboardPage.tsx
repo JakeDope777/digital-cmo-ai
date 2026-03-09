@@ -107,7 +107,7 @@ export default function DashboardPage() {
     setLoading(true);
     try {
       const data = await analyticsService.getDashboard();
-      setMetrics(data.metrics);
+      setMetrics(data.metrics ?? defaults);
       setCharts(data.charts || []);
       const funnelData = await growthService.getFunnelSummary(14);
       setFunnel(funnelData);
