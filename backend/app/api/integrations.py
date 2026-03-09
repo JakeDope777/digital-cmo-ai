@@ -211,6 +211,8 @@ async def run_integration_action(
             name=name,
             action=request.action,
             payload=request.payload,
+            context=request.context,
+            idempotency_key=request.idempotency_key,
             endpoint=request.endpoint,
             method=request.method,
             params=request.params,

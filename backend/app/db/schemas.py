@@ -365,6 +365,8 @@ class IntegrationConnectRequest(BaseModel):
 class IntegrationActionRequest(BaseModel):
     action: Optional[str] = None
     payload: Optional[dict[str, Any]] = None
+    context: Optional[dict[str, Any]] = None
+    idempotency_key: Optional[str] = None
     endpoint: Optional[str] = None
     method: str = "GET"
     params: Optional[dict[str, Any]] = None

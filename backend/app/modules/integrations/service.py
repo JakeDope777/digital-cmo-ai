@@ -4,6 +4,7 @@ Integration service layer for connector lifecycle and execution.
 
 from __future__ import annotations
 
+import copy
 import datetime as dt
 from collections import deque
 import inspect
@@ -24,6 +25,9 @@ class IntegrationService:
         self.registry = ConnectorRegistry()
         self._active_connectors: dict[str, ConnectorInterface] = {}
         self._run_history: deque[dict[str, Any]] = deque(maxlen=2000)
+        self._idempotency_cache: dict[str, dict[str, Any]] = {}
+        self._idempotency_order: deque[str] = deque()
+        self._idempotency_max_entries = 2000
 
     def list_catalog(self) -> dict[str, Any]:
         marketplace = n8n_catalog_stats()
@@ -376,6 +380,52 @@ class IntegrationService:
             }
         )
 
+    def _idempotency_cache_key(self, connector: str, idempotency_key: str) -> str:
+        return f"{connector}:{idempotency_key}"
+
+    def _get_cached_idempotent_response(
+        self,
+        connector: str,
+        idempotency_key: Optional[str],
+    ) -> Optional[dict[str, Any]]:
+        key = (idempotency_key or "").strip()
+        if not key:
+            return None
+        cache_key = self._idempotency_cache_key(connector, key)
+        cached = self._idempotency_cache.get(cache_key)
+        if not cached:
+            return None
+        response = copy.deepcopy(cached["response"])
+        idempotency_meta = response.setdefault("idempotency", {})
+        idempotency_meta.update(
+            {
+                "enabled": True,
+                "key": key,
+                "replayed": True,
+            }
+        )
+        return response
+
+    def _store_idempotent_response(
+        self,
+        connector: str,
+        idempotency_key: Optional[str],
+        response: dict[str, Any],
+    ) -> None:
+        key = (idempotency_key or "").strip()
+        if not key:
+            return
+        cache_key = self._idempotency_cache_key(connector, key)
+        self._idempotency_cache[cache_key] = {
+            "stored_at": dt.datetime.utcnow().isoformat() + "Z",
+            "response": copy.deepcopy(response),
+        }
+        if cache_key not in self._idempotency_order:
+            self._idempotency_order.append(cache_key)
+        while len(self._idempotency_order) > self._idempotency_max_entries:
+            oldest = self._idempotency_order.popleft()
+            self._idempotency_cache.pop(oldest, None)
+
     async def connect(
         self,
         name: str,
@@ -466,6 +516,8 @@ class IntegrationService:
         name: str,
         action: Optional[str] = None,
         payload: Optional[dict[str, Any]] = None,
+        context: Optional[dict[str, Any]] = None,
+        idempotency_key: Optional[str] = None,
         endpoint: Optional[str] = None,
         method: str = "GET",
         params: Optional[dict[str, Any]] = None,
@@ -474,6 +526,20 @@ class IntegrationService:
     ) -> dict[str, Any]:
         start = time.perf_counter()
         event_name = action or f"{method.upper()} {endpoint or ''}".strip()
+        cached = self._get_cached_idempotent_response(name, idempotency_key)
+        if cached is not None:
+            self._record_run(
+                name,
+                event_name,
+                "success",
+                (time.perf_counter() - start) * 1000,
+                metadata={
+                    "idempotency_key": (idempotency_key or "").strip(),
+                    "replayed": True,
+                },
+            )
+            return cached
+
         try:
             connector = self._resolve(name, credentials)
             await connector.authenticate()
@@ -506,13 +572,23 @@ class IntegrationService:
                 "status": "success",
                 "connector_status": connector.get_status(),
                 "result": result,
+                "idempotency": {
+                    "enabled": bool((idempotency_key or "").strip()),
+                    "key": (idempotency_key or "").strip() or None,
+                    "replayed": False,
+                },
             }
+            self._store_idempotent_response(name, idempotency_key, details)
             self._record_run(
                 name,
                 event_name,
                 "success",
                 (time.perf_counter() - start) * 1000,
-                metadata={"demo_mode": connector.get_status().get("demo_mode", False)},
+                metadata={
+                    "demo_mode": connector.get_status().get("demo_mode", False),
+                    "idempotency_key": (idempotency_key or "").strip() or None,
+                    "context": context or {},
+                },
             )
             return details
         except Exception as exc:

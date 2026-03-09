@@ -931,6 +931,7 @@ function renderIntegrationRunsFeed(runs) {
       <b>${row.connector} · ${row.event}</b>
       <div class="meta">${row.status} · ${row.duration_ms} ms</div>
       <div class="meta">${row.timestamp}</div>
+      ${(row.metadata?.replayed === true || row.metadata?.idempotency_replayed === true) ? '<div class="meta">idempotency replay</div>' : ''}
       ${row.error ? `<div class="meta">error: ${row.error}</div>` : ''}
     </div>
   `).join('');
@@ -1225,10 +1226,16 @@ async function refreshIntegrationState() {
 async function triggerN8NWorkflow() {
   setIntegrationStatus('Triggering n8n workflow…', 'warn');
   try {
+    const idempotencyKey = `investor-demo-n8n-${new Date().toISOString().slice(0, 16)}`;
     const result = await apiRequest('/integrations/n8n/action', {
       method: 'POST',
       body: JSON.stringify({
         action: 'trigger_workflow',
+        idempotency_key: idempotencyKey,
+        context: {
+          source: 'investor-pitch-demo',
+          scope: 'modules-live-box',
+        },
         payload: {
           payload: {
             source: 'investor-pitch-demo',
@@ -1244,6 +1251,7 @@ async function triggerN8NWorkflow() {
       { name: 'n8n', status: details.status || 'triggered' },
       { name: 'Execution', status: details.execution_id || details.target || 'n/a' },
       { name: 'Mode', status: details.demo ? 'demo' : 'live' },
+      { name: 'Replay', status: result.details?.idempotency?.replayed ? 'yes' : 'no' },
     ]);
     setIntegrationStatus('n8n workflow triggered successfully.', 'ok');
   } catch (error) {

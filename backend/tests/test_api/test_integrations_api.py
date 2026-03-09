@@ -117,3 +117,25 @@ class TestIntegrationsAPI:
         assert data["total_runs"] >= 1
         assert data["success_count"] >= 1
         assert "avg_duration_ms" in data
+
+    def test_n8n_action_idempotency_replay(self, client):
+        payload = {
+            "action": "trigger_workflow",
+            "payload": {"payload": {"source": "test-idempotency"}},
+            "idempotency_key": "idem-001",
+        }
+        first = client.post("/integrations/n8n/action", json=payload)
+        assert first.status_code == 200
+        first_data = first.json()
+        assert first_data["details"]["idempotency"]["enabled"] is True
+        assert first_data["details"]["idempotency"]["replayed"] is False
+
+        second = client.post("/integrations/n8n/action", json=payload)
+        assert second.status_code == 200
+        second_data = second.json()
+        assert second_data["details"]["idempotency"]["enabled"] is True
+        assert second_data["details"]["idempotency"]["replayed"] is True
+        assert (
+            second_data["details"]["result"]["execution_id"]
+            == first_data["details"]["result"]["execution_id"]
+        )
