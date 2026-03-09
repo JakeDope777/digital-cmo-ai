@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Wand2, Loader2, Copy, Check, Paintbrush, TestTubeDiagonal, Sparkles, ChevronRight } from 'lucide-react';
 import { creativeService } from '../services/api';
+import { trackEvent } from '../services/analytics';
 import ReactMarkdown from 'react-markdown';
 
 type CreativeMode = 'copy' | 'image' | 'ab-test';
@@ -97,10 +98,12 @@ export default function CreativePage() {
         case 'copy':
           response = await creativeService.generateCopy(brief, tone);
           setResult(response.content || JSON.stringify(response, null, 2));
+          void trackEvent('creative_generated', { mode: 'copy', tone });
           break;
         case 'image':
           response = await creativeService.generateImage(brief);
           setResult(response.content || JSON.stringify(response, null, 2));
+          void trackEvent('creative_generated', { mode: 'image' });
           break;
         case 'ab-test':
           response = await creativeService.suggestABTests(brief);
@@ -109,6 +112,7 @@ export default function CreativePage() {
               ? response.alternatives.join('\n\n---\n\n')
               : JSON.stringify(response, null, 2),
           );
+          void trackEvent('creative_generated', { mode: 'ab_test' });
           break;
       }
     } catch {

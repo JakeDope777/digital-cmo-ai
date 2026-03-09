@@ -10,6 +10,7 @@ import {
   Brain,
   UserCircle2,
   Plug,
+  TrendingUp,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -19,6 +20,7 @@ export const navItems = [
   { label: 'Analysis', path: '/app/analysis', icon: Search },
   { label: 'Creative', path: '/app/creative', icon: Palette },
   { label: 'CRM', path: '/app/crm', icon: Users },
+  { label: 'Growth', path: '/app/growth', icon: TrendingUp },
   { label: 'Integrations', path: '/app/integrations', icon: Plug },
   { label: 'Billing', path: '/app/billing', icon: CreditCard },
   { label: 'Profile', path: '/app/profile', icon: UserCircle2 },
@@ -39,8 +41,8 @@ export default function Sidebar({ className, onNavigate }: SidebarProps) {
           <Brain className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-bold text-slate-900 leading-tight">CMO Buddy</h1>
-          <p className="text-xs text-slate-500">Revenue Operating System</p>
+          <h1 className="text-lg font-bold text-slate-900 leading-tight">Digital CMO AI</h1>
+          <p className="text-xs text-slate-500">Your AI Chief Marketing Officer</p>
         </div>
       </div>
 

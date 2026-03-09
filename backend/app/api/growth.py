@@ -17,6 +17,9 @@ from ..db.schemas import (
     GrowthFunnelStep,
     GrowthFunnelSummaryResponse,
     MessageResponse,
+    TopEventRow,
+    UtmBreakdownResponse,
+    UtmRow,
     WaitlistRequest,
 )
 from ..db.session import get_db
@@ -189,4 +192,77 @@ async def funnel_summary(days: int = 14, db: Session = Depends(get_db)):
         conversion_verified_from_signup=_pct(verification_completed, signup_completed),
         conversion_first_value_from_verified=_pct(first_value_action, verification_completed),
         conversion_return_from_first_value=_pct(returning_users, first_value_action),
+    )
+
+
+@router.get("/utm-breakdown", response_model=UtmBreakdownResponse)
+async def utm_breakdown(days: int = 14, db: Session = Depends(get_db)):
+    """Return UTM source attribution for signups and first-value actions."""
+    now = datetime.now(timezone.utc)
+    days = min(max(days, 1), 90)
+    date_from = now - timedelta(days=days)
+
+    # Fetch relevant events in the window — pull in Python to avoid
+    # JSON path syntax differences between SQLite (dev) and Postgres (prod).
+    events = (
+        db.query(models.GrowthEvent)
+        .filter(
+            and_(
+                models.GrowthEvent.created_at >= date_from,
+                models.GrowthEvent.event_name.in_(
+                    [
+                        "signup_completed",
+                        "analysis_run",
+                        "chat_message_sent",
+                        "creative_generated",
+                    ]
+                ),
+            )
+        )
+        .all()
+    )
+
+    # Aggregate by (utm_source, utm_medium, utm_campaign)
+    agg: dict[tuple, dict] = {}
+    for ev in events:
+        props = ev.properties or {}
+        key = (
+            props.get("utm_source") or "(direct)",
+            props.get("utm_medium") or "",
+            props.get("utm_campaign") or "",
+        )
+        if key not in agg:
+            agg[key] = {"signups": 0, "value_actions": 0}
+        if ev.event_name == "signup_completed":
+            agg[key]["signups"] += 1
+        else:
+            agg[key]["value_actions"] += 1
+
+    rows = [
+        UtmRow(
+            utm_source=k[0],
+            utm_medium=k[1] or None,
+            utm_campaign=k[2] or None,
+            signups=v["signups"],
+            value_actions=v["value_actions"],
+        )
+        for k, v in sorted(agg.items(), key=lambda x: -x[1]["signups"])
+    ]
+
+    # Top product events by volume in the window
+    top_raw = (
+        db.query(models.GrowthEvent.event_name, func.count(models.GrowthEvent.id).label("cnt"))
+        .filter(models.GrowthEvent.created_at >= date_from)
+        .group_by(models.GrowthEvent.event_name)
+        .order_by(func.count(models.GrowthEvent.id).desc())
+        .limit(10)
+        .all()
+    )
+    top_events = [TopEventRow(event_name=r[0], count=r[1]) for r in top_raw]
+
+    return UtmBreakdownResponse(
+        date_from=date_from.isoformat(),
+        date_to=now.isoformat(),
+        rows=rows,
+        top_events=top_events,
     )

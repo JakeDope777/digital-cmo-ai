@@ -555,6 +555,26 @@ class GrowthFunnelSummaryResponse(BaseModel):
     conversion_return_from_first_value: float
 
 
+class UtmRow(BaseModel):
+    utm_source: Optional[str]
+    utm_medium: Optional[str]
+    utm_campaign: Optional[str]
+    signups: int
+    value_actions: int
+
+
+class TopEventRow(BaseModel):
+    event_name: str
+    count: int
+
+
+class UtmBreakdownResponse(BaseModel):
+    date_from: str
+    date_to: str
+    rows: list[UtmRow]
+    top_events: list[TopEventRow]
+
+
 # ── Memory ────────────────────────────────────────────────────────────
 
 class MemoryStoreRequest(BaseModel):

@@ -347,6 +347,22 @@ export const growthService = {
       conversion_return_from_first_value: number;
     };
   },
+
+  async getUtmBreakdown(days: number = 14) {
+    const { data } = await api.get('/growth/utm-breakdown', { params: { days } });
+    return data as {
+      date_from: string;
+      date_to: string;
+      rows: Array<{
+        utm_source: string | null;
+        utm_medium: string | null;
+        utm_campaign: string | null;
+        signups: number;
+        value_actions: number;
+      }>;
+      top_events: Array<{ event_name: string; count: number }>;
+    };
+  },
 };
 
 export default api;

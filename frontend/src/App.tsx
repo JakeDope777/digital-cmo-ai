@@ -13,6 +13,7 @@ import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import BillingPage from './pages/BillingPage';
+import GrowthPage from './pages/GrowthPage';
 import ProfilePage from './pages/ProfilePage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import PublicOnlyRoute from './components/auth/PublicOnlyRoute';
@@ -43,6 +44,7 @@ export default function App() {
           <Route path="analysis" element={<AnalysisPage />} />
           <Route path="creative" element={<CreativePage />} />
           <Route path="crm" element={<CRMPage />} />
+          <Route path="growth" element={<GrowthPage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="integrations" element={<IntegrationsPage />} />
