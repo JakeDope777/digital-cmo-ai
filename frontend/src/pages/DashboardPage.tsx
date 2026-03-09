@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   ArrowUpRight,
   DollarSign,
@@ -12,6 +13,7 @@ import {
   Users,
   Sparkles,
   ChevronRight,
+  X,
 } from 'lucide-react';
 import {
   Area,
@@ -102,6 +104,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string>('');
   const [isDemo, setIsDemo] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(
+    !localStorage.getItem('dcmo_welcome_dismissed'),
+  );
 
   const DEMO_FUNNEL = {
     steps: DEMO_FUNNEL_STEPS,
@@ -222,8 +227,107 @@ export default function DashboardPage() {
 
   const maxFunnelCount = funnel ? Math.max(...funnel.steps.map((s) => s.count)) : 1;
 
+  const dismissWelcome = () => {
+    localStorage.setItem('dcmo_welcome_dismissed', '1');
+    setShowWelcome(false);
+  };
+
+  const QUICK_ACTIONS = [
+    {
+      href: '/app/chat',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+      ),
+      title: 'Ask your AI CMO',
+      desc: 'Start a strategy conversation — campaigns, analysis, copy.',
+      cta: 'Open Chat →',
+      accent: 'bg-orange-500',
+    },
+    {
+      href: '/app/analysis',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+        </svg>
+      ),
+      title: 'Run your first analysis',
+      desc: 'SWOT, PESTEL, competitor intel, buyer personas — pick one.',
+      cta: 'Analyse now →',
+      accent: 'bg-blue-600',
+    },
+    {
+      href: '/app/creative',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+      ),
+      title: 'Generate campaign copy',
+      desc: 'Ad variants, email sequences, landing page headlines.',
+      cta: 'Create content →',
+      accent: 'bg-violet-600',
+    },
+  ];
+
   return (
     <div className="space-y-6">
+
+      {/* ── First-session welcome card ── */}
+      {showWelcome && (
+        <section className="relative rounded-2xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm">
+          <button
+            onClick={dismissWelcome}
+            className="absolute right-4 top-4 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="h-4 w-4" />
+          </button>
+
+          <div className="flex items-start gap-3 mb-5">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white shadow-md shadow-orange-200">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Welcome to Digital CMO AI</h2>
+              <p className="mt-0.5 text-sm text-slate-500">
+                You're looking at demo data. Pick a quick-start action to get your first real AI result.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-3">
+            {QUICK_ACTIONS.map((a) => (
+              <Link
+                key={a.href}
+                to={a.href}
+                onClick={dismissWelcome}
+                className="group flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all"
+              >
+                <div className={`inline-flex h-9 w-9 items-center justify-center rounded-lg text-white ${a.accent}`}>
+                  {a.icon}
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{a.title}</p>
+                  <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">{a.desc}</p>
+                </div>
+                <span className="mt-auto text-xs font-semibold text-orange-600 group-hover:text-orange-700">
+                  {a.cta}
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          <p className="mt-4 text-xs text-slate-400">
+            No integrations required · Demo data active ·{' '}
+            <button onClick={dismissWelcome} className="underline hover:text-slate-600">
+              Dismiss
+            </button>
+          </p>
+        </section>
+      )}
+
       {/* ── Dark hero header ── */}
       <section className="rounded-2xl border border-slate-700 bg-slate-900 p-6 text-white shadow-xl">
         <div className="flex flex-wrap items-start justify-between gap-4">

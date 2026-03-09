@@ -24,12 +24,12 @@ const ChevronDown = () => (
 // ── FAQ ────────────────────────────────────────────────────────────────────
 const faqs = [
   {
-    q: 'Do I need technical skills to use TablePilot AI?',
+    q: 'Do I need technical skills to use Digital CMO AI?',
     a: 'Not at all. The entire product works through a conversational interface. Describe your goal in plain English — strategy, copy, analytics, or campaign briefs — and the AI handles the rest. No SQL, no dashboards to configure.',
   },
   {
     q: 'How is this different from ChatGPT or Jasper?',
-    a: 'General AI tools have no memory of your brand, no access to your live data, and no ability to execute actions. TablePilot AI connects to your actual marketing stack, remembers your history and goals across sessions, and returns execution-ready plans — not just text.',
+    a: 'General AI tools have no memory of your brand, no access to your live data, and no ability to execute actions. Digital CMO AI connects to your actual marketing stack, remembers your history and goals across sessions, and returns execution-ready plans — not just text.',
   },
   {
     q: 'Which integrations are supported?',
@@ -182,7 +182,7 @@ export default function LandingPage() {
       setMessage(response.message);
       setName(''); setEmail(''); setCompany('');
     } catch {
-      setMessage('Unable to join waitlist at the moment. Email us at hello@tablepilot.ai');
+      setMessage('Unable to join waitlist at the moment. Email us at hello@digitalcmo.ai');
     } finally {
       setSubmitting(false);
     }
@@ -201,8 +201,8 @@ export default function LandingPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 leading-tight">TablePilot AI</p>
-              <p className="text-[10px] text-slate-400 leading-tight">TablePilot OS</p>
+              <p className="text-sm font-bold text-slate-900 leading-tight">Digital CMO AI</p>
+              <p className="text-[10px] text-slate-400 leading-tight">Your AI Chief Marketing Officer</p>
             </div>
           </div>
 
@@ -345,7 +345,7 @@ export default function LandingPage() {
         <div className="mt-12 flex justify-center">
           <div className="inline-flex items-center gap-3 rounded-2xl border border-orange-200 bg-orange-50 px-6 py-4 text-sm font-medium text-orange-900">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            TablePilot AI eliminates all three. Automatically. In real time.
+            Digital CMO AI eliminates all three. Automatically. In real time.
           </div>
         </div>
       </section>
@@ -492,7 +492,7 @@ export default function LandingPage() {
                 Not a chatbot.<br />A persistent AI<br />co-founder for growth.
               </h2>
               <p className="mt-5 text-lg leading-relaxed text-slate-300">
-                Every other AI tool forgets everything the moment you close the tab. TablePilot AI maintains a living, growing model of your business — so every interaction is smarter than the last.
+                Every other AI tool forgets everything the moment you close the tab. Digital CMO AI maintains a living, growing model of your business — so every interaction is smarter than the last.
               </p>
 
               <div className="mt-8 space-y-5">
@@ -522,7 +522,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-3 border-b border-white/10 px-4 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-400">
                 <span>Capability</span>
                 <span className="text-center">Generic AI</span>
-                <span className="text-center text-orange-400">TablePilot AI</span>
+                <span className="text-center text-orange-400">Digital CMO AI</span>
               </div>
               {[
                 ['Persistent memory', false, true],
@@ -616,7 +616,7 @@ export default function LandingPage() {
               Tailored for how your<br />industry actually works.
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-400">
-              Not a generic AI tool. TablePilot AI comes pre-loaded with industry-specific KPIs, workflows, compliance guardrails, and integration stacks — so you're operational on day one.
+              Not a generic AI tool. Digital CMO AI comes pre-loaded with industry-specific KPIs, workflows, compliance guardrails, and integration stacks — so you're operational on day one.
             </p>
           </div>
 
@@ -678,8 +678,8 @@ export default function LandingPage() {
                 period: 'per month',
                 desc: 'For growth teams running live campaigns and replacing agency retainers.',
                 features: ['Unlimited AI Chat', 'Live integrations (5 connectors)', 'Unlimited Creative Generation', 'Full CRM & Campaign Orchestration', 'Advanced Analytics & Forecasting', 'A/B significance testing', 'Priority support'],
-                cta: 'Start Pro Trial',
-                ctaHref: '#waitlist',
+                cta: 'Start Pro Trial →',
+                ctaHref: '/register',
                 highlight: true,
               },
               {
@@ -780,8 +780,8 @@ export default function LandingPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900">TablePilot AI</p>
-              <p className="text-xs text-slate-400">TablePilot OS · v0.2.0</p>
+              <p className="text-sm font-bold text-slate-900">Digital CMO AI</p>
+              <p className="text-xs text-slate-400">Your AI Chief Marketing Officer</p>
             </div>
           </div>
 
@@ -793,7 +793,7 @@ export default function LandingPage() {
             <Link to="/register" className="hover:text-slate-900 transition-colors">Register</Link>
           </nav>
 
-          <p className="text-xs text-slate-400">© 2026 TablePilot AI. All rights reserved.</p>
+          <p className="text-xs text-slate-400">© 2026 Digital CMO AI. All rights reserved.</p>
         </div>
       </footer>
     </div>
