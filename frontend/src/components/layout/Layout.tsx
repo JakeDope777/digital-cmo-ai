@@ -1,10 +1,36 @@
 import { useState } from 'react';
-import { X } from 'lucide-react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { X, Sparkles } from 'lucide-react';
+import { NavLink, Outlet, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { navItems } from './Sidebar';
 import clsx from 'clsx';
+
+function DemoBanner() {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed || localStorage.getItem('demo_mode') !== '1') return null;
+  return (
+    <div className="flex items-center justify-between gap-4 bg-orange-500 px-4 py-2 text-sm text-white">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-4 w-4 flex-shrink-0" />
+        <span className="font-medium">Demo mode</span>
+        <span className="hidden sm:inline text-orange-100">— Exploring with realistic sample data. No account needed.</span>
+      </div>
+      <div className="flex items-center gap-3">
+        <Link
+          to="/register"
+          onClick={() => localStorage.removeItem('demo_mode')}
+          className="rounded-lg border border-white/40 bg-white/15 px-3 py-1 text-xs font-semibold hover:bg-white/25 transition-colors whitespace-nowrap"
+        >
+          Create free account →
+        </Link>
+        <button onClick={() => setDismissed(true)} className="rounded p-0.5 hover:bg-white/20">
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -13,6 +39,7 @@ export default function Layout() {
     <div className="flex h-screen overflow-hidden bg-gradient-to-b from-orange-50 via-amber-50 to-slate-100">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
+        <DemoBanner />
         <Header onMenuClick={() => setMobileMenuOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />

@@ -274,7 +274,7 @@ export default function LandingPage() {
                   Request Early Access
                   <ArrowRight size={15} />
                 </a>
-                <Link to="/register" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white/14 transition-all">
+                <Link to="/app/dashboard?demo=1" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white/14 transition-all">
                   Open Dashboard Free
                 </Link>
               </div>
