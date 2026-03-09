@@ -271,6 +271,44 @@ export const billingService = {
   },
 };
 
+// ── Integrations ────────────────────────────────────────────
+
+export const integrationsService = {
+  async getCatalog() {
+    const { data } = await api.get<{ integrations: Array<{ name: string; status: string; demo_mode: boolean; authenticated: boolean }> }>('/integrations/catalog');
+    return data;
+  },
+
+  async getMarketplace(params?: { provider?: string; category?: string; search?: string; limit?: number; offset?: number }) {
+    const { data } = await api.get<{
+      connectors: Array<{ key: string; name: string; provider: string; category: string; auth_type?: string; status?: string }>;
+      total: number;
+      has_more: boolean;
+    }>('/integrations/marketplace/connectors', { params });
+    return data;
+  },
+
+  async getMarketplaceStats() {
+    const { data } = await api.get<{ total_connectors: number; snapshot_connectors: number; source_total_connectors: number; providers: string[] }>('/integrations/marketplace/stats');
+    return data;
+  },
+
+  async getConnectorDetail(key: string, provider?: string) {
+    const { data } = await api.get(`/integrations/marketplace/connectors/${encodeURIComponent(key)}`, { params: provider ? { provider } : undefined });
+    return data as { key: string; display_name: string; category?: string; providers_available: string[]; suggested_actions: string[]; variants: unknown[] };
+  },
+
+  async getConnectorStatus(name: string) {
+    const { data } = await api.get(`/integrations/${name}/status`);
+    return data as { name: string; status: string; demo_mode: boolean; authenticated: boolean };
+  },
+
+  async triggerAction(name: string, action: string, payload?: Record<string, unknown>) {
+    const { data } = await api.post(`/integrations/${name}/action`, { action, payload: payload ?? {} });
+    return data;
+  },
+};
+
 // ── Growth / Tracking ──────────────────────────────────────
 
 export const growthService = {

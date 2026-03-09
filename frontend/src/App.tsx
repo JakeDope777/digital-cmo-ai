@@ -7,6 +7,8 @@ import AnalysisPage from './pages/AnalysisPage';
 import CreativePage from './pages/CreativePage';
 import CRMPage from './pages/CRMPage';
 import SettingsPage from './pages/SettingsPage';
+import IntegrationsPage from './pages/IntegrationsPage';
+import IndustryPage from './pages/IndustryPage';
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -31,6 +33,7 @@ export default function App() {
       </Route>
 
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/industries/:slug" element={<IndustryPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<Layout />}>
@@ -42,6 +45,7 @@ export default function App() {
           <Route path="crm" element={<CRMPage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="integrations" element={<IntegrationsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Route>

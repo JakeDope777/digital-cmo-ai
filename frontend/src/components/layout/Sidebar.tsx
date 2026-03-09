@@ -9,6 +9,7 @@ import {
   Settings,
   Brain,
   UserCircle2,
+  Plug,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -18,6 +19,7 @@ export const navItems = [
   { label: 'Analysis', path: '/app/analysis', icon: Search },
   { label: 'Creative', path: '/app/creative', icon: Palette },
   { label: 'CRM', path: '/app/crm', icon: Users },
+  { label: 'Integrations', path: '/app/integrations', icon: Plug },
   { label: 'Billing', path: '/app/billing', icon: CreditCard },
   { label: 'Profile', path: '/app/profile', icon: UserCircle2 },
   { label: 'Settings', path: '/app/settings', icon: Settings },

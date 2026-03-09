@@ -324,6 +324,81 @@ footer{padding:32px 40px;border-top:1px solid rgba(255,255,255,.06);display:flex
 
 /* ── Scrolled nav state ── */
 nav.scrolled{background:rgba(15,23,42,.98)}
+
+/* ── MOBILE RESPONSIVE ── */
+@media (max-width: 768px) {
+  /* Nav */
+  nav{padding:0 20px;height:58px}
+  .nav-links{display:none}
+  .btn-ghost{display:none}
+  .btn-orange{padding:7px 14px;font-size:12px}
+
+  /* Hero */
+  .hero{padding:80px 20px 60px}
+  .hero-inner{grid-template-columns:1fr;gap:36px}
+  .hero-right{display:none}
+  .hero-h1{font-size:clamp(32px,8vw,44px)}
+  .hero-sub{font-size:15px}
+  .btn-hero-primary,.btn-hero-secondary{padding:11px 20px;font-size:13px}
+
+  /* Stats */
+  .stats-bar{padding:36px 20px}
+  .stats-inner{grid-template-columns:1fr 1fr;gap:24px 0}
+  .stat-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.06);padding-bottom:24px}
+  .stat-item:nth-child(odd){border-right:1px solid rgba(255,255,255,.06)}
+  .stat-item:nth-last-child(-n+2){border-bottom:none}
+  .stat-val{font-size:28px}
+
+  /* Sections */
+  section{padding:60px 20px}
+
+  /* Steps */
+  .steps-grid{grid-template-columns:1fr;gap:16px;margin-top:36px}
+
+  /* Product demo */
+  .product-inner{grid-template-columns:1fr;gap:24px}
+  .product-tabs{flex-direction:row;flex-wrap:wrap;position:static;gap:6px;overflow-x:auto;padding-bottom:4px}
+  .product-tab{padding:10px 12px;gap:8px;min-width:120px}
+  .tab-desc{display:none}
+  .tab-icon{width:32px;height:32px}
+  .kpi-row{grid-template-columns:1fr 1fr;gap:10px}
+  .charts-row{grid-template-columns:1fr;gap:12px}
+  .chart-box-wrap{height:140px}
+
+  /* Modules */
+  .modules-grid{grid-template-columns:1fr 1fr;gap:14px;margin-top:36px}
+  .mod-live-toolbar{flex-direction:column;gap:10px}
+  .mod-live-input{width:100%}
+  .mod-live-actions{flex-direction:column;align-items:stretch}
+  .mod-live-actions .live-btn,.mod-live-actions .market-search{width:100%}
+  .live-list{grid-template-columns:1fr 1fr}
+  .run-feed{grid-template-columns:1fr}
+
+  /* Integrations pill grid */
+  .int-grid.marketplace{max-height:260px}
+
+  /* Pricing */
+  .pricing-grid{grid-template-columns:1fr;gap:16px;margin-top:36px}
+  .price-card.pro{order:-1}
+
+  /* CTA waitlist */
+  .waitlist-row{grid-template-columns:1fr;gap:8px}
+
+  /* Footer */
+  footer{flex-direction:column;gap:16px;padding:24px 20px;text-align:center}
+  .footer-links{flex-wrap:wrap;justify-content:center;gap:16px}
+}
+
+@media (max-width: 480px) {
+  .hero-h1{font-size:30px}
+  .hero-actions{flex-direction:column}
+  .btn-hero-primary,.btn-hero-secondary{width:100%;justify-content:center}
+  .modules-grid{grid-template-columns:1fr}
+  .live-list{grid-template-columns:1fr}
+  .section-h2{font-size:26px}
+  .product-tabs{gap:4px}
+  .product-tab{min-width:100px;padding:8px 10px}
+}
 </style>
 </head>
 <body>
@@ -655,7 +730,7 @@ Are you using AI to go faster, or to think better?
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Dashboard & Reporting</div>
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Email support</div>
         </div>
-        <button class="price-cta ghost">Start Free</button>
+        <button class="price-cta ghost" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">Start Free</button>
       </div>
       <div class="price-card pro reveal">
         <div class="price-badge">Most Popular</div>
