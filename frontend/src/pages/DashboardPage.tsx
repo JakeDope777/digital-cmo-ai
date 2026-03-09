@@ -103,24 +103,43 @@ export default function DashboardPage() {
   const [updatedAt, setUpdatedAt] = useState<string>('');
   const [isDemo, setIsDemo] = useState(false);
 
+  const DEMO_FUNNEL = {
+    steps: DEMO_FUNNEL_STEPS,
+    conversion_signup_from_visitor: 6.97,
+    conversion_verified_from_signup: 68.22,
+    conversion_first_value_from_verified: 35.62,
+    conversion_return_from_first_value: 63.46,
+  };
+
   const fetchData = async () => {
     setLoading(true);
+
+    // In demo mode skip API calls entirely — just show hardcoded demo data
+    if (localStorage.getItem('demo_mode') === '1') {
+      setMetrics(defaults);
+      setFunnel(DEMO_FUNNEL);
+      setIsDemo(true);
+      setUpdatedAt(new Date().toLocaleString());
+      setLoading(false);
+      return;
+    }
+
     try {
       const data = await analyticsService.getDashboard();
-      setMetrics(data.metrics ?? defaults);
-      setCharts(data.charts || []);
-      const funnelData = await growthService.getFunnelSummary(14);
-      setFunnel(funnelData);
+      // Guard: backend may return non-JSON (e.g. HTML) if not yet configured
+      setMetrics(data?.metrics ?? defaults);
+      setCharts(data?.charts || []);
+      try {
+        const funnelData = await growthService.getFunnelSummary(14);
+        // Only use funnel data if it has the expected shape
+        setFunnel(Array.isArray(funnelData?.steps) ? funnelData : DEMO_FUNNEL);
+      } catch {
+        setFunnel(DEMO_FUNNEL);
+      }
       setIsDemo(false);
     } catch {
       setMetrics(defaults);
-      setFunnel({
-        steps: DEMO_FUNNEL_STEPS,
-        conversion_signup_from_visitor: 6.97,
-        conversion_verified_from_signup: 68.22,
-        conversion_first_value_from_verified: 35.62,
-        conversion_return_from_first_value: 63.46,
-      });
+      setFunnel(DEMO_FUNNEL);
       setIsDemo(true);
     } finally {
       setUpdatedAt(new Date().toLocaleString());
