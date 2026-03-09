@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import './styles/globals.css';
 import { AuthProvider } from './context/AuthContext';
+import { DemoModeProvider } from './context/DemoModeContext';
 import { initAnalytics } from './services/analytics';
 
 initAnalytics();
@@ -12,7 +13,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <AuthProvider>
       <BrowserRouter>
-        <App />
+        <DemoModeProvider>
+          <App />
+        </DemoModeProvider>
       </BrowserRouter>
     </AuthProvider>
   </React.StrictMode>,

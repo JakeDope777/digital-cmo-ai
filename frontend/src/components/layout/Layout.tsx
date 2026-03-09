@@ -1,28 +1,43 @@
 import { useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
-import { NavLink, Outlet, Link } from 'react-router-dom';
+import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { navItems } from './Sidebar';
 import clsx from 'clsx';
+import { useDemoMode } from '../../context/DemoModeContext';
 
 function DemoBanner() {
   const [dismissed, setDismissed] = useState(false);
-  if (dismissed || localStorage.getItem('demo_mode') !== '1') return null;
+  const navigate = useNavigate();
+  const { isDemoMode, disableDemoMode } = useDemoMode();
+
+  if (dismissed || !isDemoMode) return null;
+
+  const switchToLiveMode = () => {
+    disableDemoMode();
+    navigate('/register');
+  };
+
   return (
     <div className="flex items-center justify-between gap-4 bg-orange-500 px-4 py-2 text-sm text-white">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 flex-shrink-0" />
         <span className="font-medium">Demo mode</span>
-        <span className="hidden sm:inline text-orange-100">— Exploring with realistic sample data. No account needed.</span>
+        <span className="hidden sm:inline text-orange-100">— Exploring with realistic sample data. Switch to live mode to connect your real account.</span>
       </div>
       <div className="flex items-center gap-3">
-        <Link
-          to="/register"
-          onClick={() => localStorage.removeItem('demo_mode')}
+        <button
+          onClick={switchToLiveMode}
           className="rounded-lg border border-white/40 bg-white/15 px-3 py-1 text-xs font-semibold hover:bg-white/25 transition-colors whitespace-nowrap"
         >
-          Create free account →
+          Switch to live mode →
+        </button>
+        <Link
+          to="/register"
+          className="hidden rounded-lg border border-white/30 px-3 py-1 text-xs font-semibold hover:bg-white/10 transition-colors whitespace-nowrap sm:block"
+        >
+          Create account
         </Link>
         <button onClick={() => setDismissed(true)} className="rounded p-0.5 hover:bg-white/20">
           <X className="h-4 w-4" />

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { growthService } from '../services/api';
-import { getStoredUtm, trackEvent } from '../services/analytics';
+import { getStoredUtm, trackEvent, trackOnboardingStep } from '../services/analytics';
 import { industries } from '../data/industries';
 
 // ── Tiny inline icons ──────────────────────────────────────────────────────
@@ -160,6 +160,7 @@ function DashMockup() {
 
 // ── Main component ──────────────────────────────────────────────────────────
 export default function LandingPage() {
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
@@ -168,21 +169,44 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    void trackEvent('landing_view');
+    void trackOnboardingStep('landing_seen', { source: 'landing' });
   }, []);
 
   const submitWaitlist = async (event: React.FormEvent) => {
     event.preventDefault();
+    const trimmedName = name.trim();
+    const trimmedEmail = email.trim();
+    const trimmedCompany = company.trim();
+    if (!trimmedName || !trimmedEmail) {
+      setWaitlistStatus('error');
+      setMessage('Name and work email are required.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      setWaitlistStatus('error');
+      setMessage('Enter a valid work email address.');
+      return;
+    }
+
     setSubmitting(true);
+    setWaitlistStatus('idle');
     setMessage('');
     try {
       const utm = getStoredUtm();
-      const response = await growthService.joinWaitlist({ name, email, company, source: 'landing_page', ...utm });
-      await trackEvent('waitlist_joined', { company });
-      setMessage(response.message);
+      const response = await growthService.joinWaitlist({
+        name: trimmedName,
+        email: trimmedEmail,
+        company: trimmedCompany || undefined,
+        source: 'landing_page',
+        ...utm,
+      });
+      await trackEvent('waitlist_joined', { company: trimmedCompany, source: 'landing_page' });
+      setWaitlistStatus('success');
+      setMessage(response.message || 'You are on the waitlist. We will reach out within 24 hours.');
       setName(''); setEmail(''); setCompany('');
     } catch {
-      setMessage('Unable to join waitlist at the moment. Email us at hello@digitalcmo.ai');
+      setWaitlistStatus('error');
+      setMessage('Unable to join waitlist right now. Please retry, or email hello@digitalcmo.ai.');
     } finally {
       setSubmitting(false);
     }
@@ -217,8 +241,11 @@ export default function LandingPage() {
             <Link to="/login" className="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors md:block">
               Sign in
             </Link>
+            <Link to="/app/dashboard?demo=1" className="hidden rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors lg:inline-flex">
+              Open demo
+            </Link>
             <Link to="/register" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-orange-300/40 hover:bg-orange-600 transition-colors">
-              Start Free
+              Create account
               <ArrowRight size={14} />
             </Link>
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="ml-1 rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden">
@@ -236,6 +263,7 @@ export default function LandingPage() {
               {[['#how-it-works', 'How it works'], ['#features', 'Features'], ['#pricing', 'Pricing'], ['#faq', 'FAQ']].map(([href, label]) => (
                 <a key={href} href={href} onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-slate-700">{label}</a>
               ))}
+              <Link to="/app/dashboard?demo=1" className="text-sm font-medium text-slate-700">Open demo</Link>
               <Link to="/login" className="text-sm font-medium text-slate-700">Sign in</Link>
             </nav>
           </div>
@@ -270,12 +298,12 @@ export default function LandingPage() {
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <a href="#waitlist" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-orange-500/30 hover:bg-orange-600 transition-all hover:-translate-y-0.5">
-                  Request Early Access
+                <Link to="/register" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-orange-500/30 hover:bg-orange-600 transition-all hover:-translate-y-0.5">
+                  Create free account
                   <ArrowRight size={15} />
-                </a>
+                </Link>
                 <Link to="/app/dashboard?demo=1" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white/14 transition-all">
-                  Open Dashboard Free
+                  Open demo
                 </Link>
               </div>
 
@@ -293,6 +321,32 @@ export default function LandingPage() {
             <div className="hidden lg:block">
               <DashMockup />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FIRST SESSION GUIDE ───────────────────────────────── */}
+      <section className="border-b border-slate-100 bg-white px-6 py-14">
+        <div className="mx-auto max-w-6xl">
+          <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-orange-500">First 5 minutes</p>
+          <h3 className="mt-3 text-center text-3xl font-extrabold tracking-tight text-slate-900">Choose your starting path</h3>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <article className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Primary path</p>
+              <h4 className="mt-2 text-xl font-bold text-slate-900">Register → Verify → Dashboard</h4>
+              <p className="mt-2 text-sm text-slate-600">Best for live setup and full onboarding telemetry.</p>
+              <Link to="/register" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600">
+                Create account <ArrowRight size={14} />
+              </Link>
+            </article>
+            <article className="rounded-2xl border border-slate-200 bg-white p-6">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Secondary path</p>
+              <h4 className="mt-2 text-xl font-bold text-slate-900">Open demo → Run first action</h4>
+              <p className="mt-2 text-sm text-slate-600">No signup required. Explore realistic data instantly.</p>
+              <Link to="/app/dashboard?demo=1" className="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                Open demo <ArrowRight size={14} />
+              </Link>
+            </article>
           </div>
         </div>
       </section>
@@ -668,8 +722,8 @@ export default function LandingPage() {
                 period: 'Free forever',
                 desc: 'Explore the full AI CMO experience with realistic demo data.',
                 features: ['AI Chat — 50 msg/month', 'Business Analysis (demo data)', 'Creative Studio — 10 gen/month', 'Dashboard & Reporting', 'Email support'],
-                cta: 'Start Free',
-                ctaHref: '/register',
+                cta: 'Open demo',
+                ctaHref: '/app/dashboard?demo=1',
                 highlight: false,
               },
               {
@@ -678,7 +732,7 @@ export default function LandingPage() {
                 period: 'per month',
                 desc: 'For growth teams running live campaigns and replacing agency retainers.',
                 features: ['Unlimited AI Chat', 'Live integrations (5 connectors)', 'Unlimited Creative Generation', 'Full CRM & Campaign Orchestration', 'Advanced Analytics & Forecasting', 'A/B significance testing', 'Priority support'],
-                cta: 'Start Pro Trial →',
+                cta: 'Create account',
                 ctaHref: '/register',
                 highlight: true,
               },
@@ -688,8 +742,8 @@ export default function LandingPage() {
                 period: 'per seat / year',
                 desc: 'For scale-ups and agencies managing multiple brands and teams.',
                 features: ['Everything in Pro', 'Unlimited integrations', 'White-label option', 'Custom memory & brand voice', 'Dedicated onboarding + SLA', 'SSO + team management'],
-                cta: 'Contact Sales',
-                ctaHref: '#waitlist',
+                cta: 'Create account',
+                ctaHref: '/register',
                 highlight: false,
               },
             ].map((plan) => (
@@ -709,12 +763,12 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
-                <a
-                  href={plan.ctaHref}
+                <Link
+                  to={plan.ctaHref}
                   className={`mt-8 block rounded-xl py-3 text-center text-sm font-bold transition-all ${plan.highlight ? 'bg-orange-500 text-white shadow-lg shadow-orange-200 hover:bg-orange-600' : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-50'}`}
                 >
                   {plan.cta}
-                </a>
+                </Link>
               </article>
             ))}
           </div>

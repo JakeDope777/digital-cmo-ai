@@ -29,7 +29,9 @@ import {
 } from 'recharts';
 import { analyticsService, growthService } from '../services/api';
 import type { ChartData, DashboardMetrics } from '../types';
-import { trackEvent } from '../services/analytics';
+import { trackOnboardingStep } from '../services/analytics';
+import { useDemoMode } from '../context/DemoModeContext';
+import DemoDataBadge from '../components/common/DemoDataBadge';
 
 const defaults: DashboardMetrics = {
   total_leads: 342,
@@ -92,6 +94,7 @@ const ACTIONS = [
 const CHANNEL_COLORS = ['#f97316', '#0f172a', '#3b82f6', '#8b5cf6', '#10b981', '#64748b'];
 
 export default function DashboardPage() {
+  const { isDemoMode } = useDemoMode();
   const [metrics, setMetrics] = useState<DashboardMetrics>(defaults);
   const [charts, setCharts] = useState<ChartData[]>([]);
   const [funnel, setFunnel] = useState<{
@@ -104,9 +107,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string>('');
   const [isDemo, setIsDemo] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(
-    !localStorage.getItem('dcmo_welcome_dismissed'),
-  );
+  const [showWelcome, setShowWelcome] = useState(!localStorage.getItem('dcmo_welcome_dismissed'));
 
   const DEMO_FUNNEL = {
     steps: DEMO_FUNNEL_STEPS,
@@ -120,7 +121,7 @@ export default function DashboardPage() {
     setLoading(true);
 
     // In demo mode skip API calls entirely — just show hardcoded demo data
-    if (localStorage.getItem('demo_mode') === '1') {
+    if (isDemoMode) {
       setMetrics(defaults);
       setFunnel(DEMO_FUNNEL);
       setIsDemo(true);
@@ -153,13 +154,9 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    void trackEvent('dashboard_viewed');
-    if (!localStorage.getItem('onboarding_completed')) {
-      localStorage.setItem('onboarding_completed', '1');
-      void trackEvent('onboarding_completed');
-    }
+    void trackOnboardingStep('dashboard_viewed', { source: 'app' });
     void fetchData();
-  }, []);
+  }, [isDemoMode]);
 
   const spendSeries = useMemo(() => {
     const spendChart = charts.find((c) => c.id === 'spend_over_time');
@@ -334,11 +331,7 @@ export default function DashboardPage() {
           <div>
             <div className="flex items-center gap-2">
               <p className="text-xs uppercase tracking-[0.2em] text-orange-300">Executive View</p>
-              {isDemo && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-orange-500/20 px-2 py-0.5 text-xs font-medium text-orange-300 border border-orange-500/30">
-                  <Sparkles className="h-3 w-3" /> Demo data
-                </span>
-              )}
+              {isDemo && <DemoDataBadge className="border-orange-500/30 bg-orange-500/20 text-orange-300" />}
             </div>
             <h2 className="mt-2 text-2xl font-bold">Growth Command Dashboard</h2>
             <p className="mt-1 text-sm text-slate-400">Last sync: {updatedAt || 'just now'}</p>

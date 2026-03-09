@@ -3,9 +3,11 @@ import { Send, Loader2, Trash2, Bot, UserCircle } from 'lucide-react';
 import { chatService } from '../services/api';
 import type { ChatMessage } from '../types';
 import ReactMarkdown from 'react-markdown';
-import { trackEvent } from '../services/analytics';
+import { trackEvent, trackOnboardingStep } from '../services/analytics';
+import { useDemoMode } from '../context/DemoModeContext';
 
 export default function ChatPage() {
+  const { isDemoMode } = useDemoMode();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,6 +34,21 @@ export default function ChatPage() {
 
     try {
       await trackEvent('chat_message_sent', { length: text.length });
+
+      if (isDemoMode) {
+        const assistantMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content:
+            "Demo mode response: your top growth opportunity is improving signup-to-verified conversion. I recommend: 1) resend verification after 2 minutes, 2) add a dashboard preview before signup, 3) run one A/B test on onboarding email subject lines.",
+          timestamp: new Date().toISOString(),
+          module_used: 'AI Brain Orchestrator (demo)',
+        };
+        setMessages((prev) => [...prev, assistantMsg]);
+        await trackOnboardingStep('first_value_completed', { entrypoint: 'chat' });
+        return;
+      }
+
       const response = await chatService.sendMessage({
         message: text,
         conversation_id: conversationId,
@@ -47,6 +64,7 @@ export default function ChatPage() {
         tokens_used: response.tokens_used,
       };
       setMessages((prev) => [...prev, assistantMsg]);
+      void trackOnboardingStep('first_value_completed', { entrypoint: 'chat' });
     } catch {
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),

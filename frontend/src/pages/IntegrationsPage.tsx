@@ -18,6 +18,8 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { integrationsService } from '../services/api';
+import { useDemoMode } from '../context/DemoModeContext';
+import DemoDataBadge from '../components/common/DemoDataBadge';
 
 /* ── Types ─────────────────────────────────────────────── */
 interface Connector {
@@ -142,10 +144,12 @@ function ConnectorIcon({ connectorKey, size = 'md' }: { connectorKey: string; si
 }
 
 export default function IntegrationsPage() {
+  const { isDemoMode } = useDemoMode();
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [catalog, setCatalog] = useState<Record<string, CatalogItem>>({});
   const [stats, setStats] = useState<{ total_connectors: number; snapshot_connectors: number; source_total_connectors: number } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [total, setTotal] = useState(0);
@@ -164,7 +168,7 @@ export default function IntegrationsPage() {
   const fetchConnectors = async (reset = true) => {
     if (reset) { setLoading(true); setOffset(0); } else { setLoadingMore(true); }
 
-    if (localStorage.getItem('demo_mode') === '1') {
+    if (isDemoMode) {
       const filtered = DEMO_CONNECTORS.filter((c) => {
         if (category && c.category !== category) return false;
         if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
@@ -174,6 +178,7 @@ export default function IntegrationsPage() {
       setTotal(filtered.length);
       setHasMore(false);
       setStats({ total_connectors: 200, snapshot_connectors: 180, source_total_connectors: 420 });
+      setIsDemo(true);
       setLoading(false);
       setLoadingMore(false);
       return;
@@ -205,16 +210,18 @@ export default function IntegrationsPage() {
         integrations.forEach((item) => { map[item.name] = item; });
         setCatalog(map);
       }
+      setIsDemo(false);
     } catch {
       if (reset) setConnectors(DEMO_CONNECTORS);
       setTotal(DEMO_CONNECTORS.length);
+      setIsDemo(true);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
   };
 
-  useEffect(() => { void fetchConnectors(true); }, [category]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void fetchConnectors(true); }, [category, isDemoMode]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => { void fetchConnectors(true); }, 350);
@@ -261,6 +268,7 @@ export default function IntegrationsPage() {
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-orange-400" />
             <p className="text-xs uppercase tracking-[0.2em] text-orange-300 font-medium">Integration Hub</p>
+            {isDemo && <DemoDataBadge className="border-orange-500/30 bg-orange-500/20 text-orange-200" />}
           </div>
           <h2 className="text-3xl font-bold tracking-tight">Connect your stack</h2>
           <p className="mt-2 max-w-lg text-base text-slate-300">

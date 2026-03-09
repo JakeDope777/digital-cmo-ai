@@ -12,7 +12,9 @@ import {
 } from 'lucide-react';
 import { analysisService } from '../services/api';
 import ReactMarkdown from 'react-markdown';
-import { trackEvent } from '../services/analytics';
+import { trackEvent, trackOnboardingStep } from '../services/analytics';
+import { useDemoMode } from '../context/DemoModeContext';
+import DemoDataBadge from '../components/common/DemoDataBadge';
 
 type AnalysisType = 'market' | 'swot' | 'pestel' | 'competitor' | 'persona';
 
@@ -175,6 +177,7 @@ Autonomous AI that **plans, executes and analyses** — not just reports. Faster
 };
 
 export default function AnalysisPage() {
+  const { isDemoMode } = useDemoMode();
   const [selectedType, setSelectedType] = useState<AnalysisType>('market');
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<string | null>(null);
@@ -186,6 +189,16 @@ export default function AnalysisPage() {
     setLoading(true);
     setResult(null);
     setIsDemo(false);
+
+    if (isDemoMode) {
+      setResult(DEMO_RESULTS[selectedType]);
+      setIsDemo(true);
+      await trackEvent('analysis_run', { analysis_type: selectedType });
+      await trackOnboardingStep('first_value_completed', { entrypoint: 'analysis' });
+      setLoading(false);
+      return;
+    }
+
     try {
       await trackEvent('analysis_run', { analysis_type: selectedType });
       let response;
@@ -214,6 +227,7 @@ export default function AnalysisPage() {
             ? JSON.stringify(response.insights, null, 2)
             : JSON.stringify(response, null, 2);
       setResult(text);
+      void trackOnboardingStep('first_value_completed', { entrypoint: 'analysis' });
     } catch {
       // Show demo result so the page is useful without backend
       setResult(DEMO_RESULTS[selectedType]);
@@ -328,9 +342,7 @@ export default function AnalysisPage() {
             <Sparkles className="h-4 w-4 text-orange-500" />
             <h3 className="text-sm font-semibold text-slate-800">{current.label} Results</h3>
             {isDemo && (
-              <span className={`ml-auto rounded-full border px-2 py-0.5 text-xs font-medium ${colorMap[current.color]}`}>
-                Demo output
-              </span>
+              <DemoDataBadge className={`ml-auto ${colorMap[current.color]}`} />
             )}
           </div>
           <div className="prose prose-sm max-w-none prose-headings:text-slate-900 prose-headings:font-semibold prose-p:text-slate-700 prose-li:text-slate-700 prose-strong:text-slate-900 prose-table:text-sm">

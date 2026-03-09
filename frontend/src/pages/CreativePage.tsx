@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Wand2, Loader2, Copy, Check, Paintbrush, TestTubeDiagonal, Sparkles, ChevronRight } from 'lucide-react';
 import { creativeService } from '../services/api';
-import { trackEvent } from '../services/analytics';
+import { trackEvent, trackOnboardingStep } from '../services/analytics';
 import ReactMarkdown from 'react-markdown';
+import { useDemoMode } from '../context/DemoModeContext';
+import DemoDataBadge from '../components/common/DemoDataBadge';
 
 type CreativeMode = 'copy' | 'image' | 'ab-test';
 
@@ -79,6 +81,7 @@ const QUICK_BRIEFS: Record<CreativeMode, string[]> = {
 };
 
 export default function CreativePage() {
+  const { isDemoMode } = useDemoMode();
   const [mode, setMode] = useState<CreativeMode>('copy');
   const [brief, setBrief] = useState('');
   const [tone, setTone] = useState('professional');
@@ -92,18 +95,33 @@ export default function CreativePage() {
     setLoading(true);
     setResult(null);
     setIsDemo(false);
+
+    if (isDemoMode) {
+      const demoMap: Record<CreativeMode, string> = {
+        copy: DEMO_COPY,
+        image: DEMO_IMAGE,
+        'ab-test': DEMO_AB,
+      };
+      setResult(demoMap[mode]);
+      setIsDemo(true);
+      await trackEvent('creative_generated', { mode: mode === 'ab-test' ? 'ab_test' : mode, tone, demo: true });
+      await trackOnboardingStep('first_value_completed', { entrypoint: 'creative' });
+      setLoading(false);
+      return;
+    }
+
     try {
       let response;
       switch (mode) {
         case 'copy':
           response = await creativeService.generateCopy(brief, tone);
           setResult(response.content || JSON.stringify(response, null, 2));
-          void trackEvent('creative_generated', { mode: 'copy', tone });
+          void trackEvent('creative_generated', { mode: 'copy', tone, demo: false });
           break;
         case 'image':
           response = await creativeService.generateImage(brief);
           setResult(response.content || JSON.stringify(response, null, 2));
-          void trackEvent('creative_generated', { mode: 'image' });
+          void trackEvent('creative_generated', { mode: 'image', demo: false });
           break;
         case 'ab-test':
           response = await creativeService.suggestABTests(brief);
@@ -112,9 +130,10 @@ export default function CreativePage() {
               ? response.alternatives.join('\n\n---\n\n')
               : JSON.stringify(response, null, 2),
           );
-          void trackEvent('creative_generated', { mode: 'ab_test' });
+          void trackEvent('creative_generated', { mode: 'ab_test', demo: false });
           break;
       }
+      void trackOnboardingStep('first_value_completed', { entrypoint: 'creative' });
     } catch {
       // Show demo output so page is always useful
       const demoMap: Record<CreativeMode, string> = {
@@ -247,9 +266,7 @@ export default function CreativePage() {
               <Sparkles className="h-4 w-4 text-orange-500" />
               <h3 className="text-sm font-semibold text-slate-800">Generated {currentMode.label}</h3>
               {isDemo && (
-                <span className="rounded-full bg-orange-50 border border-orange-200 px-2 py-0.5 text-xs font-medium text-orange-600">
-                  Demo output
-                </span>
+                <DemoDataBadge />
               )}
             </div>
             <button

@@ -1,4 +1,5 @@
 import { growthService } from './api';
+import { completeOnboardingStep, type OnboardingStep } from './onboarding';
 
 declare global {
   interface Window {
@@ -8,22 +9,55 @@ declare global {
   }
 }
 
+export interface AnalyticsEventMap {
+  landing_view: { source?: string };
+  signup_started: { method?: 'email' };
+  signup_completed: { method?: 'email' };
+  verification_completed: { method?: 'token_link' };
+  dashboard_viewed: { source?: 'app' };
+  first_value_completed: { entrypoint?: 'chat' | 'analysis' | 'creative' };
+  onboarding_completed: { source?: 'frontend' };
+  login_completed: { method?: 'password' };
+  chat_message_sent: { length: number };
+  analysis_run: { analysis_type: string };
+  creative_generated: { mode: string; tone?: string; demo?: boolean };
+  billing_viewed: Record<string, never>;
+  checkout_started: { plan: string };
+  checkout_completed: Record<string, never>;
+  waitlist_joined: { company?: string; industry?: string; source?: string };
+  verification_email_resent: Record<string, never>;
+  profile_updated: Record<string, never>;
+  industry_page_view: { industry: string };
+  demo_mode_enabled: { source: 'query' | 'manual' };
+  demo_mode_disabled: Record<string, never>;
+}
+
+export type AnalyticsEventName = keyof AnalyticsEventMap;
+
 const GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
 const POSTHOG_HOST = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) || 'https://app.posthog.com';
 
+const ONBOARDING_EVENT_BY_STEP: Record<OnboardingStep, AnalyticsEventName> = {
+  landing_seen: 'landing_view',
+  signup_started: 'signup_started',
+  signup_completed: 'signup_completed',
+  verification_completed: 'verification_completed',
+  dashboard_viewed: 'dashboard_viewed',
+  first_value_completed: 'first_value_completed',
+};
+
 export function initAnalytics() {
   captureUtmParams();
-  if (GA_ID) {
-    loadGa(GA_ID);
-  }
-  if (POSTHOG_KEY) {
-    loadPosthog(POSTHOG_KEY, POSTHOG_HOST);
-  }
+  if (GA_ID) loadGa(GA_ID);
+  if (POSTHOG_KEY) loadPosthog(POSTHOG_KEY, POSTHOG_HOST);
 }
 
-export async function trackEvent(eventName: string, properties: Record<string, unknown> = {}) {
-  const merged = { ...getStoredUtm(), ...properties };
+export async function trackEvent<E extends AnalyticsEventName>(
+  eventName: E,
+  properties?: AnalyticsEventMap[E],
+) {
+  const merged = { ...getStoredUtm(), ...(properties ?? {}) };
   if (window.gtag && GA_ID) {
     window.gtag('event', eventName, merged);
   }
@@ -32,6 +66,22 @@ export async function trackEvent(eventName: string, properties: Record<string, u
   } catch {
     // best-effort analytics should not break UX
   }
+}
+
+export async function trackOnboardingStep(
+  step: OnboardingStep,
+  properties?: AnalyticsEventMap[AnalyticsEventName],
+) {
+  const changed = completeOnboardingStep(step);
+  if (!changed) return false;
+
+  const eventName = ONBOARDING_EVENT_BY_STEP[step];
+  await trackEvent(eventName, properties as AnalyticsEventMap[typeof eventName]);
+
+  if (step === 'first_value_completed') {
+    await trackEvent('onboarding_completed', { source: 'frontend' });
+  }
+  return true;
 }
 
 function captureUtmParams() {

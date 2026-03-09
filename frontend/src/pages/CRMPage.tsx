@@ -13,6 +13,8 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { crmService } from '../services/api';
+import { useDemoMode } from '../context/DemoModeContext';
+import DemoDataBadge from '../components/common/DemoDataBadge';
 
 // ── Demo data shown when backend is unavailable ──────────────────────────
 const DEMO_LEADS = [
@@ -35,6 +37,7 @@ type Lead = typeof DEMO_LEADS[0];
 type Campaign = typeof DEMO_CAMPAIGNS[0];
 
 export default function CRMPage() {
+  const { isDemoMode } = useDemoMode();
   const [tab, setTab] = useState<'leads' | 'campaigns' | 'compliance'>('leads');
   const [leads, setLeads] = useState<Lead[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -58,7 +61,7 @@ export default function CRMPage() {
     setLoading(true);
 
     // Demo mode: skip API calls, show hardcoded demo data immediately
-    if (localStorage.getItem('demo_mode') === '1') {
+    if (isDemoMode) {
       setLeads(DEMO_LEADS);
       setCampaigns(DEMO_CAMPAIGNS);
       setIsDemo(true);
@@ -83,7 +86,7 @@ export default function CRMPage() {
     }
   };
 
-  useEffect(() => { void fetchData(); }, []);
+  useEffect(() => { void fetchData(); }, [isDemoMode]);
 
   const addLead = async () => {
     if (!leadName.trim()) return;
@@ -168,9 +171,7 @@ export default function CRMPage() {
             <p className="text-sm text-slate-500">Manage your pipeline, run campaigns, and validate message compliance.</p>
           </div>
           {isDemo && (
-            <span className="rounded-full bg-orange-50 border border-orange-200 px-3 py-1 text-xs font-medium text-orange-600">
-              Demo data
-            </span>
+            <DemoDataBadge />
           )}
         </div>
 

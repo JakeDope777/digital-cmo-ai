@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { CreditCard, ExternalLink, Loader2, Receipt, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
 import { billingService } from '../services/api';
 import { trackEvent } from '../services/analytics';
+import { useDemoMode } from '../context/DemoModeContext';
+import DemoDataBadge from '../components/common/DemoDataBadge';
 
 interface Subscription {
   tier: string;
@@ -70,16 +72,47 @@ const FREE_FEATURES = [
   'Basic analysis',
 ];
 
+const DEMO_SUBSCRIPTION: Subscription = {
+  tier: 'starter',
+  status: 'active',
+  current_period_start: '2026-03-01T00:00:00Z',
+  current_period_end: '2026-04-01T00:00:00Z',
+  cancel_at_period_end: false,
+  demo: true,
+};
+
+const DEMO_INVOICES: InvoiceItem[] = [
+  {
+    id: 'in_demo_20260301',
+    amount_due: 0,
+    amount_paid: 0,
+    currency: 'usd',
+    status: 'paid',
+    created_at: '2026-03-01T08:00:00Z',
+    hosted_invoice_url: undefined,
+  },
+];
+
 export default function BillingPage() {
+  const { isDemoMode } = useDemoMode();
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
+  const [isDemo, setIsDemo] = useState(false);
 
   const refresh = async () => {
     setLoading(true);
     setError('');
+    if (isDemoMode) {
+      setSubscription(DEMO_SUBSCRIPTION);
+      setInvoices(DEMO_INVOICES);
+      setIsDemo(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const [subData, invoiceData] = await Promise.all([
         billingService.getSubscription(),
@@ -87,8 +120,12 @@ export default function BillingPage() {
       ]);
       setSubscription(subData);
       setInvoices(invoiceData.invoices || []);
+      setIsDemo(false);
     } catch {
-      setError('Unable to load billing data right now.');
+      setSubscription(DEMO_SUBSCRIPTION);
+      setInvoices(DEMO_INVOICES);
+      setIsDemo(true);
+      setError('Unable to load live billing data right now. Showing demo billing data.');
     } finally {
       setLoading(false);
     }
@@ -101,9 +138,13 @@ export default function BillingPage() {
       void trackEvent('checkout_completed');
     }
     void refresh();
-  }, []);
+  }, [isDemoMode]);
 
   const startCheckout = async () => {
+    if (isDemoMode) {
+      setError('Switch to live mode to open Stripe checkout.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -122,6 +163,10 @@ export default function BillingPage() {
   };
 
   const openPortal = async () => {
+    if (isDemoMode) {
+      setError('Switch to live mode to open the billing portal.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -160,6 +205,7 @@ export default function BillingPage() {
       <div>
         <h2 className="text-2xl font-bold text-slate-900">Billing</h2>
         <p className="text-sm text-slate-500">Manage your plan, payments, and invoices.</p>
+        {isDemo && <DemoDataBadge className="mt-2" />}
       </div>
 
       {error && (
