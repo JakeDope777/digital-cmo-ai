@@ -21,6 +21,8 @@ import PublicOnlyRoute from './components/auth/PublicOnlyRoute';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
+import UseCasesPage from './pages/UseCasesPage';
+import WhitePaperPage from './pages/WhitePaperPage';
 
 export default function App() {
   return (
@@ -37,6 +39,8 @@ export default function App() {
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/demo" element={<DemoEntryPage />} />
       <Route path="/industries/:slug" element={<IndustryPage />} />
+      <Route path="/use-cases" element={<UseCasesPage />} />
+      <Route path="/white-paper" element={<WhitePaperPage />} />
 
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<Layout />}>

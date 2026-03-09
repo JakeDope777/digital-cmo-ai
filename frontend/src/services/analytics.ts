@@ -1,5 +1,6 @@
 import { growthService } from './api';
-import { completeOnboardingStep, type OnboardingStep } from './onboarding';
+import { completeOnboardingStep, getOnboardingState, type OnboardingStep } from './onboarding';
+import type { DomainId, ModuleId } from '../types/catalog';
 
 declare global {
   interface Window {
@@ -10,29 +11,36 @@ declare global {
 }
 
 export interface AnalyticsEventMap {
-  landing_view: { source?: string };
-  signup_started: { method?: 'email' };
-  signup_completed: { method?: 'email' };
-  verification_completed: { method?: 'token_link' };
-  dashboard_viewed: { source?: 'app' };
-  first_value_completed: { entrypoint?: 'chat' | 'analysis' | 'creative' };
-  onboarding_completed: { source?: 'frontend' };
-  login_completed: { method?: 'password' };
-  chat_message_sent: { length: number };
-  analysis_run: { analysis_type: string };
-  creative_generated: { mode: string; tone?: string; demo?: boolean };
-  billing_viewed: Record<string, never>;
-  checkout_started: { plan: string };
-  checkout_completed: Record<string, never>;
-  waitlist_joined: { company?: string; industry?: string; source?: string };
-  verification_email_resent: Record<string, never>;
-  profile_updated: Record<string, never>;
-  industry_page_view: { industry: string };
-  demo_mode_enabled: { source: 'query' | 'manual' };
-  demo_mode_disabled: Record<string, never>;
+  landing_view: WithContext<{ source?: string }>;
+  signup_started: WithContext<{ method?: 'email' }>;
+  signup_completed: WithContext<{ method?: 'email' }>;
+  verification_completed: WithContext<{ method?: 'token_link' }>;
+  dashboard_viewed: WithContext<{ source?: 'app' }>;
+  first_value_completed: WithContext<{ entrypoint?: 'chat' | 'analysis' | 'creative' }>;
+  onboarding_completed: WithContext<{ source?: 'frontend' }>;
+  login_completed: WithContext<{ method?: 'password' }>;
+  chat_message_sent: WithContext<{ length: number }>;
+  analysis_run: WithContext<{ analysis_type: string }>;
+  creative_generated: WithContext<{ mode: string; tone?: string; demo?: boolean }>;
+  billing_viewed: WithContext;
+  checkout_started: WithContext<{ plan: string }>;
+  checkout_completed: WithContext;
+  waitlist_joined: WithContext<{ company?: string; industry?: string; source?: string }>;
+  verification_email_resent: WithContext;
+  profile_updated: WithContext;
+  industry_page_view: WithContext<{ industry: string }>;
+  demo_mode_enabled: WithContext<{ source: 'query' | 'manual' }>;
+  demo_mode_disabled: WithContext;
+  module_card_viewed: WithContext<{ module_id: ModuleId; location: 'landing' | 'investor_demo' | 'app' }>;
+  module_card_clicked: WithContext<{ module_id: ModuleId; location: 'landing' | 'investor_demo' | 'app' }>;
+  use_cases_view: WithContext<Record<string, never>>;
+  white_paper_view: WithContext<Record<string, never>>;
+  white_paper_download: WithContext<{ email: string }>;
 }
 
 export type AnalyticsEventName = keyof AnalyticsEventMap;
+type EventContext = { domain?: DomainId; module_id?: ModuleId };
+type WithContext<T extends Record<string, unknown> = Record<string, never>> = T & EventContext;
 
 const GA_ID = import.meta.env.VITE_GA_MEASUREMENT_ID as string | undefined;
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
@@ -57,7 +65,7 @@ export async function trackEvent<E extends AnalyticsEventName>(
   eventName: E,
   properties?: AnalyticsEventMap[E],
 ) {
-  const merged = { ...getStoredUtm(), ...(properties ?? {}) };
+  const merged = { ...getStoredUtm(), ...getOnboardingContext(), ...(properties ?? {}) };
   if (window.gtag && GA_ID) {
     window.gtag('event', eventName, merged);
   }
@@ -82,6 +90,14 @@ export async function trackOnboardingStep(
     await trackEvent('onboarding_completed', { source: 'frontend' });
   }
   return true;
+}
+
+function getOnboardingContext(): EventContext {
+  const state = getOnboardingState();
+  return {
+    domain: state.selected_domain,
+    module_id: state.selected_module,
+  };
 }
 
 function captureUtmParams() {
