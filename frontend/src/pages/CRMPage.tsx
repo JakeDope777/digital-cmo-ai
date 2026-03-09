@@ -56,13 +56,23 @@ export default function CRMPage() {
 
   const fetchData = async () => {
     setLoading(true);
+
+    // Demo mode: skip API calls, show hardcoded demo data immediately
+    if (localStorage.getItem('demo_mode') === '1') {
+      setLeads(DEMO_LEADS);
+      setCampaigns(DEMO_CAMPAIGNS);
+      setIsDemo(true);
+      setLoading(false);
+      return;
+    }
+
     try {
       const [leadsRes, campsRes] = await Promise.all([
         crmService.getLeads(),
         crmService.getCampaigns(),
       ]);
-      setLeads((leadsRes.leads as Lead[]) || []);
-      setCampaigns((campsRes.campaigns as Campaign[]) || []);
+      setLeads(Array.isArray(leadsRes?.leads) ? (leadsRes.leads as Lead[]) : DEMO_LEADS);
+      setCampaigns(Array.isArray(campsRes?.campaigns) ? (campsRes.campaigns as Campaign[]) : DEMO_CAMPAIGNS);
       setIsDemo(false);
     } catch {
       setLeads(DEMO_LEADS);

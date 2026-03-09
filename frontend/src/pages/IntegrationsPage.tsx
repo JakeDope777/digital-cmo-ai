@@ -30,6 +30,29 @@ interface ConnectorDetail {
 const PROVIDERS = ['all', 'native', 'n8n'];
 const CATEGORIES = ['', 'crm', 'ads', 'analytics', 'commerce', 'automation', 'email', 'social'];
 
+const DEMO_CONNECTORS: Connector[] = [
+  { key: 'google-ads', name: 'Google Ads', provider: 'native', category: 'ads' },
+  { key: 'meta-ads', name: 'Meta Ads', provider: 'native', category: 'ads' },
+  { key: 'hubspot', name: 'HubSpot', provider: 'native', category: 'crm' },
+  { key: 'salesforce', name: 'Salesforce', provider: 'native', category: 'crm' },
+  { key: 'mailchimp', name: 'Mailchimp', provider: 'native', category: 'email' },
+  { key: 'klaviyo', name: 'Klaviyo', provider: 'native', category: 'email' },
+  { key: 'ga4', name: 'Google Analytics 4', provider: 'native', category: 'analytics' },
+  { key: 'mixpanel', name: 'Mixpanel', provider: 'native', category: 'analytics' },
+  { key: 'shopify', name: 'Shopify', provider: 'native', category: 'commerce' },
+  { key: 'stripe', name: 'Stripe', provider: 'native', category: 'commerce' },
+  { key: 'linkedin-ads', name: 'LinkedIn Ads', provider: 'native', category: 'ads' },
+  { key: 'tiktok-ads', name: 'TikTok Ads', provider: 'native', category: 'ads' },
+  { key: 'zapier', name: 'Zapier', provider: 'n8n', category: 'automation' },
+  { key: 'make', name: 'Make (Integromat)', provider: 'n8n', category: 'automation' },
+  { key: 'twitter-x', name: 'X / Twitter', provider: 'native', category: 'social' },
+  { key: 'instagram', name: 'Instagram', provider: 'native', category: 'social' },
+  { key: 'pipedrive', name: 'Pipedrive', provider: 'native', category: 'crm' },
+  { key: 'intercom', name: 'Intercom', provider: 'native', category: 'crm' },
+  { key: 'sendgrid', name: 'SendGrid', provider: 'native', category: 'email' },
+  { key: 'segment', name: 'Segment', provider: 'native', category: 'analytics' },
+];
+
 const statusColor: Record<string, string> = {
   live: 'text-emerald-700 bg-emerald-50 ring-emerald-200',
   demo: 'text-orange-700 bg-orange-50 ring-orange-200',
@@ -64,6 +87,24 @@ export default function IntegrationsPage() {
     } else {
       setLoadingMore(true);
     }
+
+    // Demo mode: skip API calls, show hardcoded demo connectors
+    if (localStorage.getItem('demo_mode') === '1') {
+      const filtered = DEMO_CONNECTORS.filter((c) => {
+        if (provider !== 'all' && c.provider !== provider) return false;
+        if (category && c.category !== category) return false;
+        if (search && !c.name.toLowerCase().includes(search.toLowerCase())) return false;
+        return true;
+      });
+      setConnectors(filtered);
+      setTotal(filtered.length);
+      setHasMore(false);
+      setStats({ total_connectors: DEMO_CONNECTORS.length, snapshot_connectors: 180, source_total_connectors: 420 });
+      setLoading(false);
+      setLoadingMore(false);
+      return;
+    }
+
     try {
       const currentOffset = reset ? 0 : offset;
       const [marketData, statsData, catalogData] = await Promise.all([
@@ -78,26 +119,31 @@ export default function IntegrationsPage() {
         Object.keys(catalog).length === 0 ? integrationsService.getCatalog() : Promise.resolve({ integrations: [] }),
       ]);
 
+      // Guard: if response is not the expected shape (e.g. HTML from Vercel rewrite), fall back to demo
+      const connectorList: Connector[] = Array.isArray(marketData?.connectors) ? marketData.connectors : DEMO_CONNECTORS;
       if (reset) {
-        setConnectors(marketData.connectors);
+        setConnectors(connectorList);
       } else {
-        setConnectors((prev) => [...prev, ...marketData.connectors]);
+        setConnectors((prev) => [...prev, ...connectorList]);
       }
-      setTotal(marketData.total);
-      setHasMore(marketData.has_more);
+      setTotal(marketData?.total || connectorList.length);
+      setHasMore(marketData?.has_more || false);
       setOffset(currentOffset + PAGE_SIZE);
 
       if (statsData) setStats(statsData as typeof stats);
 
-      if (catalogData.integrations.length > 0) {
+      const integrations = catalogData?.integrations;
+      if (Array.isArray(integrations) && integrations.length > 0) {
         const map: Record<string, CatalogItem> = {};
-        catalogData.integrations.forEach((item) => {
+        integrations.forEach((item) => {
           map[item.name] = item;
         });
         setCatalog(map);
       }
     } catch {
-      // backend may be offline; keep existing data
+      // backend may be offline; show demo connectors
+      if (reset) setConnectors(DEMO_CONNECTORS);
+      setTotal(DEMO_CONNECTORS.length);
     } finally {
       setLoading(false);
       setLoadingMore(false);
