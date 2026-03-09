@@ -12,7 +12,11 @@ import time
 from typing import Any, Optional
 import uuid
 
+from sqlalchemy.exc import SQLAlchemyError
+
 from ...core.config import settings
+from ...db.models import IntegrationRun
+from ...db.session import SessionLocal
 from . import ConnectorRegistry
 from .base import ConnectorInterface
 from .n8n_catalog import list_n8n_connectors, n8n_catalog_stats
@@ -254,13 +258,19 @@ class IntegrationService:
         status_filter = (status or "").strip().lower()
         event_filter = (event or "").strip().lower()
 
-        rows = list(reversed(self._run_history))
-        if connector_filter:
-            rows = [row for row in rows if row.get("connector", "").lower() == connector_filter]
-        if status_filter:
-            rows = [row for row in rows if row.get("status", "").lower() == status_filter]
-        if event_filter:
-            rows = [row for row in rows if row.get("event", "").lower() == event_filter]
+        rows = self._list_runs_from_db(
+            connector=connector_filter or None,
+            status=status_filter or None,
+            event=event_filter or None,
+        )
+        if rows is None:
+            rows = list(reversed(self._run_history))
+            if connector_filter:
+                rows = [row for row in rows if row.get("connector", "").lower() == connector_filter]
+            if status_filter:
+                rows = [row for row in rows if row.get("status", "").lower() == status_filter]
+            if event_filter:
+                rows = [row for row in rows if row.get("event", "").lower() == event_filter]
 
         safe_limit = max(1, limit)
         clipped = rows[:safe_limit]
@@ -276,9 +286,11 @@ class IntegrationService:
 
     def get_run_summary(self, connector: Optional[str] = None) -> dict[str, Any]:
         connector_filter = (connector or "").strip().lower()
-        rows = list(self._run_history)
-        if connector_filter:
-            rows = [row for row in rows if row.get("connector", "").lower() == connector_filter]
+        rows = self._list_runs_from_db(connector=connector_filter or None)
+        if rows is None:
+            rows = list(self._run_history)
+            if connector_filter:
+                rows = [row for row in rows if row.get("connector", "").lower() == connector_filter]
 
         success_count = sum(1 for row in rows if row.get("status") == "success")
         error_count = sum(1 for row in rows if row.get("status") == "error")
@@ -301,6 +313,39 @@ class IntegrationService:
             "avg_duration_ms": round(avg_duration_ms, 2),
             "by_connector": by_connector,
         }
+
+    def _list_runs_from_db(
+        self,
+        connector: Optional[str] = None,
+        status: Optional[str] = None,
+        event: Optional[str] = None,
+    ) -> Optional[list[dict[str, Any]]]:
+        try:
+            with SessionLocal() as db:
+                query = db.query(IntegrationRun)
+                if connector:
+                    query = query.filter(IntegrationRun.connector == connector)
+                if status:
+                    query = query.filter(IntegrationRun.status == status)
+                if event:
+                    query = query.filter(IntegrationRun.event == event)
+                query = query.order_by(IntegrationRun.created_at.desc())
+                rows = query.all()
+            return [
+                {
+                    "id": row.id,
+                    "timestamp": row.created_at.isoformat() + "Z" if row.created_at else None,
+                    "connector": row.connector,
+                    "event": row.event,
+                    "status": row.status,
+                    "duration_ms": row.duration_ms,
+                    "error": row.error,
+                    "metadata": row.meta_payload or {},
+                }
+                for row in rows
+            ]
+        except SQLAlchemyError:
+            return None
 
     @staticmethod
     def _humanize_connector_key(key: str) -> str:
@@ -368,7 +413,7 @@ class IntegrationService:
         metadata: Optional[dict[str, Any]] = None,
     ) -> None:
         self._run_history.append(
-            {
+            run_record := {
                 "id": f"run_{uuid.uuid4().hex[:12]}",
                 "timestamp": dt.datetime.utcnow().isoformat() + "Z",
                 "connector": connector,
@@ -379,6 +424,27 @@ class IntegrationService:
                 "metadata": metadata or {},
             }
         )
+        self._persist_run_to_db(run_record)
+
+    @staticmethod
+    def _persist_run_to_db(run_record: dict[str, Any]) -> None:
+        try:
+            with SessionLocal() as db:
+                db.add(
+                    IntegrationRun(
+                        id=run_record["id"],
+                        connector=run_record["connector"],
+                        event=run_record["event"],
+                        status=run_record["status"],
+                        duration_ms=float(run_record["duration_ms"]),
+                        error=run_record.get("error"),
+                        meta_payload=run_record.get("metadata") or {},
+                    )
+                )
+                db.commit()
+        except SQLAlchemyError:
+            # Persist failure should never break connector execution flows.
+            return
 
     def _idempotency_cache_key(self, connector: str, idempotency_key: str) -> str:
         return f"{connector}:{idempotency_key}"

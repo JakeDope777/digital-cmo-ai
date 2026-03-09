@@ -292,3 +292,16 @@ class WaitlistLead(Base):
     utm_medium = Column(String, nullable=True)
     utm_campaign = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class IntegrationRun(Base):
+    __tablename__ = "integration_runs"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    connector = Column(String, nullable=False, index=True)
+    event = Column(String, nullable=False, index=True)
+    status = Column(String, nullable=False, index=True)
+    duration_ms = Column(Float, nullable=False, default=0.0)
+    error = Column(Text, nullable=True)
+    meta_payload = Column("metadata", JSON, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
