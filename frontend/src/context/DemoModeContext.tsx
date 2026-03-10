@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { trackEvent } from '../services/analytics';
+import { resolveDomainId } from '../data/domainModuleCatalog';
+import { setSelectedDomain } from '../services/onboarding';
+import type { DomainId } from '../types/catalog';
 
 const DEMO_MODE_KEY = 'demo_mode';
 const DEMO_MODE_STATE_KEY = 'dcmo_demo_mode_state_v1';
@@ -8,13 +11,14 @@ const DEMO_MODE_STATE_KEY = 'dcmo_demo_mode_state_v1';
 export interface DemoModeState {
   enabled: boolean;
   source: 'query' | 'manual' | 'stored' | null;
+  domain?: DomainId;
   enabled_at?: string;
 }
 
 interface DemoModeContextValue {
   demoMode: DemoModeState;
   isDemoMode: boolean;
-  enableDemoMode: (source?: 'query' | 'manual') => void;
+  enableDemoMode: (source?: 'query' | 'manual', domain?: DomainId) => void;
   disableDemoMode: () => void;
 }
 
@@ -27,10 +31,12 @@ function readStoredState(): DemoModeState {
 
   // Check URL param synchronously so ProtectedRoute sees demo mode on first render
   const search = new URLSearchParams(window.location.search);
+  const queryDomain = resolveDomainId(search.get('domain'));
   if (search.get('demo') === '1') {
     const state: DemoModeState = {
       enabled: true,
       source: 'query',
+      domain: queryDomain,
       enabled_at: new Date().toISOString(),
     };
     persistState(state);
@@ -45,6 +51,7 @@ function readStoredState(): DemoModeState {
         return {
           enabled: parsed.enabled,
           source: parsed.source ?? null,
+          domain: resolveDomainId(parsed.domain),
           enabled_at: parsed.enabled_at,
         };
       }
@@ -54,7 +61,7 @@ function readStoredState(): DemoModeState {
   }
 
   return localStorage.getItem(DEMO_MODE_KEY) === '1'
-    ? { enabled: true, source: 'stored' }
+    ? { enabled: true, source: 'stored', domain: queryDomain }
     : { enabled: false, source: null };
 }
 
@@ -69,16 +76,20 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [demoMode, setDemoMode] = useState<DemoModeState>(() => readStoredState());
 
-  const enableDemoMode = useCallback((source: 'query' | 'manual' = 'manual') => {
+  const enableDemoMode = useCallback((source: 'query' | 'manual' = 'manual', domain?: DomainId) => {
     setDemoMode((prev) => {
-      if (prev.enabled && prev.source === source) return prev;
+      if (prev.enabled && prev.source === source && prev.domain === domain) return prev;
       const next: DemoModeState = {
         enabled: true,
         source,
+        domain: domain ?? prev.domain,
         enabled_at: prev.enabled_at ?? new Date().toISOString(),
       };
       persistState(next);
-      void trackEvent('demo_mode_enabled', { source });
+      if (next.domain) {
+        setSelectedDomain(next.domain);
+      }
+      void trackEvent('demo_mode_enabled', { source, domain: next.domain });
       return next;
     });
   }, []);
@@ -86,7 +97,7 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
   const disableDemoMode = useCallback(() => {
     setDemoMode((prev) => {
       if (!prev.enabled) return prev;
-      const next: DemoModeState = { enabled: false, source: null };
+      const next: DemoModeState = { enabled: false, source: null, domain: prev.domain };
       persistState(next);
       void trackEvent('demo_mode_disabled');
       return next;
@@ -96,9 +107,19 @@ export function DemoModeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const search = new URLSearchParams(location.search);
     if (search.get('demo') === '1') {
-      enableDemoMode('query');
+      const domain = resolveDomainId(search.get('domain'));
+      if (domain) {
+        setSelectedDomain(domain);
+      }
+      enableDemoMode('query', domain);
     }
   }, [location.search, enableDemoMode]);
+
+  useEffect(() => {
+    if (demoMode.domain) {
+      setSelectedDomain(demoMode.domain);
+    }
+  }, [demoMode.domain]);
 
   const value = useMemo<DemoModeContextValue>(
     () => ({

@@ -214,7 +214,7 @@ section{padding:100px 40px}
 .copy-btn:hover{color:white;border-color:rgba(255,255,255,.2)}
 
 /* ── MODULES ── */
-.modules-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:60px}
+.modules-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-top:60px}
 .mod-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:26px;transition:all .3s;opacity:0;transform:translateY(16px)}
 .mod-card.visible{opacity:1;transform:translateY(0)}
 .mod-card:hover{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);transform:translateY(-3px)}
@@ -223,6 +223,9 @@ section{padding:100px 40px}
 .mod-badge{display:inline-block;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:600;background:rgba(255,255,255,.06);color:#64748b;margin-left:8px;vertical-align:middle}
 .mod-title{font-size:15px;font-weight:700;color:white;margin-bottom:8px}
 .mod-desc{font-size:13px;color:#64748b;line-height:1.6}
+.mod-features{margin-top:9px;display:flex;flex-direction:column;gap:6px}
+.mod-feat{font-size:11px;color:#cbd5e1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:6px 8px}
+.mod-domain{margin-top:8px;font-size:11px;color:#94a3b8}
 
 /* ── INTEGRATIONS ── */
 .int-section{text-align:center}
@@ -579,13 +582,13 @@ nav.scrolled{background:rgba(15,23,42,.98)}
               <div class="ai-avatar-sm"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
               <div>
                 <div class="chat-header-name">AI CMO Buddy</div>
-                <div class="chat-header-status"><span class="status-dot"></span>Active — all modules ready</div>
+                <div class="chat-header-status"><span class="status-dot"></span>Active — 10 modules ready</div>
               </div>
             </div>
             <div class="chat-messages" id="chatMessages">
               <div class="chat-msg">
                 <div class="msg-ava ai"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
-                <div class="bubble ai">How can I help with your marketing today? I can run strategy, analysis, write copy, review your campaigns, or brief you on KPIs.<div class="module-chip">Brain Orchestrator · all modules ready</div></div>
+                <div class="bubble ai">How can I help with your marketing today? I can run strategy, analysis, write copy, review your campaigns, or brief you on KPIs.<div class="module-chip">Brain Orchestrator · 10 modules ready</div></div>
               </div>
             </div>
             <div class="chat-suggestions-row" id="chatSugs">
@@ -655,18 +658,11 @@ Are you using AI to go faster, or to think better?
 <section id="modules">
   <div class="section-inner">
     <div class="reveal text-center">
-      <div class="section-eyebrow">Six modules. One OS.</div>
+      <div class="section-eyebrow">Ten modules. One OS.</div>
       <h2 class="section-h2" style="text-align:center">Every module shares memory.<br>Context never gets lost.</h2>
       <p class="section-sub" style="margin:16px auto 0;text-align:center">Each module is orchestrated by the AI brain and contributes to a persistent, 4-layer memory system — so your AI CMO always knows your history, goals, and brand.</p>
     </div>
-    <div class="modules-grid">
-      <div class="mod-card"><div class="mod-icon" style="background:rgba(15,23,42,1);border:1px solid rgba(255,255,255,.1)"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div><div class="mod-title">AI Brain & Memory<span class="mod-badge">Core</span></div><div class="mod-desc">Persistent 4-layer memory: context window, folder store, vector embeddings, and relational DB. Never loses context between sessions.</div></div>
-      <div class="mod-card"><div class="mod-icon" style="background:var(--orange)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div><div class="mod-title">Business Analysis<span class="mod-badge">Analysis</span></div><div class="mod-desc">SWOT, PESTEL, competitor deep-dives, market research, buyer persona generation — hours of research in seconds.</div></div>
-      <div class="mod-card"><div class="mod-icon" style="background:var(--violet)"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div><div class="mod-title">Creative Studio<span class="mod-badge">Creative</span></div><div class="mod-desc">Generate channel-ready copy, image prompts, and A/B variants at scale with brand voice preservation across tones and formats.</div></div>
-      <div class="mod-card"><div class="mod-icon" style="background:#059669"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="mod-title">CRM & Campaigns<span class="mod-badge">CRM</span></div><div class="mod-desc">Lead scoring, journey mapping, multi-channel orchestration, GDPR/CAN-SPAM compliance checking — all automated.</div></div>
-      <div class="mod-card"><div class="mod-icon" style="background:var(--blue)"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="mod-title">Analytics & Reporting<span class="mod-badge">Analytics</span></div><div class="mod-desc">KPI dashboards, forecasting, cohort analysis, A/B significance testing — no BI team or SQL knowledge required.</div></div>
-      <div class="mod-card" id="integrationsModuleCard"><div class="mod-icon" style="background:var(--rose)"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div><div class="mod-title">21+ Integrations<span class="mod-badge">Integrations</span></div><div class="mod-desc" id="integrationsModuleDesc">HubSpot, Salesforce, Google Ads, Meta, Klaviyo, Shopify, Stripe, LinkedIn, n8n and more — all with demo fallback.</div></div>
-    </div>
+    <div class="modules-grid" id="modulesGrid"></div>
     <div class="mod-live-box reveal">
       <div class="mod-live-toolbar">
         <div>
@@ -686,7 +682,22 @@ Are you using AI to go faster, or to think better?
         <select id="categoryFilterInput" class="market-search market-filter" title="Filter by category">
           <option value="">All categories</option>
         </select>
+        <select id="domainScenarioInput" class="market-search market-filter" title="Select domain">
+          <option value="ecommerce">E-commerce & DTC</option>
+          <option value="saas">B2B SaaS</option>
+          <option value="fintech">Fintech</option>
+          <option value="igaming">iGaming & Betting</option>
+          <option value="healthtech">Health & MedTech</option>
+          <option value="proptech">Real Estate & PropTech</option>
+          <option value="edtech">EdTech & Online Education</option>
+          <option value="agency">Marketing Agency</option>
+        </select>
         <input id="connectorSearchInput" class="market-search" placeholder="Search 200+ connectors..." />
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="live-btn ghost" onclick="applyDemoScenario('investor')">Scenario: Investor</button>
+          <button class="live-btn ghost" onclick="applyDemoScenario('marketplace')">Scenario: Marketplace</button>
+          <button class="live-btn ghost" onclick="applyDemoScenario('runs')">Scenario: Run History</button>
+        </div>
         <span class="live-status" id="integrationsLiveStatus">Waiting for first sync…</span>
       </div>
       <div class="live-list" id="integrationsLiveList"></div>
@@ -946,15 +957,173 @@ function copyOutput(){navigator.clipboard.writeText(document.getElementById('cre
 
 // ── Integrations live sync (modules section) ──
 const urlParams = new URLSearchParams(window.location.search);
-const queryApiBase = (urlParams.get('api') || '').trim();
+const DOMAIN_NAMES = {
+  ecommerce: 'E-commerce',
+  saas: 'SaaS',
+  fintech: 'Fintech',
+  igaming: 'iGaming',
+  healthtech: 'HealthTech',
+  proptech: 'PropTech',
+  edtech: 'EdTech',
+  agency: 'Agency',
+};
+const queryDomain = (urlParams.get('domain') || '').trim().toLowerCase();
+const storedDomain = (localStorage.getItem('investor_demo_domain') || '').trim().toLowerCase();
+let selectedDemoDomain = DOMAIN_NAMES[queryDomain]
+  ? queryDomain
+  : (DOMAIN_NAMES[storedDomain] ? storedDomain : 'saas');
+localStorage.setItem('investor_demo_domain', selectedDemoDomain);
+
+const modulesGrid = document.getElementById('modulesGrid');
+const domainScenarioInput = document.getElementById('domainScenarioInput');
+if (domainScenarioInput && DOMAIN_NAMES[selectedDemoDomain]) {
+  domainScenarioInput.value = selectedDemoDomain;
+}
+
+function moduleOverrides(title) {
+  return Object.fromEntries(
+    Object.keys(DOMAIN_NAMES).map((domainId) => [
+      domainId,
+      `${title} tuned for ${DOMAIN_NAMES[domainId]} revenue motion and onboarding milestones.`,
+    ])
+  );
+}
+
+const MODULE_CATALOG = [
+  {
+    id: 'dashboard',
+    title: 'Dashboard',
+    badge: 'Core',
+    color: 'rgba(15,23,42,1)',
+    icon: '<svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+    desc: 'Unified KPI command center with proactive alerts and execution-ready next actions.',
+    features: ['KPI snapshots by channel', 'Anomaly alerts', 'Exec summary cards', 'Rapid drilldowns'],
+    domain_overrides: moduleOverrides('Dashboard'),
+  },
+  {
+    id: 'chat',
+    title: 'Chat',
+    badge: 'Assistant',
+    color: 'var(--orange)',
+    icon: '<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+    desc: 'Natural-language workspace to trigger strategy, execution, and reporting workflows.',
+    features: ['Prompt-to-workflow routing', 'Persistent context', 'Structured outputs', 'Fast iteration loops'],
+    domain_overrides: moduleOverrides('Chat'),
+  },
+  {
+    id: 'analysis',
+    title: 'Analysis',
+    badge: 'Strategy',
+    color: 'var(--blue)',
+    icon: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>',
+    desc: 'Framework-driven market and competitor intelligence for strategic planning.',
+    features: ['SWOT + PESTEL', 'Market sizing', 'Persona generation', 'Decision briefs'],
+    domain_overrides: moduleOverrides('Analysis'),
+  },
+  {
+    id: 'creative',
+    title: 'Creative',
+    badge: 'Creative',
+    color: 'var(--violet)',
+    icon: '<svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+    desc: 'Copy systems, image prompts, and variant packs with brand consistency.',
+    features: ['Channel-ready copy', 'Prompt templates', 'A/B variants', 'Reuse-ready scaffolds'],
+    domain_overrides: moduleOverrides('Creative'),
+  },
+  {
+    id: 'crm',
+    title: 'CRM',
+    badge: 'Execution',
+    color: '#059669',
+    icon: '<svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    desc: 'Lead and campaign orchestration with scoring and compliance guardrails.',
+    features: ['Lead scoring', 'Journey orchestration', 'Compliance checks', 'Pipeline visibility'],
+    domain_overrides: moduleOverrides('CRM'),
+  },
+  {
+    id: 'growth',
+    title: 'Growth',
+    badge: 'Funnel',
+    color: '#0d9488',
+    icon: '<svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+    desc: 'Funnel and attribution visibility to reduce time to first value.',
+    features: ['Drop-off analysis', 'UTM attribution', 'Event velocity', 'Activation diagnostics'],
+    domain_overrides: moduleOverrides('Growth'),
+  },
+  {
+    id: 'integrations',
+    title: 'Integrations',
+    badge: 'Connectors',
+    color: 'var(--rose)',
+    icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    desc: 'Native and marketplace connectors with deterministic fallback reliability.',
+    features: ['Live/demo status', 'Provider filtering', 'Run summaries', 'Fallback scenarios'],
+    domain_overrides: moduleOverrides('Integrations'),
+  },
+  {
+    id: 'billing',
+    title: 'Billing',
+    badge: 'Revenue',
+    color: '#d97706',
+    icon: '<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>',
+    desc: 'Plan and checkout experience with safe demo guardrails.',
+    features: ['Plan progression', 'Checkout handoff', 'Portal visibility', 'Upgrade telemetry'],
+    domain_overrides: moduleOverrides('Billing'),
+  },
+  {
+    id: 'profile',
+    title: 'Profile',
+    badge: 'Workspace',
+    color: '#4f46e5',
+    icon: '<svg viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>',
+    desc: 'Workspace identity controls used by onboarding and personalization.',
+    features: ['Company profile', 'Preference persistence', 'Team context', 'Output personalization'],
+    domain_overrides: moduleOverrides('Profile'),
+  },
+  {
+    id: 'settings',
+    title: 'Settings',
+    badge: 'Admin',
+    color: '#334155',
+    icon: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 0 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5h.1a1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    desc: 'Operational controls for environment, defaults, and safety posture.',
+    features: ['Environment controls', 'Access defaults', 'Operational diagnostics', 'Support context'],
+    domain_overrides: moduleOverrides('Settings'),
+  },
+];
+
+function renderModuleCatalog() {
+  if (!modulesGrid) return;
+  modulesGrid.innerHTML = MODULE_CATALOG.map((module) => {
+    const features = module.features.map((feature) => `<div class="mod-feat">${feature}</div>`).join('');
+    const domainNote = module.domain_overrides[selectedDemoDomain] || '';
+    const descId = module.id === 'integrations' ? ' id="integrationsModuleDesc"' : '';
+    return `
+      <div class="mod-card">
+        <div class="mod-icon" style="background:${module.color};${module.id === 'dashboard' ? 'border:1px solid rgba(255,255,255,.1)' : ''}">${module.icon}</div>
+        <div class="mod-title">${module.title}<span class="mod-badge">${module.badge}</span></div>
+        <div class="mod-desc"${descId}>${module.desc}</div>
+        <div class="mod-features">${features}</div>
+        <div class="mod-domain">${domainNote}</div>
+      </div>
+    `;
+  }).join('');
+  document.querySelectorAll('.mod-card').forEach((card, index) => {
+    setTimeout(() => card.classList.add('visible'), 60 * index);
+  });
+}
+
+const queryApiBase = (urlParams.get('api') || urlParams.get('api_base') || '').trim();
 const isFileMode = window.location.protocol === 'file:';
 const isVercelStaticHost = !isFileMode && window.location.hostname.endsWith('vercel.app');
+const storedApiBase = (localStorage.getItem('investor_demo_api_base') || '').trim();
 const defaultApiBase = queryApiBase
+  || storedApiBase
   || (isFileMode ? 'http://localhost:8000' : (isVercelStaticHost ? '' : `${window.location.protocol}//${window.location.host}`));
 const integrationApiInput = document.getElementById('integrationApiBase');
 if (integrationApiInput) {
-  integrationApiInput.value = queryApiBase || localStorage.getItem('investor_demo_api_base') || defaultApiBase;
-  integrationApiInput.addEventListener('change', () => {
+  integrationApiInput.value = defaultApiBase;
+  integrationApiInput.addEventListener('input', () => {
     localStorage.setItem('investor_demo_api_base', integrationApiInput.value.trim());
   });
 }
@@ -968,6 +1137,18 @@ function setIntegrationStatus(text, level='') {
   if (!el) return;
   el.textContent = text;
   el.className = `live-status ${level}`.trim();
+}
+
+function networkHelpText() {
+  return 'Live API unavailable. Showing deterministic demo scenario. Check backend URL, CORS, and service health.';
+}
+
+function formatRequestError(error) {
+  const msg = (error && error.message) ? error.message : String(error || 'Unknown error');
+  if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+    return `${msg}. This usually means the backend is unreachable or blocked by CORS.`;
+  }
+  return msg;
 }
 
 function renderIntegrationRun(items) {
@@ -1013,7 +1194,16 @@ function renderIntegrationRunsFeed(runs) {
 }
 
 async function refreshRunHistory() {
-  if (!apiBase()) return;
+  if (!apiBase()) {
+    renderIntegrationRunSummary({
+      total_runs: FALLBACK_RUNS.length,
+      success_count: FALLBACK_RUNS.filter((r) => r.status === 'success').length,
+      error_count: FALLBACK_RUNS.filter((r) => r.status !== 'success').length,
+      avg_duration_ms: Math.round(FALLBACK_RUNS.reduce((acc, r) => acc + r.duration_ms, 0) / FALLBACK_RUNS.length),
+    });
+    renderIntegrationRunsFeed(FALLBACK_RUNS);
+    return;
+  }
   try {
     const [runsData, summaryData] = await Promise.all([
       apiRequest('/integrations/runs?limit=8'),
@@ -1022,8 +1212,13 @@ async function refreshRunHistory() {
     renderIntegrationRunSummary(summaryData);
     renderIntegrationRunsFeed(runsData.runs || []);
   } catch {
-    renderIntegrationRunSummary(null);
-    renderIntegrationRunsFeed([]);
+    renderIntegrationRunSummary({
+      total_runs: FALLBACK_RUNS.length,
+      success_count: FALLBACK_RUNS.filter((r) => r.status === 'success').length,
+      error_count: FALLBACK_RUNS.filter((r) => r.status !== 'success').length,
+      avg_duration_ms: Math.round(FALLBACK_RUNS.reduce((acc, r) => acc + r.duration_ms, 0) / FALLBACK_RUNS.length),
+    });
+    renderIntegrationRunsFeed(FALLBACK_RUNS);
   }
 }
 
@@ -1031,9 +1226,23 @@ async function apiRequest(path, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   const token = localStorage.getItem('access_token');
   if (token) headers.Authorization = `Bearer ${token}`;
-
-  const response = await fetch(`${apiBase()}${path}`, { ...options, headers });
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+  const requestUrl = `${apiBase()}${path}`;
+  let response;
+  try {
+    response = await fetch(requestUrl, { ...options, headers });
+  } catch (error) {
+    throw new Error(formatRequestError(error));
+  }
+  if (!response.ok) {
+    let payload = '';
+    try {
+      payload = await response.text();
+    } catch {
+      payload = '';
+    }
+    const detail = payload ? ` · ${payload.slice(0, 140)}` : '';
+    throw new Error(`${response.status} ${response.statusText}${detail}`);
+  }
   return response.json();
 }
 
@@ -1059,6 +1268,147 @@ const marketplaceGrid = document.getElementById('marketplaceGrid');
 const marketplaceDetail = document.getElementById('marketplaceDetail');
 const marketplaceSummaryEl = document.getElementById('marketplaceSummary');
 const loadMoreConnectorsBtn = document.getElementById('loadMoreConnectorsBtn');
+
+const FALLBACK_CONNECTORS = [
+  { key: 'google-ads', name: 'Google Ads', provider: 'native', category: 'ads' },
+  { key: 'meta-ads', name: 'Meta Ads', provider: 'native', category: 'ads' },
+  { key: 'hubspot', name: 'HubSpot', provider: 'native', category: 'crm' },
+  { key: 'salesforce', name: 'Salesforce', provider: 'native', category: 'crm' },
+  { key: 'ga4', name: 'Google Analytics 4', provider: 'native', category: 'analytics' },
+  { key: 'shopify', name: 'Shopify', provider: 'native', category: 'commerce' },
+  { key: 'stripe', name: 'Stripe', provider: 'native', category: 'commerce' },
+  { key: 'klaviyo', name: 'Klaviyo', provider: 'native', category: 'email' },
+  { key: 'n8n-hubspot-sync', name: 'HubSpot Sync Template', provider: 'n8n', category: 'automation' },
+  { key: 'n8n-lead-routing', name: 'Lead Routing Template', provider: 'n8n', category: 'automation' },
+  { key: 'n8n-report-rollup', name: 'Weekly Report Rollup', provider: 'n8n', category: 'analytics' },
+];
+
+const FALLBACK_STATUS = {
+  'google-ads': { demo_mode: false, authenticated: true },
+  'meta-ads': { demo_mode: true, authenticated: false },
+  hubspot: { demo_mode: false, authenticated: true },
+  salesforce: { demo_mode: true, authenticated: false },
+  ga4: { demo_mode: false, authenticated: true },
+  shopify: { demo_mode: true, authenticated: false },
+  stripe: { demo_mode: true, authenticated: false },
+  klaviyo: { demo_mode: true, authenticated: false },
+};
+
+const FALLBACK_RUNS = [
+  { connector: 'hubspot', event: 'sync_contacts', status: 'success', duration_ms: 381, timestamp: '2026-03-09T20:11:03Z', metadata: { replayed: false } },
+  { connector: 'google-ads', event: 'pull_campaigns', status: 'success', duration_ms: 249, timestamp: '2026-03-09T20:10:55Z', metadata: { replayed: false } },
+  { connector: 'n8n', event: 'trigger_workflow', status: 'success', duration_ms: 534, timestamp: '2026-03-09T20:10:42Z', metadata: { replayed: true } },
+];
+
+function buildFallbackSummary(rows) {
+  const providers = {};
+  const categories = {};
+  rows.forEach((row) => {
+    providers[row.provider] = (providers[row.provider] || 0) + 1;
+    categories[row.category] = (categories[row.category] || 0) + 1;
+  });
+  return {
+    total_filtered: rows.length,
+    providers: Object.entries(providers).map(([key, count]) => ({ key, count })),
+    categories: Object.entries(categories).map(([key, count]) => ({ key, count })),
+  };
+}
+
+function filteredFallbackConnectors() {
+  const providerFilter = marketplaceProvider || 'all';
+  const search = (connectorSearchInput?.value || '').trim().toLowerCase();
+  return FALLBACK_CONNECTORS.filter((row) => {
+    if (providerFilter !== 'all' && row.provider !== providerFilter) return false;
+    if (marketplaceCategory && row.category !== marketplaceCategory) return false;
+    if (search && !(`${row.name} ${row.key}`.toLowerCase().includes(search))) return false;
+    return true;
+  });
+}
+
+function useDeterministicFallback(reason = '') {
+  const rows = filteredFallbackConnectors();
+  marketplaceConnectors = rows;
+  marketplaceOffset = rows.length;
+  marketplaceHasMore = false;
+  marketplaceTotalFiltered = rows.length;
+  marketplaceStats = { snapshot_connectors: 200, source_total_connectors: 1411 };
+  marketplaceSummary = buildFallbackSummary(rows);
+  coreConnectorKeys = new Set(Object.keys(FALLBACK_STATUS));
+  coreStatusMap = FALLBACK_STATUS;
+
+  updateCategoryOptions(marketplaceSummary);
+  renderMarketplaceSummary(marketplaceSummary);
+  renderMarketplacePills();
+  renderLoadMoreState();
+
+  if (rows.length > 0) {
+    const target = rows[0];
+    selectedMarketplaceKey = target.key;
+    selectedMarketplaceProvider = target.provider;
+    renderMarketplacePills();
+    renderMarketplaceDetail({
+      key: target.key,
+      display_name: target.name,
+      category: target.category,
+      providers_available: [target.provider],
+      suggested_actions: ['test_connection', 'trigger_workflow'],
+      variants: [],
+      n8n_template: { source_url: 'https://n8n.io/workflows' },
+    });
+  } else if (marketplaceDetail) {
+    marketplaceDetail.classList.add('hidden');
+    marketplaceDetail.innerHTML = '';
+  }
+
+  renderIntegrationRun([
+    { name: 'Native', status: `${Object.keys(FALLBACK_STATUS).length} connectors` },
+    { name: 'Marketplace', status: `${rows.length}/${rows.length} loaded` },
+    { name: 'Native Live', status: `${Object.values(FALLBACK_STATUS).filter((s) => s.authenticated && !s.demo_mode).length} authenticated` },
+    { name: 'Native Demo', status: `${Object.values(FALLBACK_STATUS).filter((s) => s.demo_mode).length} fallback` },
+  ]);
+  renderIntegrationRunSummary({
+    total_runs: FALLBACK_RUNS.length,
+    success_count: FALLBACK_RUNS.filter((r) => r.status === 'success').length,
+    error_count: FALLBACK_RUNS.filter((r) => r.status !== 'success').length,
+    avg_duration_ms: Math.round(FALLBACK_RUNS.reduce((acc, r) => acc + r.duration_ms, 0) / FALLBACK_RUNS.length),
+  });
+  renderIntegrationRunsFeed(FALLBACK_RUNS);
+
+  const moduleDesc = document.getElementById('integrationsModuleDesc');
+  if (moduleDesc) {
+    moduleDesc.textContent = `${Object.keys(FALLBACK_STATUS).length} native connectors + ${rows.length}/${rows.length} marketplace loaded (deterministic demo mode · ${DOMAIN_NAMES[selectedDemoDomain]}).`;
+  }
+
+  const reasonSuffix = reason ? ` ${reason}` : '';
+  setIntegrationStatus(`${networkHelpText()}${reasonSuffix}`, 'warn');
+}
+
+const SCENARIO_MODULE_FOCUS = {
+  investor: 'Dashboard, Growth, Billing',
+  marketplace: 'Integrations, CRM, Settings',
+  runs: 'Integrations, Growth, Analysis',
+};
+
+function applyDemoScenario(name = 'investor') {
+  if (name === 'investor') {
+    if (providerFilterInput) providerFilterInput.value = 'all';
+    if (categoryFilterInput) categoryFilterInput.value = '';
+    if (connectorSearchInput) connectorSearchInput.value = '';
+  } else if (name === 'marketplace') {
+    if (providerFilterInput) providerFilterInput.value = 'n8n';
+    if (categoryFilterInput) categoryFilterInput.value = 'automation';
+    if (connectorSearchInput) connectorSearchInput.value = '';
+  } else if (name === 'runs') {
+    if (providerFilterInput) providerFilterInput.value = 'native';
+    if (categoryFilterInput) categoryFilterInput.value = 'analytics';
+    if (connectorSearchInput) connectorSearchInput.value = 'Google';
+  }
+  marketplaceProvider = (providerFilterInput?.value || 'all').trim().toLowerCase();
+  marketplaceCategory = (categoryFilterInput?.value || '').trim().toLowerCase();
+  const domainName = DOMAIN_NAMES[selectedDemoDomain] || 'SaaS';
+  const focus = SCENARIO_MODULE_FOCUS[name] || 'All modules';
+  useDeterministicFallback(`Scenario preset: ${name} · Domain: ${domainName} · Focus: ${focus}`);
+}
 
 function connectorPillClass(key) {
   if (!coreConnectorKeys.has(key)) return '';
@@ -1220,13 +1570,9 @@ async function loadMoreMarketplace() {
 
 async function refreshIntegrationState() {
   if (!apiBase()) {
-    setIntegrationStatus('Set Backend API base URL to enable live connector sync.', 'warn');
-    renderIntegrationRun([
-      { name: 'Connector Sync', status: 'Waiting for backend API URL' },
-      { name: 'Tip', status: 'Use ?api=https://your-backend-url for shared demo links' },
-    ]);
-    renderIntegrationRunSummary(null);
-    renderIntegrationRunsFeed([]);
+    marketplaceProvider = (providerFilterInput?.value || 'all').trim().toLowerCase();
+    marketplaceCategory = (categoryFilterInput?.value || '').trim().toLowerCase();
+    useDeterministicFallback('No backend API configured. Use ?api=https://your-backend-url for live sync.');
     return;
   }
 
@@ -1271,7 +1617,7 @@ async function refreshIntegrationState() {
 
     const moduleDesc = document.getElementById('integrationsModuleDesc');
     if (moduleDesc) {
-      moduleDesc.textContent = `${connectors.length} native connectors + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace loaded (${marketplaceProvider}${marketplaceCategory ? `/${marketplaceCategory}` : ''}). ${liveCount} native live, ${demoCount} native demo mode.`;
+      moduleDesc.textContent = `${connectors.length} native connectors + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace loaded (${marketplaceProvider}${marketplaceCategory ? `/${marketplaceCategory}` : ''} · ${DOMAIN_NAMES[selectedDemoDomain]}). ${liveCount} native live, ${demoCount} native demo mode.`;
     }
 
     if (marketplaceConnectors.length > 0) {
@@ -1293,8 +1639,9 @@ async function refreshIntegrationState() {
     await refreshRunHistory();
     setIntegrationStatus(`Sync complete · ${connectors.length} native + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace`, 'ok');
   } catch (error) {
-    setIntegrationStatus(`Sync failed: ${error.message}. Check API URL/CORS/server.`, 'err');
-    renderIntegrationRun([{ name: 'Error', status: 'Unable to load integrations catalog' }]);
+    marketplaceProvider = (providerFilterInput?.value || 'all').trim().toLowerCase();
+    marketplaceCategory = (categoryFilterInput?.value || '').trim().toLowerCase();
+    useDeterministicFallback(`Sync failed: ${formatRequestError(error)}`);
   }
 }
 
@@ -1330,7 +1677,13 @@ async function triggerN8NWorkflow() {
     ]);
     setIntegrationStatus('n8n workflow triggered successfully.', 'ok');
   } catch (error) {
-    setIntegrationStatus(`n8n trigger failed: ${error.message}`, 'err');
+    setIntegrationStatus(`n8n trigger failed: ${formatRequestError(error)}. Using demo response.`, 'warn');
+    renderIntegrationRun([
+      { name: 'n8n', status: 'triggered (demo)' },
+      { name: 'Execution', status: 'demo-run-001' },
+      { name: 'Mode', status: 'demo' },
+      { name: 'Replay', status: 'no' },
+    ]);
   } finally {
     await refreshRunHistory();
   }
@@ -1339,6 +1692,7 @@ async function triggerN8NWorkflow() {
 window.refreshIntegrationState = refreshIntegrationState;
 window.triggerN8NWorkflow = triggerN8NWorkflow;
 window.loadMoreMarketplace = loadMoreMarketplace;
+window.applyDemoScenario = applyDemoScenario;
 if (connectorSearchInput) {
   connectorSearchInput.addEventListener('input', () => {
     if (searchDebounceTimer) window.clearTimeout(searchDebounceTimer);
@@ -1353,6 +1707,17 @@ if (providerFilterInput) {
 if (categoryFilterInput) {
   categoryFilterInput.addEventListener('change', refreshIntegrationState);
 }
+if (domainScenarioInput) {
+  domainScenarioInput.addEventListener('change', () => {
+    const value = (domainScenarioInput.value || '').trim().toLowerCase();
+    if (DOMAIN_NAMES[value]) {
+      selectedDemoDomain = value;
+      localStorage.setItem('investor_demo_domain', value);
+      renderModuleCatalog();
+      applyDemoScenario('investor');
+    }
+  });
+}
 if (marketplaceGrid) {
   marketplaceGrid.addEventListener('click', (event) => {
     const pill = event.target.closest('.marketplace-pill');
@@ -1360,13 +1725,11 @@ if (marketplaceGrid) {
     fetchMarketplaceDetail(pill.dataset.key || '', pill.dataset.provider || '');
   });
 }
+renderModuleCatalog();
 if (apiBase()) {
   setTimeout(refreshIntegrationState, 600);
 } else {
-  setIntegrationStatus('Demo loaded. Enter backend API URL to start integration sync.', 'warn');
-  renderIntegrationRun([{ name: 'Status', status: 'Idle until backend API URL is provided' }]);
-  renderIntegrationRunSummary(null);
-  renderIntegrationRunsFeed([]);
+  applyDemoScenario('investor');
 }
 
 // ── Waitlist ──

@@ -17,6 +17,19 @@ from .core.config import settings
 from .db.session import init_db
 from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth, integrations, restaurant
 
+PUBLIC_MODULES = [
+    "dashboard",
+    "chat",
+    "analysis",
+    "creative",
+    "crm",
+    "growth",
+    "integrations",
+    "billing",
+    "profile",
+    "settings",
+]
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -70,15 +83,7 @@ async def api_health():
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "running",
-        "modules": [
-            "brain_memory",
-            "business_analysis",
-            "creative_design",
-            "crm_campaign",
-            "analytics_reporting",
-            "integrations",
-            "restaurant_ops",
-        ],
+        "modules": PUBLIC_MODULES,
     }
 
 
@@ -120,15 +125,7 @@ async def root(request: Request):
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
         "status": "running",
-        "modules": [
-            "brain_memory",
-            "business_analysis",
-            "creative_design",
-            "crm_campaign",
-            "analytics_reporting",
-            "integrations",
-            "restaurant_ops",
-        ],
+        "modules": PUBLIC_MODULES,
     }
 
 

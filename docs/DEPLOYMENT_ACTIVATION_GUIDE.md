@@ -38,6 +38,7 @@
 - `/forgot-password`
 - `/verify-email`
 - `/app/dashboard`
+- `/demo/investor-pitch-demo.html`
 
 ## 3) Stripe Webhook Activation
 1. In Stripe test mode, set webhook endpoint to:

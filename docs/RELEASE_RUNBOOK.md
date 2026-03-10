@@ -21,6 +21,7 @@
    - `/forgot-password`
    - `/verify-email`
    - `/app/dashboard`
+   - `/demo/investor-pitch-demo.html`
 
 ## 3) Smoke tests
 0. Run `./scripts/smoke_check.sh https://<backend-url> https://<frontend-url>`

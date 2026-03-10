@@ -11,21 +11,31 @@ import {
   UserCircle2,
   Plug,
   TrendingUp,
+  type LucideIcon,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { MODULE_CATALOG, MODULE_ORDER } from '../../data/domainModuleCatalog';
+import type { ModuleId } from '../../types/catalog';
 
-export const navItems = [
-  { label: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard },
-  { label: 'Chat', path: '/app/chat', icon: MessageSquare },
-  { label: 'Analysis', path: '/app/analysis', icon: Search },
-  { label: 'Creative', path: '/app/creative', icon: Palette },
-  { label: 'CRM', path: '/app/crm', icon: Users },
-  { label: 'Growth', path: '/app/growth', icon: TrendingUp },
-  { label: 'Integrations', path: '/app/integrations', icon: Plug },
-  { label: 'Billing', path: '/app/billing', icon: CreditCard },
-  { label: 'Profile', path: '/app/profile', icon: UserCircle2 },
-  { label: 'Settings', path: '/app/settings', icon: Settings },
-];
+const ICON_BY_MODULE: Record<ModuleId, LucideIcon> = {
+  dashboard: LayoutDashboard,
+  chat: MessageSquare,
+  analysis: Search,
+  creative: Palette,
+  crm: Users,
+  growth: TrendingUp,
+  integrations: Plug,
+  billing: CreditCard,
+  profile: UserCircle2,
+  settings: Settings,
+};
+
+export const navItems = MODULE_ORDER.map((moduleId) => ({
+  id: moduleId,
+  label: MODULE_CATALOG[moduleId].title,
+  path: MODULE_CATALOG[moduleId].route,
+  icon: ICON_BY_MODULE[moduleId],
+}));
 
 interface SidebarProps {
   className?: string;

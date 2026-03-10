@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, Navigate } from 'react-router-dom';
 import { industryBySlug } from '../data/industries';
+import { isDomainId, resolveDomainId, withDomainQuery } from '../data/domainModuleCatalog';
 import { growthService } from '../services/api';
 import { getStoredUtm, trackEvent } from '../services/analytics';
+import { setSelectedDomain } from '../services/onboarding';
 
 const Check = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -25,6 +27,7 @@ const ArrowRight = () => (
 export default function IndustryPage() {
   const { slug } = useParams<{ slug: string }>();
   const industry = slug ? industryBySlug[slug] : undefined;
+  const selectedDomain = resolveDomainId(slug);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -34,12 +37,15 @@ export default function IndustryPage() {
 
   useEffect(() => {
     if (industry) {
+      if (selectedDomain) {
+        setSelectedDomain(selectedDomain);
+      }
       void trackEvent('industry_page_view', { industry: industry.slug });
       window.scrollTo(0, 0);
     }
-  }, [industry]);
+  }, [industry, selectedDomain]);
 
-  if (!industry) return <Navigate to="/" replace />;
+  if (!industry || !selectedDomain) return <Navigate to="/" replace />;
 
   const submitWaitlist = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -85,7 +91,7 @@ export default function IndustryPage() {
               <ArrowLeft /> All Industries
             </Link>
             <Link to="/login" className="hidden rounded-lg px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 md:block">Sign in</Link>
-            <Link to="/register" className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors">
+            <Link to={withDomainQuery('/register', selectedDomain)} className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition-colors">
               Start Free <ArrowRight />
             </Link>
           </div>
@@ -130,8 +136,8 @@ export default function IndustryPage() {
             <a href="#waitlist" className="inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-xl transition-all hover:-translate-y-0.5" style={{ backgroundColor: industry.colorHex, boxShadow: `0 12px 32px ${industry.colorHex}35` }}>
               Request Early Access <ArrowRight />
             </a>
-            <Link to="/register" className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white/14 transition-all">
-              Try Free with Demo Data
+            <Link to={withDomainQuery('/app/dashboard', selectedDomain, { demo: '1' })} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/8 px-6 py-3.5 text-sm font-semibold text-white hover:bg-white/14 transition-all">
+              Open Domain Demo
             </Link>
           </div>
 
@@ -260,11 +266,11 @@ export default function IndustryPage() {
           <p className="mb-6 text-center text-xs font-bold uppercase tracking-[0.2em] text-slate-400">Also built for</p>
           <div className="flex flex-wrap justify-center gap-3">
             {Object.values(industryBySlug)
-              .filter((ind) => ind.slug !== industry.slug)
+              .filter((ind) => ind.slug !== industry.slug && isDomainId(ind.slug))
               .map((ind) => (
                 <Link
                   key={ind.slug}
-                  to={`/industries/${ind.slug}`}
+                  to={withDomainQuery(`/industries/${ind.slug}`, resolveDomainId(ind.slug))}
                   className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-slate-300 hover:shadow-sm transition-all"
                 >
                   <span>{ind.emoji}</span> {ind.shortName}

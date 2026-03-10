@@ -36,5 +36,6 @@
 ## Product QA
 - [ ] Mobile nav works on `/app/*`
 - [ ] Login, register, forgot/reset, verify pages render on mobile + desktop
+- [ ] Investor demo route renders (`/demo/investor-pitch-demo.html`)
 - [ ] Dashboard, profile, billing fail gracefully when API errors
 - [ ] Core flow under 5 minutes: signup -> verify -> dashboard -> first analysis/chat action

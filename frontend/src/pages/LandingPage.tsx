@@ -1,8 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { growthService } from '../services/api';
-import { getStoredUtm, trackEvent } from '../services/analytics';
+import { getStoredUtm, trackEvent, trackOnboardingStep } from '../services/analytics';
 import { industries } from '../data/industries';
+import {
+  getDomainDefinition,
+  isDomainId,
+  MODULE_CATALOG,
+  MODULE_ORDER,
+  resolveDomainId,
+  SUPPORTED_DOMAINS,
+  withDomainQuery,
+} from '../data/domainModuleCatalog';
+import { getOnboardingState, setSelectedDomain, setSelectedModule } from '../services/onboarding';
+import type { DomainId, ModuleId } from '../types/catalog';
 
 const ArrowRight = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -19,6 +30,19 @@ const ChevronDown = () => (
     <polyline points="6 9 12 15 18 9" />
   </svg>
 );
+
+const MODULE_ICON_EMOJI: Record<ModuleId, string> = {
+  dashboard: '📊',
+  chat: '💬',
+  analysis: '🔎',
+  creative: '🎨',
+  crm: '🧭',
+  growth: '📈',
+  integrations: '🔌',
+  billing: '💳',
+  profile: '👤',
+  settings: '⚙️',
+};
 
 function DashMockup() {
   return (
@@ -103,18 +127,41 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 }
 
 export default function LandingPage() {
+  const initialDomain = (() => {
+    if (typeof window === 'undefined') return getOnboardingState().selected_domain;
+    const queryDomain = resolveDomainId(new URLSearchParams(window.location.search).get('domain'));
+    return queryDomain ?? getOnboardingState().selected_domain;
+  })();
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [earlyName, setEarlyName] = useState('');
   const [earlyEmail, setEarlyEmail] = useState('');
   const [earlyCompany, setEarlyCompany] = useState('');
+  const [selectedDomain, setSelectedDomainState] = useState<DomainId | undefined>(initialDomain);
   const [earlyLoading, setEarlyLoading] = useState(false);
   const [earlySuccess, setEarlySuccess] = useState(false);
   const [earlyError, setEarlyError] = useState('');
   const earlyRef = useRef<HTMLDivElement>(null);
+  const trackedModuleViews = useRef(false);
+  const selectedDomainLabel = getDomainDefinition(selectedDomain)?.shortName;
+  const registerHref = withDomainQuery('/register', selectedDomain);
+  const demoDashboardHref = withDomainQuery('/app/dashboard', selectedDomain, { demo: '1' });
+  const supportedIndustries = industries.filter((ind) => isDomainId(ind.slug));
 
   useEffect(() => {
-    void trackEvent('landing_view', {});
+    if (selectedDomain) {
+      setSelectedDomain(selectedDomain);
+    }
+    void trackOnboardingStep('landing_seen', { source: 'landing' });
     document.title = 'Digital CMO AI — Your AI Chief Marketing Officer';
+  }, [selectedDomain]);
+
+  useEffect(() => {
+    if (trackedModuleViews.current) return;
+    trackedModuleViews.current = true;
+    MODULE_ORDER.forEach((moduleId) => {
+      void trackEvent('module_card_viewed', { module_id: moduleId, location: 'landing' });
+    });
   }, []);
 
   const handleEarlyAccess = async (e: React.FormEvent) => {
@@ -130,6 +177,11 @@ export default function LandingPage() {
         company: earlyCompany.trim() || undefined,
         source: 'landing_early_access',
         ...utm,
+      });
+      await trackEvent('waitlist_joined', {
+        company: earlyCompany.trim() || undefined,
+        industry: selectedDomain,
+        source: 'landing_early_access',
       });
       setEarlySuccess(true);
     } catch {
@@ -163,8 +215,8 @@ export default function LandingPage() {
           </div>
           <div className="hidden md:flex items-center gap-3">
             <Link to="/login" className="text-sm text-white/60 hover:text-white transition-colors px-3 py-2">Sign in</Link>
-            <Link to="/demo" className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">Try demo</Link>
-            <Link to="/register" className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-black hover:bg-orange-400 transition-colors">Start free</Link>
+            <Link to={demoDashboardHref} className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">Try demo</Link>
+            <Link to={registerHref} className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-black hover:bg-orange-400 transition-colors">Start free</Link>
           </div>
           <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 text-white/60 hover:text-white">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -179,8 +231,8 @@ export default function LandingPage() {
             <Link to="/white-paper" onClick={() => setMenuOpen(false)} className="block text-sm text-white/60 hover:text-white py-1">White Paper</Link>
             <a href="#pricing" onClick={() => setMenuOpen(false)} className="block text-sm text-white/60 hover:text-white py-1">Pricing</a>
             <div className="flex gap-3 pt-2">
-              <Link to="/demo" className="flex-1 rounded-lg border border-white/20 py-2.5 text-center text-sm font-medium text-white">Try demo</Link>
-              <Link to="/register" className="flex-1 rounded-lg bg-orange-500 py-2.5 text-center text-sm font-bold text-black">Start free</Link>
+              <Link to={demoDashboardHref} className="flex-1 rounded-lg border border-white/20 py-2.5 text-center text-sm font-medium text-white">Try demo</Link>
+              <Link to={registerHref} className="flex-1 rounded-lg bg-orange-500 py-2.5 text-center text-sm font-bold text-black">Start free</Link>
             </div>
           </div>
         )}
@@ -206,10 +258,10 @@ export default function LandingPage() {
               Strategy, execution, and reporting — through a single conversational interface. Replace agency retainers with AI that knows your brand, acts on live data, and executes in minutes.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/demo" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-base font-bold text-black hover:bg-orange-400 transition-colors shadow-lg shadow-orange-500/20">
+              <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-base font-bold text-black hover:bg-orange-400 transition-colors shadow-lg shadow-orange-500/20">
                 Try the live demo <ArrowRight size={16} />
               </Link>
-              <Link to="/register" className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3.5 text-base font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">
+              <Link to={registerHref} className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3.5 text-base font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">
                 Create free account
               </Link>
             </div>
@@ -245,6 +297,55 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* DOMAIN + FIRST SESSION PATH */}
+      <section className="border-b border-white/8 px-6 py-10">
+        <div className="mx-auto max-w-6xl">
+          <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
+            <p className="text-xs font-semibold uppercase tracking-widest text-orange-500">First 5 minutes</p>
+            <h3 className="mt-2 text-2xl font-extrabold">Pick your domain and start path</h3>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <select
+                value={selectedDomain ?? ''}
+                onChange={(event) => {
+                  const next = resolveDomainId(event.target.value);
+                  setSelectedDomainState(next);
+                  setSelectedDomain(next);
+                }}
+                className="min-w-[240px] rounded-lg border border-white/20 bg-black px-3 py-2 text-sm text-white"
+              >
+                <option value="">Select domain</option>
+                {SUPPORTED_DOMAINS.map((domain) => (
+                  <option key={domain.id} value={domain.id}>{domain.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-white/40">
+                {selectedDomainLabel
+                  ? `Configured for ${selectedDomainLabel} across onboarding, demo fixtures, and module guidance.`
+                  : 'Select a domain to personalize onboarding, module highlights, and demo scenarios.'}
+              </p>
+            </div>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              <div className="rounded-xl border border-white/10 bg-black p-4">
+                <p className="text-[11px] uppercase tracking-wide text-white/40">Primary path</p>
+                <p className="mt-1 text-sm font-semibold text-white">Register → Verify → Dashboard</p>
+                <p className="mt-1 text-xs text-white/40">Best for live onboarding telemetry and account setup.</p>
+                <Link to={registerHref} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-400">
+                  Create account <ArrowRight size={12} />
+                </Link>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black p-4">
+                <p className="text-[11px] uppercase tracking-wide text-white/40">Secondary path</p>
+                <p className="mt-1 text-sm font-semibold text-white">Open demo → First value action</p>
+                <p className="mt-1 text-xs text-white/40">No signup required. Deterministic domain demo data included.</p>
+                <Link to={demoDashboardHref} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-400">
+                  Open demo <ArrowRight size={12} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* HOW IT WORKS */}
       <section id="how-it-works" className="px-6 py-20">
         <div className="mx-auto max-w-6xl">
@@ -266,46 +367,58 @@ export default function LandingPage() {
             ))}
           </div>
           <div className="mt-8 text-center">
-            <Link to="/demo" className="inline-flex items-center gap-2 text-sm font-semibold text-orange-500 hover:text-orange-400 transition-colors">
+            <Link to={demoDashboardHref} className="inline-flex items-center gap-2 text-sm font-semibold text-orange-500 hover:text-orange-400 transition-colors">
               See all 3 steps in the live demo <ArrowRight size={14} />
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 6 MODULES */}
+      {/* 10 MODULES */}
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-14 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">Six modules. One OS.</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">Ten modules. One OS.</p>
             <h2 className="text-4xl font-extrabold">Everything your marketing team needs — unified.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-white/50">Each module is specialised. They all share memory of your brand, goals, and history.</p>
+            <p className="mx-auto mt-4 max-w-xl text-lg text-white/50">Each module has execution-grade features, and all 10 share the same domain-aware memory context.</p>
           </div>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {[
-              { badge: 'Core', icon: '🧠', title: 'AI Brain & Memory', color: 'text-white', desc: '4-layer persistent memory: context window, folder store, vector embeddings, and relational DB.', points: ['Cross-session memory', 'Brand voice preservation', 'Goal tracking', '4-layer architecture'] },
-              { badge: 'Analysis', icon: '🔍', title: 'Business Analysis', color: 'text-orange-400', desc: 'SWOT, PESTEL, competitor deep-dives, market research, and buyer persona generation.', points: ['SWOT & PESTEL frameworks', 'Competitor intelligence', 'Buyer persona builder', 'Market sizing'] },
-              { badge: 'Creative', icon: '🎨', title: 'Creative Studio', color: 'text-violet-400', desc: 'Generate channel-ready copy, image prompts, and A/B variants at scale.', points: ['Ad copy & social posts', 'Email sequences', 'Image prompt generation', 'A/B variant packs'] },
-              { badge: 'CRM', icon: '📋', title: 'CRM & Campaigns', color: 'text-emerald-400', desc: 'Lead scoring, journey mapping, multi-channel orchestration, and compliance checking.', points: ['Lead scoring & routing', 'Multi-channel journeys', 'Compliance checking', 'Pipeline tracking'] },
-              { badge: 'Analytics', icon: '📊', title: 'Analytics & Reporting', color: 'text-blue-400', desc: 'KPI dashboards, forecasting, cohort analysis, and A/B significance testing.', points: ['Full-funnel KPI view', 'Revenue forecasting', 'Cohort & attribution', 'A/B significance engine'] },
-              { badge: 'Integrations', icon: '🔌', title: '200+ Integrations', color: 'text-rose-400', desc: 'HubSpot, Salesforce, Google Ads, Meta, Klaviyo, Shopify, Stripe, LinkedIn, n8n…', points: ['21 native connectors', '200+ marketplace templates', 'Demo-mode fallback', 'Idempotent tracking'] },
-            ].map((m) => (
-              <div key={m.title} className="rounded-2xl border border-white/10 bg-[#111111] p-7 transition-all hover:border-white/20 hover:bg-[#161616]">
+          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
+            {MODULE_ORDER.map((moduleId) => {
+              const module = MODULE_CATALOG[moduleId];
+              const moduleDemoHref = withDomainQuery(module.route, selectedDomain, { demo: '1' });
+              return (
+              <div key={module.id} className="rounded-2xl border border-white/10 bg-[#111111] p-7 transition-all hover:border-white/20 hover:bg-[#161616]">
                 <div className="mb-4 flex items-center justify-between">
-                  <span className="text-2xl">{m.icon}</span>
-                  <span className="rounded-full bg-white/8 px-2.5 py-1 text-xs font-semibold text-white/50">{m.badge}</span>
+                  <span className="text-2xl">{MODULE_ICON_EMOJI[module.id]}</span>
+                  <span className="rounded-full bg-white/8 px-2.5 py-1 text-xs font-semibold text-white/50">{module.badge}</span>
                 </div>
-                <h3 className={`mb-2 font-bold ${m.color}`}>{m.title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-white/50">{m.desc}</p>
+                <h3 className="mb-2 font-bold text-white">{module.title}</h3>
+                <p className="mb-4 text-sm leading-relaxed text-white/50">{module.description}</p>
                 <ul className="space-y-1.5">
-                  {m.points.map((p) => (
-                    <li key={p} className="flex items-center gap-2 text-xs text-white/40">
-                      <span className="text-white/20"><Check /></span>{p}
+                  {module.features.map((feature) => (
+                    <li key={feature} className="flex items-center gap-2 text-xs text-white/40">
+                      <span className="text-white/20"><Check /></span>{feature}
                     </li>
                   ))}
                 </ul>
+                <p className="mt-3 rounded-lg bg-white/5 px-2.5 py-2 text-[11px] text-white/50">
+                  {selectedDomain
+                    ? module.domain_overrides[selectedDomain]
+                    : 'Select a domain to personalize this module.'}
+                </p>
+                <Link
+                  to={moduleDemoHref}
+                  onClick={() => {
+                    setSelectedModule(module.id);
+                    void trackEvent('module_card_clicked', { module_id: module.id, location: 'landing' });
+                  }}
+                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-400"
+                >
+                  Open in demo <ArrowRight size={12} />
+                </Link>
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </section>
@@ -422,8 +535,8 @@ export default function LandingPage() {
             <p className="mx-auto mt-4 max-w-xl text-lg text-white/50">Pre-loaded with industry-specific KPIs, workflows, compliance guardrails, and integration stacks.</p>
           </div>
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
-            {industries.slice(0, 10).map((ind) => (
-              <Link key={ind.slug} to={`/industries/${ind.slug}`} className="group rounded-xl border border-white/10 bg-[#111111] p-5 text-center transition-all hover:border-white/20 hover:bg-[#161616]">
+            {supportedIndustries.map((ind) => (
+              <Link key={ind.slug} to={withDomainQuery(`/industries/${ind.slug}`, resolveDomainId(ind.slug))} className="group rounded-xl border border-white/10 bg-[#111111] p-5 text-center transition-all hover:border-white/20 hover:bg-[#161616]">
                 <div className="mb-2 text-2xl">{ind.emoji}</div>
                 <div className="text-sm font-semibold text-white/80 group-hover:text-white">{ind.shortName}</div>
                 <div className="mt-1 text-xs text-white/30">{ind.tagline}</div>
@@ -453,7 +566,7 @@ export default function LandingPage() {
                   <li key={f} className="flex items-center gap-2.5 text-white/60"><span className="text-white/30"><Check /></span>{f}</li>
                 ))}
               </ul>
-              <Link to="/demo" className="block w-full rounded-xl border border-white/15 py-3 text-center text-sm font-semibold text-white hover:border-white/30 hover:bg-white/5 transition-colors">Open demo</Link>
+              <Link to={demoDashboardHref} className="block w-full rounded-xl border border-white/15 py-3 text-center text-sm font-semibold text-white hover:border-white/30 hover:bg-white/5 transition-colors">Open demo</Link>
             </div>
 
             <div className="relative rounded-2xl border border-orange-500 bg-[#111111] p-8 shadow-lg shadow-orange-500/10">
@@ -468,7 +581,7 @@ export default function LandingPage() {
                   <li key={f} className="flex items-center gap-2.5 text-white/70"><span className="text-orange-500"><Check /></span>{f}</li>
                 ))}
               </ul>
-              <Link to="/register" className="block w-full rounded-xl bg-orange-500 py-3 text-center text-sm font-bold text-black hover:bg-orange-400 transition-colors">Create account</Link>
+              <Link to={registerHref} className="block w-full rounded-xl bg-orange-500 py-3 text-center text-sm font-bold text-black hover:bg-orange-400 transition-colors">Create account</Link>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-[#111111] p-8">
@@ -509,7 +622,7 @@ export default function LandingPage() {
               <div className="mt-8 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-6">
                 <p className="font-semibold text-emerald-400">🎉 You're on the list.</p>
                 <p className="mt-1 text-sm text-emerald-400/70">We'll reach out within 24 hours. In the meantime, try the demo.</p>
-                <Link to="/demo" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-black hover:bg-orange-400 transition-colors">
+                <Link to={demoDashboardHref} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-black hover:bg-orange-400 transition-colors">
                   Open demo now <ArrowRight size={14} />
                 </Link>
               </div>
@@ -537,10 +650,10 @@ export default function LandingPage() {
           <h2 className="text-4xl font-extrabold md:text-5xl">Ready to replace<br />your agency?</h2>
           <p className="mx-auto mt-5 max-w-lg text-lg text-white/50">The demo is free, instant, and shows you exactly what your first week looks like — without signing up.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link to="/demo" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-8 py-4 text-base font-bold text-black hover:bg-orange-400 transition-colors shadow-lg shadow-orange-500/20">
+            <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-8 py-4 text-base font-bold text-black hover:bg-orange-400 transition-colors shadow-lg shadow-orange-500/20">
               Try the live demo <ArrowRight size={16} />
             </Link>
-            <Link to="/register" className="inline-flex rounded-xl border border-white/20 px-8 py-4 text-base font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">
+            <Link to={registerHref} className="inline-flex rounded-xl border border-white/20 px-8 py-4 text-base font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">
               Create free account
             </Link>
           </div>
@@ -565,7 +678,7 @@ export default function LandingPage() {
             <Link to="/white-paper" className="hover:text-white transition-colors">White Paper</Link>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
             <Link to="/login" className="hover:text-white transition-colors">Sign in</Link>
-            <Link to="/register" className="hover:text-white transition-colors">Register</Link>
+            <Link to={registerHref} className="hover:text-white transition-colors">Register</Link>
           </div>
           <p className="text-xs text-white/20">© 2026 Digital CMO AI. All rights reserved.</p>
         </div>

@@ -3,6 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { authService } from '../services/api';
 import { trackEvent, trackOnboardingStep } from '../services/analytics';
 import { useAuth } from '../context/AuthContext';
+import { resolveDomainId, withDomainQuery } from '../data/domainModuleCatalog';
+import { setSelectedDomain } from '../services/onboarding';
 
 type VerifyStatus = 'idle' | 'loading' | 'success' | 'error' | 'expired' | 'already_used';
 
@@ -26,6 +28,7 @@ export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const token = useMemo(() => searchParams.get('token') || '', [searchParams]);
   const pending = useMemo(() => searchParams.get('pending') === '1', [searchParams]);
+  const selectedDomain = useMemo(() => resolveDomainId(searchParams.get('domain')), [searchParams]);
   const initialEmail = useMemo(() => user?.email || '', [user?.email]);
   const [status, setStatus] = useState<VerifyStatus>('idle');
   const [message, setMessage] = useState('');
@@ -36,6 +39,12 @@ export default function VerifyEmailPage() {
   useEffect(() => {
     setEmail(initialEmail);
   }, [initialEmail]);
+
+  useEffect(() => {
+    if (selectedDomain) {
+      setSelectedDomain(selectedDomain);
+    }
+  }, [selectedDomain]);
 
   useEffect(() => {
     const verify = async () => {
@@ -55,7 +64,7 @@ export default function VerifyEmailPage() {
         setMessage(response.message || 'Your email is verified. You can now log in.');
         await trackOnboardingStep('verification_completed', { method: 'token_link' });
         // Auto-redirect to dashboard after short delay
-        setTimeout(() => navigate('/app/dashboard'), 2000);
+        setTimeout(() => navigate(withDomainQuery('/app/dashboard', selectedDomain)), 2000);
       } catch (err: unknown) {
         const detail =
           (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ?? '';
@@ -162,7 +171,7 @@ export default function VerifyEmailPage() {
                 Contact support
               </a>
               {' · '}
-              <Link to="/login" className="text-orange-400 hover:text-orange-300">
+              <Link to={withDomainQuery('/login', selectedDomain)} className="text-orange-400 hover:text-orange-300">
                 Back to login
               </Link>
             </p>
@@ -247,13 +256,13 @@ export default function VerifyEmailPage() {
 
         <p className="mt-5 text-sm text-slate-600">
           {status === 'success' ? (
-            <Link to="/app/dashboard" className="font-semibold text-orange-600 hover:text-orange-700">
+            <Link to={withDomainQuery('/app/dashboard', selectedDomain)} className="font-semibold text-orange-600 hover:text-orange-700">
               Go to dashboard →
             </Link>
           ) : (
             <>
               Back to{' '}
-              <Link to="/login" className="font-semibold text-orange-600 hover:text-orange-700">
+              <Link to={withDomainQuery('/login', selectedDomain)} className="font-semibold text-orange-600 hover:text-orange-700">
                 login
               </Link>
             </>

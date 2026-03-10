@@ -1,30 +1,59 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { X, Sparkles } from 'lucide-react';
-import { NavLink, Outlet, Link, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import { navItems } from './Sidebar';
 import clsx from 'clsx';
 import { useDemoMode } from '../../context/DemoModeContext';
+import ModuleHighlightsPanel from '../common/ModuleHighlightsPanel';
+import {
+  getDomainDefinition,
+  MODULE_CATALOG,
+  resolveModuleIdFromPath,
+  withDomainQuery,
+} from '../../data/domainModuleCatalog';
+import {
+  getOnboardingState,
+  setSelectedModule,
+  subscribeOnboardingState,
+} from '../../services/onboarding';
+import type { DomainId, ModuleId } from '../../types/catalog';
 
-function DemoBanner() {
+function DemoBanner({ moduleId }: { moduleId?: ModuleId }) {
   const [dismissed, setDismissed] = useState(false);
+  const [selectedDomain, setSelectedDomainState] = useState<DomainId | undefined>(
+    getOnboardingState().selected_domain,
+  );
   const navigate = useNavigate();
   const { isDemoMode, disableDemoMode } = useDemoMode();
+
+  useEffect(
+    () =>
+      subscribeOnboardingState(() => {
+        setSelectedDomainState(getOnboardingState().selected_domain);
+      }),
+    [],
+  );
 
   if (dismissed || !isDemoMode) return null;
 
   const switchToLiveMode = () => {
     disableDemoMode();
-    navigate('/register');
+    navigate(withDomainQuery('/register', selectedDomain));
   };
+
+  const domainLabel = getDomainDefinition(selectedDomain)?.shortName ?? 'General';
+  const moduleLabel = moduleId ? MODULE_CATALOG[moduleId].title : 'App';
 
   return (
     <div className="flex items-center justify-between gap-4 bg-orange-500 px-4 py-2 text-sm text-white">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 flex-shrink-0" />
         <span className="font-medium">Demo mode</span>
-        <span className="hidden sm:inline text-orange-100">— Exploring with realistic sample data. Switch to live mode to connect your real account.</span>
+        <span className="hidden sm:inline text-orange-100">
+          {`— ${domainLabel} · ${moduleLabel}. Exploring with realistic sample data. Switch to live mode to connect your real account.`}
+        </span>
       </div>
       <div className="flex items-center gap-3">
         <button
@@ -34,7 +63,7 @@ function DemoBanner() {
           Switch to live mode →
         </button>
         <Link
-          to="/register"
+          to={withDomainQuery('/register', selectedDomain)}
           className="hidden rounded-lg border border-white/30 px-3 py-1 text-xs font-semibold hover:bg-white/10 transition-colors whitespace-nowrap sm:block"
         >
           Create account
@@ -49,14 +78,23 @@ function DemoBanner() {
 
 export default function Layout() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const currentModuleId = resolveModuleIdFromPath(location.pathname);
+
+  useEffect(() => {
+    if (currentModuleId) {
+      setSelectedModule(currentModuleId);
+    }
+  }, [currentModuleId]);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-950">
       <Sidebar />
       <div className="flex flex-col flex-1 overflow-hidden">
-        <DemoBanner />
+        <DemoBanner moduleId={currentModuleId} />
         <Header onMenuClick={() => setMobileMenuOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+          {currentModuleId && <ModuleHighlightsPanel moduleId={currentModuleId} />}
           <Outlet />
         </main>
       </div>
