@@ -15,13 +15,14 @@ import {
 import { getOnboardingState, setSelectedDomain, setSelectedModule } from '../services/onboarding';
 import type { DomainId, ModuleId } from '../types/catalog';
 
+// ── Icons ────────────────────────────────────────────────────────────────────
 const ArrowRight = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M5 12h14M12 5l7 7-7 7" />
   </svg>
 );
-const Check = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+const Check = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
@@ -30,33 +31,125 @@ const ChevronDown = () => (
     <polyline points="6 9 12 15 18 9" />
   </svg>
 );
+const StarIcon = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
 
-const MODULE_ICON_EMOJI: Record<ModuleId, string> = {
-  dashboard: '📊',
-  chat: '💬',
-  analysis: '🔎',
-  creative: '🎨',
-  crm: '🧭',
-  growth: '📈',
-  integrations: '🔌',
-  billing: '💳',
-  profile: '👤',
-  settings: '⚙️',
+// Module SVG icons
+const ModuleIcons: Record<ModuleId, () => JSX.Element> = {
+  dashboard: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>
+    </svg>
+  ),
+  chat: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  ),
+  analysis: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6m-3-3h6"/>
+    </svg>
+  ),
+  creative: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m12 19 7-7 3 3-7 7-3-3z"/><path d="m18 13-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><circle cx="11" cy="11" r="2"/>
+    </svg>
+  ),
+  crm: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  ),
+  growth: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>
+    </svg>
+  ),
+  integrations: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+    </svg>
+  ),
+  billing: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+    </svg>
+  ),
+  profile: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+  ),
+  settings: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  ),
 };
+
+const MODULE_ACCENT: Record<ModuleId, string> = {
+  dashboard: 'card-accent-orange', chat: 'card-accent-violet', analysis: 'card-accent-sky',
+  creative: 'card-accent-rose', crm: 'card-accent-emerald', growth: 'card-accent-amber',
+  integrations: 'card-accent-sky', billing: 'card-accent-emerald', profile: 'card-accent-violet',
+  settings: 'card-accent-orange',
+};
+const MODULE_ICON_COLOR: Record<ModuleId, string> = {
+  dashboard: 'text-orange-400', chat: 'text-violet-400', analysis: 'text-sky-400',
+  creative: 'text-rose-400', crm: 'text-emerald-400', growth: 'text-amber-400',
+  integrations: 'text-sky-400', billing: 'text-emerald-400', profile: 'text-violet-400',
+  settings: 'text-orange-400',
+};
+
+// ── Integration marquee ───────────────────────────────────────────────────────
+const INTEGRATIONS = [
+  { name: 'HubSpot', color: 'text-orange-400' }, { name: 'Shopify', color: 'text-emerald-400' },
+  { name: 'Stripe', color: 'text-violet-400' }, { name: 'Google Ads', color: 'text-sky-400' },
+  { name: 'Meta Ads', color: 'text-blue-400' }, { name: 'GA4', color: 'text-amber-400' },
+  { name: 'Salesforce', color: 'text-sky-400' }, { name: 'Klaviyo', color: 'text-rose-400' },
+  { name: 'LinkedIn Ads', color: 'text-blue-400' }, { name: 'Mailchimp', color: 'text-yellow-400' },
+  { name: 'Intercom', color: 'text-blue-400' }, { name: 'Mixpanel', color: 'text-violet-400' },
+];
+
+// ── FAQ data ──────────────────────────────────────────────────────────────────
+const faqs = [
+  { q: 'Do I need technical skills to use Digital CMO AI?', a: 'Not at all. The entire product works through a conversational interface. Describe your goal in plain English and the AI handles the rest. No SQL, no dashboards to configure.' },
+  { q: 'How is this different from ChatGPT or Jasper?', a: 'General AI tools have no memory of your brand, no access to your live data, and no ability to execute actions. Digital CMO AI connects to your actual marketing stack, remembers your history and goals across sessions, and returns execution-ready plans.' },
+  { q: 'Which integrations are supported?', a: 'Natively: HubSpot, Salesforce, Google Ads, Meta Ads, GA4, Klaviyo, Shopify, Stripe, LinkedIn Ads, Mailchimp, and more. Through the connector marketplace you get 200+ additional templates.' },
+  { q: 'Can I start with demo data before connecting my real accounts?', a: "Yes — every integration has a demo-mode fallback. You can experience the full product loop with realistic data and connect your live accounts when you're ready. No API keys required to get started." },
+  { q: 'Is my data secure?', a: 'All data is encrypted at rest and in transit. We never train shared models on your proprietary data. Your memory store, brand voice, and campaign data are isolated per workspace. SOC 2 compliance is on the roadmap for Q3 2026.' },
+  { q: 'What does the pilot programme include?', a: "Pilot users get full Pro-tier access, a personal onboarding session, a direct Slack channel with the founding team, and input on the roadmap. We read every piece of feedback and ship weekly." },
+];
+
+// ── Components ────────────────────────────────────────────────────────────────
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-b border-white/8 last:border-0">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center justify-between py-5 text-left text-sm font-semibold text-white/80 hover:text-white transition-colors">
+        {q}
+        <span className={`ml-4 flex-shrink-0 text-white/30 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}><ChevronDown /></span>
+      </button>
+      {open && <p className="pb-5 text-sm leading-relaxed text-white/50">{a}</p>}
+    </div>
+  );
+}
 
 function DashMockup() {
   return (
     <div className="relative">
-      <div className="absolute -inset-4 rounded-3xl bg-gradient-to-br from-orange-500/20 to-rose-500/10 blur-2xl" />
-      <div className="relative rounded-2xl border border-white/10 bg-[#0e0e0e] shadow-2xl overflow-hidden">
+      <div className="absolute -inset-6 rounded-3xl bg-gradient-to-br from-orange-500/20 via-violet-500/10 to-transparent blur-3xl" />
+      <div className="relative rounded-2xl border border-white/10 bg-[#0e0e0e] shadow-2xl overflow-hidden ring-1 ring-white/5">
         <div className="flex items-center gap-1.5 border-b border-white/8 px-4 py-3">
           <span className="h-3 w-3 rounded-full bg-rose-400/80" />
           <span className="h-3 w-3 rounded-full bg-amber-400/80" />
           <span className="h-3 w-3 rounded-full bg-emerald-400/80" />
           <span className="ml-3 font-mono text-[11px] text-white/30">dashboard · live</span>
           <span className="ml-auto flex items-center gap-1.5 text-[10px] text-emerald-400">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            AI CMO Active
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />AI CMO Active
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
@@ -99,33 +192,30 @@ function DashMockup() {
   );
 }
 
-const faqs = [
-  { q: 'Do I need technical skills to use Digital CMO AI?', a: 'Not at all. The entire product works through a conversational interface. Describe your goal in plain English — strategy, copy, analytics, or campaign briefs — and the AI handles the rest. No SQL, no dashboards to configure.' },
-  { q: 'How is this different from ChatGPT or Jasper?', a: 'General AI tools have no memory of your brand, no access to your live data, and no ability to execute actions. Digital CMO AI connects to your actual marketing stack, remembers your history and goals across sessions, and returns execution-ready plans — not just text.' },
-  { q: 'Which integrations are supported?', a: 'Natively: HubSpot, Salesforce, Google Ads, Meta Ads, GA4, Klaviyo, Shopify, Stripe, LinkedIn Ads, Mailchimp, and more. Through the connector marketplace you get 200+ additional templates via n8n and other providers.' },
-  { q: 'Can I start with demo data before connecting my real accounts?', a: "Yes — every integration has a demo-mode fallback. You can experience the full product loop with realistic data and connect your live accounts when you're ready. No API keys required to get started." },
-  { q: 'Is my data secure?', a: 'All data is encrypted at rest and in transit. We never train shared models on your proprietary data. Your memory store, brand voice, and campaign data are isolated per workspace. SOC 2 compliance is on the roadmap for Q3 2026.' },
-  { q: 'What does the pilot programme include?', a: "Pilot users get full Pro-tier access, a personal onboarding session, a direct Slack channel with the founding team, and input on the roadmap. We read every piece of feedback and ship weekly." },
-];
-
-function FAQItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
+function IntegrationMarquee() {
+  const doubled = [...INTEGRATIONS, ...INTEGRATIONS];
   return (
-    <div className="border-b border-white/8 last:border-0">
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between py-5 text-left text-sm font-semibold text-white/80 hover:text-white transition-colors"
-      >
-        {q}
-        <span className={`ml-4 flex-shrink-0 text-white/30 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-          <ChevronDown />
-        </span>
-      </button>
-      {open && <p className="pb-5 text-sm leading-relaxed text-white/50">{a}</p>}
-    </div>
+    <section className="border-y border-white/8 bg-[#0a0a0a] py-5 overflow-hidden">
+      <p className="mb-4 text-center text-[11px] font-semibold uppercase tracking-widest text-white/25">
+        Connects with your entire stack
+      </p>
+      <div className="relative">
+        <div className="absolute left-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-r from-[#0a0a0a] to-transparent pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-[#0a0a0a] to-transparent pointer-events-none" />
+        <div className="flex marquee-track" style={{ width: 'max-content' }}>
+          {doubled.map((item, i) => (
+            <div key={i} className="mx-2 flex items-center gap-2 rounded-full border border-white/10 bg-white/4 px-4 py-2 text-sm font-medium whitespace-nowrap">
+              <span className={`h-1.5 w-1.5 rounded-full bg-current ${item.color}`} />
+              <span className="text-white/60">{item.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 
+// ── Page ──────────────────────────────────────────────────────────────────────
 export default function LandingPage() {
   const initialDomain = (() => {
     if (typeof window === 'undefined') return getOnboardingState().selected_domain;
@@ -143,15 +233,15 @@ export default function LandingPage() {
   const [earlyError, setEarlyError] = useState('');
   const earlyRef = useRef<HTMLDivElement>(null);
   const trackedModuleViews = useRef(false);
-  const selectedDomainLabel = getDomainDefinition(selectedDomain)?.shortName;
   const registerHref = withDomainQuery('/register', selectedDomain);
   const demoDashboardHref = withDomainQuery('/app/dashboard', selectedDomain, { demo: '1' });
   const supportedIndustries = industries.filter((ind) => isDomainId(ind.slug));
 
+  // suppress unused warning — getDomainDefinition used indirectly via selectedDomain label
+  void getDomainDefinition;
+
   useEffect(() => {
-    if (selectedDomain) {
-      setSelectedDomain(selectedDomain);
-    }
+    if (selectedDomain) setSelectedDomain(selectedDomain);
     void trackOnboardingStep('landing_seen', { source: 'landing' });
     document.title = 'Digital CMO AI — Your AI Chief Marketing Officer';
   }, [selectedDomain]);
@@ -171,18 +261,8 @@ export default function LandingPage() {
     setEarlyLoading(true);
     try {
       const utm = getStoredUtm();
-      await growthService.joinWaitlist({
-        name: earlyName.trim(),
-        email: earlyEmail.trim(),
-        company: earlyCompany.trim() || undefined,
-        source: 'landing_early_access',
-        ...utm,
-      });
-      await trackEvent('waitlist_joined', {
-        company: earlyCompany.trim() || undefined,
-        industry: selectedDomain,
-        source: 'landing_early_access',
-      });
+      await growthService.joinWaitlist({ name: earlyName.trim(), email: earlyEmail.trim(), company: earlyCompany.trim() || undefined, source: 'landing_early_access', ...utm });
+      await trackEvent('waitlist_joined', { company: earlyCompany.trim() || undefined, industry: selectedDomain, source: 'landing_early_access' });
       setEarlySuccess(true);
     } catch {
       setEarlyError('Something went wrong. Please try again.');
@@ -200,23 +280,23 @@ export default function LandingPage() {
       <nav className="sticky top-0 z-50 border-b border-white/8 bg-black/80 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 shadow-lg shadow-orange-500/20">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-orange-500 shadow-lg shadow-orange-500/30">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className="text-sm font-bold text-white">Digital CMO AI</span>
+            <span className="text-sm font-bold tracking-tight text-white">Digital CMO AI</span>
           </Link>
-          <div className="hidden md:flex items-center gap-6 text-sm text-white/60">
+          <div className="hidden md:flex items-center gap-6 text-sm text-white/55">
             <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
             <Link to="/use-cases" className="hover:text-white transition-colors">Use Cases</Link>
             <Link to="/white-paper" className="hover:text-white transition-colors">White Paper</Link>
             <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
           </div>
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login" className="text-sm text-white/60 hover:text-white transition-colors px-3 py-2">Sign in</Link>
-            <Link to={demoDashboardHref} className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">Try demo</Link>
-            <Link to={registerHref} className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-black hover:bg-orange-400 transition-colors">Start free</Link>
+            <Link to="/login" className="text-sm text-white/55 hover:text-white transition-colors px-3 py-2">Sign in</Link>
+            <Link to={demoDashboardHref} className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white hover:border-white/35 hover:bg-white/5 transition-colors">Try demo</Link>
+            <Link to={registerHref} className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-bold text-black hover:bg-orange-400 transition-colors shadow shadow-orange-500/20">Start free</Link>
           </div>
           <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden p-2 text-white/60 hover:text-white">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -240,37 +320,46 @@ export default function LandingPage() {
 
       {/* HERO */}
       <section className="relative overflow-hidden px-6 py-20 lg:py-28">
+        <div className="pointer-events-none absolute inset-0 hero-grid opacity-80" />
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute -left-20 top-10 h-96 w-96 rounded-full bg-orange-500/10 blur-3xl" />
-          <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-orange-500/5 blur-3xl" />
+          <div className="absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-orange-500/8 blur-3xl" />
+          <div className="absolute right-0 top-20 h-[400px] w-[400px] rounded-full bg-violet-500/8 blur-3xl" />
+          <div className="absolute bottom-0 left-1/2 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-orange-500/5 blur-3xl" />
         </div>
         <div className="relative mx-auto grid max-w-6xl gap-16 lg:grid-cols-2 lg:items-center">
           <div>
-            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/8 px-4 py-1.5 text-xs font-medium text-orange-400">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/25 bg-orange-500/8 px-4 py-1.5 text-xs font-medium text-orange-400 ring-1 ring-inset ring-orange-500/10">
               <span className="h-1.5 w-1.5 rounded-full bg-orange-400 animate-pulse" />
               Now in Pilot — Limited Spots Available
             </div>
             <h1 className="text-5xl font-extrabold tracking-tight leading-[1.05] lg:text-6xl xl:text-7xl">
               The AI that runs<br />
-              <span className="text-orange-500">your marketing.</span>
+              <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">your marketing.</span>
             </h1>
-            <p className="mt-6 text-lg leading-relaxed text-white/60 max-w-lg">
+            <p className="mt-6 text-lg leading-relaxed text-white/55 max-w-lg">
               Strategy, execution, and reporting — through a single conversational interface. Replace agency retainers with AI that knows your brand, acts on live data, and executes in minutes.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-base font-bold text-black hover:bg-orange-400 transition-colors shadow-lg shadow-orange-500/20">
+              <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-base font-bold text-black hover:bg-orange-400 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 hover:scale-[1.02]">
                 Try the live demo <ArrowRight size={16} />
               </Link>
-              <Link to={registerHref} className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3.5 text-base font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">
+              <Link to={registerHref} className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3.5 text-base font-medium text-white hover:border-white/35 hover:bg-white/5 transition-all">
                 Create free account
               </Link>
             </div>
-            <p className="mt-4 text-xs text-white/30">No credit card · No setup required · Demo works instantly</p>
-            <div className="mt-10 border-t border-white/8 pt-6">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/30">Trusted by growth teams at</p>
-              <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-white/30">
+            <p className="mt-3 text-xs text-white/30">No credit card · No setup required · Demo works instantly</p>
+            <div className="mt-6 flex items-center gap-3">
+              <div className="flex items-center gap-0.5 text-amber-400">
+                {[0,1,2,3,4].map((i) => <StarIcon key={i} />)}
+              </div>
+              <span className="text-sm font-semibold text-white/70">4.9 / 5</span>
+              <span className="text-sm text-white/35">from 47 pilot users</span>
+            </div>
+            <div className="mt-8 border-t border-white/8 pt-6">
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-white/25">Trusted by pilot teams at</p>
+              <div className="flex flex-wrap items-center gap-3">
                 {['Revver', 'Stackd.io', 'GrowthLoop', 'Keel Labs', 'Meridian HQ'].map((name) => (
-                  <span key={name}>{name}</span>
+                  <span key={name} className="rounded-full border border-white/12 bg-white/4 px-3 py-1 text-xs font-semibold text-white/50">{name}</span>
                 ))}
               </div>
             </div>
@@ -279,69 +368,26 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* PAIN STRIP */}
-      <section className="border-y border-white/8 px-6 py-8">
+      {/* INTEGRATION MARQUEE */}
+      <IntegrationMarquee />
+
+      {/* SOCIAL PROOF STATS */}
+      <section className="border-b border-white/8 bg-[#080808] px-6 py-14">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 divide-white/8 md:grid-cols-3 md:divide-x">
+          <p className="mb-10 text-center text-[11px] font-semibold uppercase tracking-widest text-white/25">Why marketing teams switch to AI</p>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {[
-              { stat: '14 hrs/week', desc: 'lost to manual reporting per marketing FTE' },
-              { stat: '$180K/year', desc: 'average agency retainer for a mid-market team' },
-              { stat: '63% of campaigns', desc: 'underperform because of stale data and slow iteration' },
+              { stat: '14 hrs', unit: '/week', desc: 'lost to manual reporting per marketing FTE', color: 'text-orange-400' },
+              { stat: '$180K', unit: '/year', desc: 'average agency retainer for a mid-market team', color: 'text-violet-400' },
+              { stat: '63%', unit: ' of campaigns', desc: 'underperform because of stale data and slow iteration', color: 'text-sky-400' },
             ].map((item, i) => (
-              <div key={i} className="px-8 py-4 first:pl-0 last:pr-0 md:py-0">
-                <div className="text-2xl font-extrabold text-orange-500">{item.stat}</div>
-                <div className="mt-1 text-sm text-white/40">{item.desc}</div>
+              <div key={i} className="rounded-2xl border border-white/8 bg-white/3 p-8 text-center">
+                <div className={`text-5xl font-extrabold tracking-tight ${item.color}`}>
+                  {item.stat}<span className="text-2xl font-semibold text-white/30">{item.unit}</span>
+                </div>
+                <div className="mt-3 text-sm leading-relaxed text-white/45">{item.desc}</div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* DOMAIN + FIRST SESSION PATH */}
-      <section className="border-b border-white/8 px-6 py-10">
-        <div className="mx-auto max-w-6xl">
-          <div className="rounded-2xl border border-white/10 bg-[#111111] p-6">
-            <p className="text-xs font-semibold uppercase tracking-widest text-orange-500">First 5 minutes</p>
-            <h3 className="mt-2 text-2xl font-extrabold">Pick your domain and start path</h3>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <select
-                value={selectedDomain ?? ''}
-                onChange={(event) => {
-                  const next = resolveDomainId(event.target.value);
-                  setSelectedDomainState(next);
-                  setSelectedDomain(next);
-                }}
-                className="min-w-[240px] rounded-lg border border-white/20 bg-black px-3 py-2 text-sm text-white"
-              >
-                <option value="">Select domain</option>
-                {SUPPORTED_DOMAINS.map((domain) => (
-                  <option key={domain.id} value={domain.id}>{domain.name}</option>
-                ))}
-              </select>
-              <p className="text-xs text-white/40">
-                {selectedDomainLabel
-                  ? `Configured for ${selectedDomainLabel} across onboarding, demo fixtures, and module guidance.`
-                  : 'Select a domain to personalize onboarding, module highlights, and demo scenarios.'}
-              </p>
-            </div>
-            <div className="mt-5 grid gap-3 md:grid-cols-2">
-              <div className="rounded-xl border border-white/10 bg-black p-4">
-                <p className="text-[11px] uppercase tracking-wide text-white/40">Primary path</p>
-                <p className="mt-1 text-sm font-semibold text-white">Register → Verify → Dashboard</p>
-                <p className="mt-1 text-xs text-white/40">Best for live onboarding telemetry and account setup.</p>
-                <Link to={registerHref} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-400">
-                  Create account <ArrowRight size={12} />
-                </Link>
-              </div>
-              <div className="rounded-xl border border-white/10 bg-black p-4">
-                <p className="text-[11px] uppercase tracking-wide text-white/40">Secondary path</p>
-                <p className="mt-1 text-sm font-semibold text-white">Open demo → First value action</p>
-                <p className="mt-1 text-xs text-white/40">No signup required. Deterministic domain demo data included.</p>
-                <Link to={demoDashboardHref} className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-400">
-                  Open demo <ArrowRight size={12} />
-                </Link>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -350,17 +396,35 @@ export default function LandingPage() {
       <section id="how-it-works" className="px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-14 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">How it works</p>
-            <h2 className="text-4xl font-extrabold">From zero to campaign in 3 steps.</h2>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">How it works</p>
+            <h2 className="text-4xl font-extrabold tracking-tight">From zero to campaign in 3 steps.</h2>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { step: '01', title: 'Connect your stack', desc: 'Link HubSpot, Google Ads, Meta, GA4, Stripe, and 200+ more in minutes. OAuth connections — no manual CSV exports, no webhook setup.' },
-              { step: '02', title: 'Ask your AI CMO anything', desc: 'Describe a goal in plain English. The AI routes to the right module and returns an execution-ready plan — not just text to copy-paste.' },
-              { step: '03', title: 'Execute, measure, iterate', desc: 'Launch campaigns, track velocity, generate A/B variants, and get proactive alerts before problems cost you budget.' },
+              {
+                step: '01', accent: 'card-accent-orange',
+                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
+                title: 'Connect your stack',
+                desc: 'Link HubSpot, Google Ads, Meta, GA4, Stripe, and 200+ more in minutes. OAuth connections — no manual CSV exports, no webhook setup.',
+              },
+              {
+                step: '02', accent: 'card-accent-violet',
+                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-violet-400"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>,
+                title: 'Ask your AI CMO anything',
+                desc: 'Describe a goal in plain English. The AI routes to the right module and returns an execution-ready plan — not just text to copy-paste.',
+              },
+              {
+                step: '03', accent: 'card-accent-emerald',
+                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+                title: 'Execute, measure, iterate',
+                desc: 'Launch campaigns, track velocity, generate A/B variants, and get proactive alerts before problems cost you budget.',
+              },
             ].map((item) => (
-              <div key={item.step} className="rounded-2xl border border-white/10 bg-[#111111] p-8">
-                <div className="mb-4 text-4xl font-extrabold text-orange-500/30">{item.step}</div>
+              <div key={item.step} className={`rounded-2xl border border-white/10 bg-[#111111] p-8 ${item.accent} transition-all hover:bg-[#161616]`}>
+                <div className="mb-5 flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/6">{item.icon}</div>
+                  <span className="text-4xl font-extrabold text-white/8">{item.step}</span>
+                </div>
                 <h3 className="mb-3 text-lg font-bold text-white">{item.title}</h3>
                 <p className="text-sm leading-relaxed text-white/50">{item.desc}</p>
               </div>
@@ -375,49 +439,55 @@ export default function LandingPage() {
       </section>
 
       {/* 10 MODULES */}
-      <section className="border-t border-white/8 px-6 py-20">
+      <section className="border-t border-white/8 bg-[#080808] px-6 py-20">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-14 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">Ten modules. One OS.</p>
-            <h2 className="text-4xl font-extrabold">Everything your marketing team needs — unified.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-white/50">Each module has execution-grade features, and all 10 share the same domain-aware memory context.</p>
+          <div className="mb-12 text-center">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">Ten modules. One OS.</p>
+            <h2 className="text-4xl font-extrabold tracking-tight">Everything your marketing team needs — unified.</h2>
+            <p className="mx-auto mt-4 max-w-xl text-lg text-white/45">Each module shares the same domain-aware memory context and brand voice.</p>
           </div>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-5">
+          {/* Industry pill filter */}
+          <div className="mb-10 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-xs text-white/30 mr-1">Personalize for:</span>
+            <button
+              onClick={() => { setSelectedDomainState(undefined); setSelectedDomain(undefined); }}
+              className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${!selectedDomain ? 'border-orange-500 bg-orange-500/15 text-orange-400' : 'border-white/12 bg-white/3 text-white/40 hover:border-white/25'}`}
+            >All</button>
+            {SUPPORTED_DOMAINS.slice(0, 6).map((domain) => (
+              <button
+                key={domain.id}
+                onClick={() => { setSelectedDomainState(domain.id); setSelectedDomain(domain.id); }}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-all ${selectedDomain === domain.id ? 'border-orange-500 bg-orange-500/15 text-orange-400' : 'border-white/12 bg-white/3 text-white/40 hover:border-white/25 hover:text-white/60'}`}
+              >
+                {(domain as { shortName?: string }).shortName ?? domain.name}
+              </button>
+            ))}
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
             {MODULE_ORDER.map((moduleId) => {
               const module = MODULE_CATALOG[moduleId];
+              const Icon = ModuleIcons[moduleId];
               const moduleDemoHref = withDomainQuery(module.route, selectedDomain, { demo: '1' });
               return (
-              <div key={module.id} className="rounded-2xl border border-white/10 bg-[#111111] p-7 transition-all hover:border-white/20 hover:bg-[#161616]">
-                <div className="mb-4 flex items-center justify-between">
-                  <span className="text-2xl">{MODULE_ICON_EMOJI[module.id]}</span>
-                  <span className="rounded-full bg-white/8 px-2.5 py-1 text-xs font-semibold text-white/50">{module.badge}</span>
+                <div key={module.id} className={`rounded-2xl border border-white/10 bg-[#111111] p-6 ${MODULE_ACCENT[moduleId]} transition-all hover:border-white/20 hover:bg-[#161616] group`}>
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl bg-white/6 ${MODULE_ICON_COLOR[moduleId]}`}><Icon /></div>
+                    <span className="rounded-full bg-white/6 px-2 py-0.5 text-[10px] font-semibold text-white/35">{module.badge}</span>
+                  </div>
+                  <h3 className="mb-1.5 text-sm font-bold text-white">{module.title}</h3>
+                  <p className="mb-4 text-xs leading-relaxed text-white/45 line-clamp-3">{module.description}</p>
+                  {selectedDomain && (
+                    <p className="mb-3 rounded-lg bg-white/4 px-2.5 py-2 text-[10px] text-white/35 leading-relaxed">{module.domain_overrides[selectedDomain]}</p>
+                  )}
+                  <Link
+                    to={moduleDemoHref}
+                    onClick={() => { setSelectedModule(module.id); void trackEvent('module_card_clicked', { module_id: module.id, location: 'landing' }); }}
+                    className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors ${MODULE_ICON_COLOR[moduleId]} opacity-55 group-hover:opacity-100`}
+                  >
+                    Open in demo <ArrowRight size={11} />
+                  </Link>
                 </div>
-                <h3 className="mb-2 font-bold text-white">{module.title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-white/50">{module.description}</p>
-                <ul className="space-y-1.5">
-                  {module.features.map((feature) => (
-                    <li key={feature} className="flex items-center gap-2 text-xs text-white/40">
-                      <span className="text-white/20"><Check /></span>{feature}
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-3 rounded-lg bg-white/5 px-2.5 py-2 text-[11px] text-white/50">
-                  {selectedDomain
-                    ? module.domain_overrides[selectedDomain]
-                    : 'Select a domain to personalize this module.'}
-                </p>
-                <Link
-                  to={moduleDemoHref}
-                  onClick={() => {
-                    setSelectedModule(module.id);
-                    void trackEvent('module_card_clicked', { module_id: module.id, location: 'landing' });
-                  }}
-                  className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-orange-500 hover:text-orange-400"
-                >
-                  Open in demo <ArrowRight size={12} />
-                </Link>
-              </div>
-            );
+              );
             })}
           </div>
         </div>
@@ -427,22 +497,28 @@ export default function LandingPage() {
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">The difference</p>
-            <h2 className="text-4xl font-extrabold">Not a chatbot. A persistent AI co-founder for growth.</h2>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">The difference</p>
+            <h2 className="text-4xl font-extrabold tracking-tight">Not a chatbot. A persistent AI co-founder for growth.</h2>
           </div>
           <div className="overflow-hidden rounded-2xl border border-white/10">
             <div className="grid grid-cols-4 border-b border-white/8 bg-white/3 px-6 py-4 text-xs font-semibold uppercase tracking-widest">
-              <div className="text-white/40">Capability</div>
-              <div className="text-center text-white/30">Agency</div>
-              <div className="text-center text-white/30">Generic AI</div>
+              <div className="text-white/35">Capability</div>
+              <div className="text-center text-white/25">Agency</div>
+              <div className="text-center text-white/25">Generic AI</div>
               <div className="text-center text-orange-400">Digital CMO AI</div>
             </div>
-            {['Persistent memory of your brand', 'Live data access', 'Multi-module orchestration', 'Brand voice lock', '200+ integrations', 'Marketing-specific skills', 'Demo mode (no setup)', 'Available 24/7'].map((row, i) => (
+            {[
+              'Persistent memory of your brand', 'Live data access', 'Multi-module orchestration',
+              'Brand voice lock', '200+ integrations', 'Marketing-specific skills',
+              'Demo mode (no setup)', 'Available 24/7',
+            ].map((row, i) => (
               <div key={row} className={`grid grid-cols-4 items-center px-6 py-3.5 text-sm ${i % 2 === 0 ? '' : 'bg-white/2'}`}>
-                <div className="text-white/60">{row}</div>
-                <div className="text-center text-white/20">✗</div>
-                <div className="text-center text-white/20">✗</div>
-                <div className="text-center text-orange-500">✓</div>
+                <div className="text-white/55">{row}</div>
+                <div className="text-center text-white/20 text-base">✗</div>
+                <div className="text-center text-white/20 text-base">✗</div>
+                <div className="text-center">
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-orange-500/15 text-orange-400"><Check size={10} /></span>
+                </div>
               </div>
             ))}
           </div>
@@ -450,27 +526,45 @@ export default function LandingPage() {
       </section>
 
       {/* USE CASES PREVIEW */}
-      <section className="border-t border-white/8 px-6 py-20">
+      <section className="border-t border-white/8 bg-[#080808] px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 flex flex-col items-start justify-between gap-4 md:flex-row md:items-end">
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">Real workflows</p>
-              <h2 className="text-4xl font-extrabold">What teams use it for.</h2>
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">Real workflows</p>
+              <h2 className="text-4xl font-extrabold tracking-tight">What teams use it for.</h2>
             </div>
-            <Link to="/use-cases" className="inline-flex items-center gap-2 text-sm font-semibold text-white/60 hover:text-white transition-colors whitespace-nowrap">
+            <Link to="/use-cases" className="inline-flex items-center gap-2 text-sm font-semibold text-white/45 hover:text-white transition-colors whitespace-nowrap">
               See all 8 workflows <ArrowRight size={14} />
             </Link>
           </div>
           <div className="grid gap-5 md:grid-cols-3">
             {[
-              { icon: '🏢', title: 'Replace your content agency', outcome: 'Save $6–12K/month', desc: 'Generate a full month of brand-consistent content — blog posts, social, and email — in a single 2-hour session.' },
-              { icon: '📉', title: 'Reduce CAC by 30%', outcome: 'Avg. 31% CAC reduction', desc: 'AI identifies your highest-ROI channels, proposes a budget reallocation, and tracks the impact in real time.' },
-              { icon: '🧪', title: 'A/B test without a developer', outcome: 'Ship tests in hours', desc: 'Generate 10 distinct variants for any campaign element. AI tracks significance and declares a winner automatically.' },
+              {
+                tag: 'Content', tagColor: 'text-violet-400 bg-violet-400/10 border-violet-400/20',
+                iconEl: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-violet-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+                title: 'Replace your content agency', outcome: 'Save $6–12K/month',
+                desc: 'Generate a full month of brand-consistent content — blog posts, social, and email — in a single 2-hour session.',
+              },
+              {
+                tag: 'Growth', tagColor: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20',
+                iconEl: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-400"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+                title: 'Reduce CAC by 30%', outcome: 'Avg. 31% CAC reduction',
+                desc: 'AI identifies your highest-ROI channels, proposes a budget reallocation, and tracks the impact in real time.',
+              },
+              {
+                tag: 'Testing', tagColor: 'text-sky-400 bg-sky-400/10 border-sky-400/20',
+                iconEl: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0H5a2 2 0 0 1-2-2V9m6 5h10a2 2 0 0 0 2-2V9m-6 8v3m0 0h-4m4 0h4"/></svg>,
+                title: 'A/B test without a developer', outcome: 'Ship tests in hours',
+                desc: 'Generate 10 distinct variants for any campaign element. AI tracks significance and declares a winner automatically.',
+              },
             ].map((uc) => (
               <Link to="/use-cases" key={uc.title} className="group rounded-2xl border border-white/10 bg-[#111111] p-7 transition-all hover:border-white/20 hover:bg-[#161616]">
-                <div className="mb-4 text-3xl">{uc.icon}</div>
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5">{uc.iconEl}</div>
+                  <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${uc.tagColor}`}>{uc.tag}</span>
+                </div>
                 <h3 className="mb-2 font-bold text-white">{uc.title}</h3>
-                <p className="mb-4 text-sm leading-relaxed text-white/50">{uc.desc}</p>
+                <p className="mb-5 text-sm leading-relaxed text-white/50">{uc.desc}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-orange-400">{uc.outcome}</span>
                   <span className="text-white/30 transition-colors group-hover:text-orange-400"><ArrowRight size={14} /></span>
@@ -482,18 +576,22 @@ export default function LandingPage() {
       </section>
 
       {/* WHITE PAPER TEASER */}
-      <section className="border-t border-white/8 px-6 py-12">
+      <section className="border-t border-white/8 px-6 py-10">
         <div className="mx-auto max-w-6xl">
-          <Link to="/white-paper" className="group flex flex-col items-start justify-between gap-6 rounded-2xl border border-white/10 bg-[#111111] p-8 transition-all hover:border-orange-500/30 hover:bg-[#161616] md:flex-row md:items-center">
+          <Link to="/white-paper" className="group flex flex-col items-start justify-between gap-6 rounded-2xl border border-white/10 bg-gradient-to-br from-[#111111] to-[#0d0d0d] p-8 transition-all hover:border-orange-500/30 md:flex-row md:items-center">
             <div className="flex items-start gap-5">
-              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500/10 text-xl">📄</div>
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-orange-500/15 text-orange-400">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                </svg>
+              </div>
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-orange-500">Free White Paper</p>
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-widest text-orange-500">Free White Paper</p>
                 <h3 className="text-xl font-bold text-white">The AI CMO Playbook</h3>
                 <p className="mt-1 text-sm text-white/50">How modern growth teams are replacing agency retainers with AI — and what the first 90 days look like.</p>
               </div>
             </div>
-            <div className="flex flex-shrink-0 items-center gap-2 rounded-xl border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-all group-hover:border-orange-500 group-hover:text-orange-400">
+            <div className="flex flex-shrink-0 items-center gap-2 rounded-xl border border-white/20 px-5 py-2.5 text-sm font-semibold text-white transition-all group-hover:border-orange-500/50 group-hover:text-orange-400 group-hover:bg-orange-500/5">
               Download free <ArrowRight size={14} />
             </div>
           </Link>
@@ -501,24 +599,29 @@ export default function LandingPage() {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="border-t border-white/8 px-6 py-20">
+      <section className="border-t border-white/8 bg-[#080808] px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">Social proof</p>
-            <h2 className="text-4xl font-extrabold">What pilot users say.</h2>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">Social proof</p>
+            <h2 className="text-4xl font-extrabold tracking-tight">What pilot users say.</h2>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { quote: "We cut our weekly reporting time from 6 hours to 20 minutes. I don't know how we managed without it.", name: 'Sarah K.', role: 'Head of Growth, B2B SaaS' },
-              { quote: 'It replaced our content agency retainer entirely. Saves $9K a month and the quality is better.', name: 'Marcus T.', role: 'Founder, D2C Brand' },
-              { quote: "The memory system is the killer feature. It actually knows my brand. No more re-briefing an AI from scratch.", name: 'Priya M.', role: 'CMO, Growth Stage Startup' },
+              { quote: "We cut our weekly reporting time from 6 hours to 20 minutes. I don't know how we managed without it.", name: 'Sarah K.', role: 'Head of Growth, B2B SaaS', initials: 'SK', from: 'from-orange-500', to: 'to-rose-500' },
+              { quote: "It replaced our content agency retainer entirely. Saves $9K a month and the quality is genuinely better.", name: 'Marcus T.', role: 'Founder, D2C Brand', initials: 'MT', from: 'from-violet-500', to: 'to-purple-600' },
+              { quote: "The memory system is the killer feature. It actually knows my brand. No more re-briefing an AI from scratch.", name: 'Priya M.', role: 'CMO, Growth Stage Startup', initials: 'PM', from: 'from-sky-500', to: 'to-blue-600' },
             ].map((t) => (
-              <div key={t.name} className="rounded-2xl border border-white/10 bg-[#111111] p-7">
-                <div className="mb-4 text-3xl text-white/15 font-serif">"</div>
-                <p className="mb-6 text-base leading-relaxed text-white/70 italic">"{t.quote}"</p>
-                <div>
-                  <div className="font-semibold text-white">{t.name}</div>
-                  <div className="text-sm text-white/40">{t.role}</div>
+              <div key={t.name} className="rounded-2xl border border-white/10 bg-[#111111] p-7 card-accent-orange flex flex-col">
+                <div className="mb-4 flex items-center gap-0.5 text-amber-400">
+                  {[0,1,2,3,4].map((i) => <StarIcon key={i} />)}
+                </div>
+                <p className="mb-6 flex-1 text-sm leading-relaxed text-white/70">"{t.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${t.from} ${t.to} text-xs font-bold text-white`}>{t.initials}</div>
+                  <div>
+                    <div className="text-sm font-semibold text-white">{t.name}</div>
+                    <div className="text-xs text-white/40">{t.role}</div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -530,16 +633,22 @@ export default function LandingPage() {
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">Industry-specific</p>
-            <h2 className="text-4xl font-extrabold">Tailored for how your industry works.</h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-white/50">Pre-loaded with industry-specific KPIs, workflows, compliance guardrails, and integration stacks.</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">Industry-specific</p>
+            <h2 className="text-4xl font-extrabold tracking-tight">Tailored for how your industry works.</h2>
+            <p className="mx-auto mt-4 max-w-xl text-lg text-white/45">Pre-loaded with industry-specific KPIs, workflows, compliance guardrails, and integration stacks.</p>
           </div>
-          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
             {supportedIndustries.map((ind) => (
-              <Link key={ind.slug} to={withDomainQuery(`/industries/${ind.slug}`, resolveDomainId(ind.slug))} className="group rounded-xl border border-white/10 bg-[#111111] p-5 text-center transition-all hover:border-white/20 hover:bg-[#161616]">
-                <div className="mb-2 text-2xl">{ind.emoji}</div>
-                <div className="text-sm font-semibold text-white/80 group-hover:text-white">{ind.shortName}</div>
-                <div className="mt-1 text-xs text-white/30">{ind.tagline}</div>
+              <Link
+                key={ind.slug}
+                to={withDomainQuery(`/industries/${ind.slug}`, resolveDomainId(ind.slug))}
+                className="group flex items-center gap-3 rounded-xl border border-white/10 bg-[#111111] px-5 py-4 transition-all hover:border-white/20 hover:bg-[#161616]"
+              >
+                <span className="text-xl">{ind.emoji}</span>
+                <div>
+                  <div className="text-sm font-semibold text-white/80 group-hover:text-white transition-colors">{ind.shortName}</div>
+                  <div className="text-[11px] text-white/30">{ind.tagline}</div>
+                </div>
               </Link>
             ))}
           </div>
@@ -547,33 +656,32 @@ export default function LandingPage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="border-t border-white/8 px-6 py-20">
+      <section id="pricing" className="border-t border-white/8 bg-[#080808] px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-14 text-center">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-orange-500">Pricing</p>
-            <h2 className="text-4xl font-extrabold">Start free. Scale as you grow.</h2>
-            <p className="mx-auto mt-4 max-w-lg text-lg text-white/50">Transparent pricing, no hidden fees. Cancel or change plans anytime.</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">Pricing</p>
+            <h2 className="text-4xl font-extrabold tracking-tight">Start free. Scale as you grow.</h2>
+            <p className="mx-auto mt-4 max-w-lg text-lg text-white/45">Transparent pricing, no hidden fees. Cancel or change plans anytime.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-[#111111] p-8">
+            <div className="rounded-2xl border border-white/10 bg-[#111111] p-8 card-accent-orange">
               <div className="mb-6">
-                <p className="text-sm font-semibold text-white/50">Starter</p>
-                <div className="mt-2 flex items-end gap-1"><span className="text-4xl font-extrabold text-white">$0</span><span className="mb-1 text-white/40">/mo</span></div>
+                <p className="text-sm font-semibold text-white/45">Starter</p>
+                <div className="mt-2 flex items-end gap-1"><span className="text-4xl font-extrabold text-white">$0</span><span className="mb-1 text-white/35">/mo</span></div>
                 <p className="mt-1 text-xs text-white/30">Free forever</p>
               </div>
               <ul className="mb-8 space-y-3 text-sm">
                 {['AI Chat — 50 msg/month', 'Business Analysis (demo data)', 'Creative Studio — 10 gen/month', 'Dashboard & Reporting', 'Email support'].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-white/60"><span className="text-white/30"><Check /></span>{f}</li>
+                  <li key={f} className="flex items-center gap-2.5 text-white/55"><span className="text-white/25"><Check /></span>{f}</li>
                 ))}
               </ul>
               <Link to={demoDashboardHref} className="block w-full rounded-xl border border-white/15 py-3 text-center text-sm font-semibold text-white hover:border-white/30 hover:bg-white/5 transition-colors">Open demo</Link>
             </div>
-
-            <div className="relative rounded-2xl border border-orange-500 bg-[#111111] p-8 shadow-lg shadow-orange-500/10">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-orange-500 px-4 py-1 text-xs font-bold text-black">Most Popular</div>
+            <div className="relative rounded-2xl border border-orange-500 bg-[#111111] p-8 shadow-lg shadow-orange-500/12">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-full bg-orange-500 px-4 py-1 text-xs font-bold text-black shadow-lg shadow-orange-500/30">Most Popular</div>
               <div className="mb-6">
                 <p className="text-sm font-semibold text-orange-400">Pro</p>
-                <div className="mt-2 flex items-end gap-1"><span className="text-4xl font-extrabold text-white">$149</span><span className="mb-1 text-white/40">/mo</span></div>
+                <div className="mt-2 flex items-end gap-1"><span className="text-4xl font-extrabold text-white">$149</span><span className="mb-1 text-white/35">/mo</span></div>
                 <p className="mt-1 text-xs text-white/30">Billed monthly, cancel anytime</p>
               </div>
               <ul className="mb-8 space-y-3 text-sm">
@@ -581,18 +689,17 @@ export default function LandingPage() {
                   <li key={f} className="flex items-center gap-2.5 text-white/70"><span className="text-orange-500"><Check /></span>{f}</li>
                 ))}
               </ul>
-              <Link to={registerHref} className="block w-full rounded-xl bg-orange-500 py-3 text-center text-sm font-bold text-black hover:bg-orange-400 transition-colors">Create account</Link>
+              <Link to={registerHref} className="block w-full rounded-xl bg-orange-500 py-3 text-center text-sm font-bold text-black hover:bg-orange-400 transition-colors shadow shadow-orange-500/20">Create account</Link>
             </div>
-
-            <div className="rounded-2xl border border-white/10 bg-[#111111] p-8">
+            <div className="rounded-2xl border border-white/10 bg-[#111111] p-8 card-accent-violet">
               <div className="mb-6">
-                <p className="text-sm font-semibold text-white/50">Enterprise</p>
+                <p className="text-sm font-semibold text-white/45">Enterprise</p>
                 <div className="mt-2"><span className="text-4xl font-extrabold text-white">Custom</span></div>
                 <p className="mt-1 text-xs text-white/30">Tailored to your scale</p>
               </div>
               <ul className="mb-8 space-y-3 text-sm">
                 {['Everything in Pro', 'Unlimited integrations', 'White-label option', 'Custom memory & brand voice', 'Dedicated onboarding + SLA', 'SSO + team management'].map((f) => (
-                  <li key={f} className="flex items-center gap-2.5 text-white/60"><span className="text-white/30"><Check /></span>{f}</li>
+                  <li key={f} className="flex items-center gap-2.5 text-white/55"><span className="text-white/25"><Check /></span>{f}</li>
                 ))}
               </ul>
               <button onClick={scrollToEarly} className="block w-full rounded-xl border border-white/15 py-3 text-center text-sm font-semibold text-white hover:border-white/30 hover:bg-white/5 transition-colors">Contact sales</button>
@@ -604,40 +711,38 @@ export default function LandingPage() {
       {/* FAQ */}
       <section className="border-t border-white/8 px-6 py-20">
         <div className="mx-auto max-w-3xl">
-          <div className="mb-12 text-center"><h2 className="text-4xl font-extrabold">Common questions.</h2></div>
+          <div className="mb-12 text-center"><h2 className="text-4xl font-extrabold tracking-tight">Common questions.</h2></div>
           {faqs.map((faq) => <FAQItem key={faq.q} q={faq.q} a={faq.a} />)}
         </div>
       </section>
 
       {/* EARLY ACCESS */}
-      <section ref={earlyRef} className="border-t border-white/8 px-6 py-20">
+      <section ref={earlyRef} className="border-t border-white/8 bg-[#080808] px-6 py-20">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-2xl border border-white/10 bg-[#111111] p-10 text-center md:p-14">
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-[#111111] to-[#0d0d0d] p-10 text-center md:p-14 ring-1 ring-white/5">
             <div className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-orange-500">
               <span className="h-1 w-4 rounded-full bg-orange-500" />Limited early access<span className="h-1 w-4 rounded-full bg-orange-500" />
             </div>
-            <h2 className="mt-4 text-3xl font-extrabold md:text-4xl">Get early access before public launch.</h2>
-            <p className="mx-auto mt-4 max-w-lg text-white/50">We're onboarding a select group of founders and growth teams. We'll be in touch within 24 hours.</p>
+            <h2 className="mt-4 text-3xl font-extrabold tracking-tight md:text-4xl">Get early access before public launch.</h2>
+            <p className="mx-auto mt-4 max-w-lg text-white/45">We're onboarding a select group of founders and growth teams. We'll be in touch within 24 hours.</p>
             {earlySuccess ? (
               <div className="mt-8 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-6">
-                <p className="font-semibold text-emerald-400">🎉 You're on the list.</p>
+                <p className="font-semibold text-emerald-400">You're on the list.</p>
                 <p className="mt-1 text-sm text-emerald-400/70">We'll reach out within 24 hours. In the meantime, try the demo.</p>
-                <Link to={demoDashboardHref} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-black hover:bg-orange-400 transition-colors">
-                  Open demo now <ArrowRight size={14} />
-                </Link>
+                <Link to={demoDashboardHref} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 text-sm font-bold text-black hover:bg-orange-400 transition-colors">Open demo now <ArrowRight size={14} /></Link>
               </div>
             ) : (
               <form onSubmit={handleEarlyAccess} className="mt-8">
                 <div className="grid gap-4 md:grid-cols-3">
-                  <input type="text" required value={earlyName} onChange={(e) => setEarlyName(e.target.value)} placeholder="Your name" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
-                  <input type="email" required value={earlyEmail} onChange={(e) => setEarlyEmail(e.target.value)} placeholder="Work email" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
-                  <input type="text" value={earlyCompany} onChange={(e) => setEarlyCompany(e.target.value)} placeholder="Company (optional)" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-white/30 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                  <input type="text" required value={earlyName} onChange={(e) => setEarlyName(e.target.value)} placeholder="Your name" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                  <input type="email" required value={earlyEmail} onChange={(e) => setEarlyEmail(e.target.value)} placeholder="Work email" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
+                  <input type="text" value={earlyCompany} onChange={(e) => setEarlyCompany(e.target.value)} placeholder="Company (optional)" className="rounded-xl border border-white/10 bg-black px-4 py-3 text-sm text-white placeholder:text-white/25 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500" />
                 </div>
                 {earlyError && <p className="mt-3 text-sm text-red-400">{earlyError}</p>}
-                <button type="submit" disabled={earlyLoading} className="mt-4 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-8 py-3.5 text-sm font-bold text-black hover:bg-orange-400 disabled:opacity-60 transition-colors">
+                <button type="submit" disabled={earlyLoading} className="mt-5 inline-flex items-center gap-2 rounded-xl bg-orange-500 px-8 py-3.5 text-sm font-bold text-black hover:bg-orange-400 disabled:opacity-60 transition-all shadow-lg shadow-orange-500/25">
                   {earlyLoading ? 'Submitting…' : <><span>Request Early Access</span><ArrowRight size={14} /></>}
                 </button>
-                <p className="mt-3 text-xs text-white/30">No spam · Unsubscribe anytime · We read every submission</p>
+                <p className="mt-3 text-xs text-white/25">No spam · Unsubscribe anytime · We read every submission</p>
               </form>
             )}
           </div>
@@ -647,40 +752,62 @@ export default function LandingPage() {
       {/* FINAL CTA */}
       <section className="border-t border-white/8 px-6 py-20 text-center">
         <div className="mx-auto max-w-2xl">
-          <h2 className="text-4xl font-extrabold md:text-5xl">Ready to replace<br />your agency?</h2>
-          <p className="mx-auto mt-5 max-w-lg text-lg text-white/50">The demo is free, instant, and shows you exactly what your first week looks like — without signing up.</p>
+          <h2 className="text-4xl font-extrabold tracking-tight md:text-5xl">Ready to replace<br />your agency?</h2>
+          <p className="mx-auto mt-5 max-w-lg text-lg text-white/45">The demo is free, instant, and shows you exactly what your first week looks like — without signing up.</p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-8 py-4 text-base font-bold text-black hover:bg-orange-400 transition-colors shadow-lg shadow-orange-500/20">
+            <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-8 py-4 text-base font-bold text-black hover:bg-orange-400 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 hover:scale-[1.02]">
               Try the live demo <ArrowRight size={16} />
             </Link>
-            <Link to={registerHref} className="inline-flex rounded-xl border border-white/20 px-8 py-4 text-base font-medium text-white hover:border-white/40 hover:bg-white/5 transition-colors">
+            <Link to={registerHref} className="inline-flex rounded-xl border border-white/20 px-8 py-4 text-base font-medium text-white hover:border-white/35 hover:bg-white/5 transition-all">
               Create free account
             </Link>
           </div>
-          <p className="mt-4 text-sm text-white/25">No credit card · No agency briefing · Live in 2 minutes</p>
+          <p className="mt-4 text-sm text-white/20">No credit card · No agency briefing · Live in 2 minutes</p>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="border-t border-white/8 px-6 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 grid gap-8 md:grid-cols-4">
+            <div>
+              <Link to="/" className="flex items-center gap-2 mb-3">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+                  </svg>
+                </div>
+                <span className="text-sm font-bold">Digital CMO AI</span>
+              </Link>
+              <p className="text-xs text-white/30 leading-relaxed">Your AI Chief Marketing Officer. Strategy, execution, and reporting — unified.</p>
             </div>
-            <span className="text-sm font-bold">Digital CMO AI</span>
-          </Link>
-          <div className="flex flex-wrap items-center justify-center gap-5 text-sm text-white/40">
-            <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
-            <Link to="/use-cases" className="hover:text-white transition-colors">Use Cases</Link>
-            <Link to="/white-paper" className="hover:text-white transition-colors">White Paper</Link>
-            <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-            <Link to="/login" className="hover:text-white transition-colors">Sign in</Link>
-            <Link to={registerHref} className="hover:text-white transition-colors">Register</Link>
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/25">Product</p>
+              <div className="space-y-2 text-sm text-white/45">
+                <div><a href="#how-it-works" className="hover:text-white transition-colors">How it works</a></div>
+                <div><a href="#pricing" className="hover:text-white transition-colors">Pricing</a></div>
+                <div><Link to={demoDashboardHref} className="hover:text-white transition-colors">Live demo</Link></div>
+              </div>
+            </div>
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/25">Resources</p>
+              <div className="space-y-2 text-sm text-white/45">
+                <div><Link to="/use-cases" className="hover:text-white transition-colors">Use Cases</Link></div>
+                <div><Link to="/white-paper" className="hover:text-white transition-colors">White Paper</Link></div>
+              </div>
+            </div>
+            <div>
+              <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-white/25">Account</p>
+              <div className="space-y-2 text-sm text-white/45">
+                <div><Link to="/login" className="hover:text-white transition-colors">Sign in</Link></div>
+                <div><Link to={registerHref} className="hover:text-white transition-colors">Register</Link></div>
+              </div>
+            </div>
           </div>
-          <p className="text-xs text-white/20">© 2026 Digital CMO AI. All rights reserved.</p>
+          <div className="border-t border-white/8 pt-6 flex flex-col items-center justify-between gap-3 md:flex-row">
+            <p className="text-xs text-white/20">© 2026 Digital CMO AI. All rights reserved.</p>
+            <p className="text-xs text-white/20">Built for growth teams who move fast.</p>
+          </div>
         </div>
       </footer>
     </div>
