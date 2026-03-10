@@ -58,6 +58,7 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends
 
+from ..core.dependencies import require_verified_user
 from ..db.schemas import (
     LeadUpdateRequest,
     LeadImportRequest,
@@ -82,7 +83,11 @@ from ..db.schemas import (
 )
 from ..modules.crm_campaign import CRMCampaignModule
 
-router = APIRouter(prefix="/crm", tags=["CRM & Campaign"])
+router = APIRouter(
+    prefix="/crm",
+    tags=["CRM & Campaign"],
+    dependencies=[Depends(require_verified_user)],
+)
 
 _module = CRMCampaignModule()
 

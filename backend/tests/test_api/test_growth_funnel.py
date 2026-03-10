@@ -109,3 +109,58 @@ def test_utm_breakdown_days_clamped(client):
     for days_param, expected_ok in [("0", True), ("91", True), ("14", True)]:
         resp = client.get(f"/growth/utm-breakdown?days={days_param}")
         assert resp.status_code == 200 if expected_ok else True
+
+
+def test_growth_funnel_summary_filters_by_domain_and_module(client):
+    client.post(
+        "/growth/track",
+        json={
+            "event_name": "landing_view",
+            "source": "web",
+            "domain": "saas",
+            "module_id": "analysis",
+            "anonymous_id": "anon-saas-1",
+            "properties": {},
+        },
+    )
+    client.post(
+        "/growth/track",
+        json={
+            "event_name": "landing_view",
+            "source": "web",
+            "domain": "ecommerce",
+            "module_id": "chat",
+            "anonymous_id": "anon-ecom-1",
+            "properties": {},
+        },
+    )
+
+    resp = client.get("/growth/funnel-summary?days=14&domain=saas&module_id=analysis")
+    assert resp.status_code == 200
+    data = resp.json()
+    visitor_step = next(step for step in data["steps"] if step["name"] == "visitor")
+    assert visitor_step["count"] == 1
+
+
+def test_waitlist_persists_domain_module_and_anonymous_id(client, db_session):
+    from app.db import models
+
+    response = client.post(
+        "/growth/waitlist",
+        json={
+            "name": "Pilot User",
+            "email": "pilot@example.com",
+            "company": "Digital CMO",
+            "domain": "tech_saas",
+            "module_id": "dashboard",
+            "anonymous_id": "anon-123",
+            "source": "landing_page",
+        },
+    )
+    assert response.status_code == 200
+
+    lead = db_session.query(models.WaitlistLead).filter(models.WaitlistLead.email == "pilot@example.com").first()
+    assert lead is not None
+    assert lead.domain == "saas"
+    assert lead.module_id == "dashboard"
+    assert lead.anonymous_id == "anon-123"

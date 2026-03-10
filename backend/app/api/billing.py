@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from ..core.config import settings
-from ..core.dependencies import get_current_user
+from ..core.dependencies import require_verified_user
 from ..db import models
 from ..db.schemas import (
     BillingInvoiceItem,
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/billing", tags=["Billing"])
 @router.post("/create-checkout-session", response_model=BillingSessionResponse)
 async def create_checkout_session(
     request: CheckoutSessionRequest,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_verified_user),
     db: Session = Depends(get_db),
 ):
     """Create a Stripe checkout session for test-mode subscriptions."""
@@ -68,7 +68,7 @@ async def create_checkout_session(
 
 @router.post("/portal-session", response_model=BillingSessionResponse)
 async def create_portal_session(
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_verified_user),
     db: Session = Depends(get_db),
 ):
     """Create a Stripe billing portal session."""
@@ -166,7 +166,7 @@ async def billing_health():
 
 @router.get("/subscription", response_model=BillingSubscriptionResponse)
 async def get_subscription(
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_verified_user),
     db: Session = Depends(get_db),
 ):
     subscription = (
@@ -199,7 +199,7 @@ async def get_subscription(
 
 @router.get("/invoices", response_model=BillingInvoicesResponse)
 async def get_invoices(
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_verified_user),
     db: Session = Depends(get_db),
 ):
     rows = (

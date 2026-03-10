@@ -15,6 +15,7 @@ GET  /creative/capabilities      - List available tones, formats, and languages
 
 from fastapi import APIRouter, Depends
 
+from ..core.dependencies import require_verified_user
 from ..db.schemas import (
     CopyGenerationRequest,
     ImageGenerationRequest,
@@ -34,7 +35,11 @@ from ..db.schemas import (
 )
 from ..modules.creative_design import CreativeDesignModule
 
-router = APIRouter(prefix="/creative", tags=["Creative & Design"])
+router = APIRouter(
+    prefix="/creative",
+    tags=["Creative & Design"],
+    dependencies=[Depends(require_verified_user)],
+)
 
 _module = CreativeDesignModule()
 

@@ -14,6 +14,7 @@ import uuid
 
 from sqlalchemy.exc import SQLAlchemyError
 
+from ...core.catalog import PILOT_CONNECTORS
 from ...core.config import settings
 from ...db.models import IntegrationRun
 from ...db.session import SessionLocal
@@ -388,6 +389,18 @@ class IntegrationService:
         self._active_connectors[name] = connector
         return connector
 
+    @classmethod
+    def _is_live_configured(cls, name: str, credentials: dict[str, Any]) -> bool:
+        if name == "hubspot":
+            return bool(credentials.get("api_key") or credentials.get("access_token"))
+        if name == "google_analytics":
+            return bool(credentials.get("property_id") and credentials.get("access_token"))
+        if name == "stripe":
+            return bool(credentials.get("api_key"))
+        if name == "n8n":
+            return bool(credentials.get("base_url"))
+        return bool(credentials)
+
     @staticmethod
     def _default_credentials(name: str) -> dict[str, Any]:
         """Default connector credentials sourced from app settings."""
@@ -400,7 +413,56 @@ class IntegrationService:
             if settings.N8N_DEFAULT_WEBHOOK_PATH:
                 defaults["default_webhook_path"] = settings.N8N_DEFAULT_WEBHOOK_PATH
             return defaults
+        if name == "hubspot":
+            defaults = {}
+            if settings.HUBSPOT_API_KEY:
+                defaults["api_key"] = settings.HUBSPOT_API_KEY
+            if settings.HUBSPOT_ACCESS_TOKEN:
+                defaults["access_token"] = settings.HUBSPOT_ACCESS_TOKEN
+            return defaults
+        if name == "google_analytics":
+            defaults = {}
+            if settings.GOOGLE_ANALYTICS_PROPERTY_ID:
+                defaults["property_id"] = settings.GOOGLE_ANALYTICS_PROPERTY_ID
+            if settings.GOOGLE_ANALYTICS_ACCESS_TOKEN:
+                defaults["access_token"] = settings.GOOGLE_ANALYTICS_ACCESS_TOKEN
+            return defaults
+        if name == "stripe":
+            defaults = {}
+            if settings.STRIPE_SECRET_KEY:
+                defaults["api_key"] = settings.STRIPE_SECRET_KEY
+            return defaults
         return {}
+
+    def get_pilot_readiness(self) -> dict[str, Any]:
+        """Return readiness metadata for the launch connector set."""
+        rows: list[dict[str, Any]] = []
+        live_ready = 0
+        for connector_name in PILOT_CONNECTORS:
+            credentials = self._default_credentials(connector_name)
+            connector = self.registry.get(connector_name, **credentials)
+            status = connector.get_status()
+            configured = self._is_live_configured(connector_name, credentials)
+            ready_for_live = configured and not status.get("demo_mode", False)
+            if ready_for_live:
+                live_ready += 1
+            rows.append(
+                {
+                    "key": connector_name,
+                    "workspace_level": True,
+                    "configured": configured,
+                    "ready_for_live": ready_for_live,
+                    "demo_fallback": status.get("demo_mode", False),
+                    "authenticated": status.get("authenticated", False),
+                    "status": "live" if ready_for_live else "demo",
+                }
+            )
+        return {
+            "connectors": rows,
+            "total": len(rows),
+            "live_ready": live_ready,
+            "demo_fallback": len(rows) - live_ready,
+        }
 
     def _record_run(
         self,

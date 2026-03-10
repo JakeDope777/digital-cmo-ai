@@ -2,6 +2,8 @@
 FastAPI dependency injection providers.
 """
 
+from typing import Optional
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
@@ -10,14 +12,19 @@ from .security import decode_token
 from ..db.session import get_db
 from ..db import models
 
-security_scheme = HTTPBearer()
+security_scheme = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security_scheme),
     db: Session = Depends(get_db),
 ) -> models.User:
     """Extract and validate the current user from the JWT bearer token."""
+    if credentials is None or not credentials.credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+        )
     payload = decode_token(credentials.credentials)
     if payload is None:
         raise HTTPException(
@@ -37,6 +44,18 @@ async def get_current_user(
             detail="User not found",
         )
     return user
+
+
+async def require_verified_user(
+    current_user: models.User = Depends(get_current_user),
+) -> models.User:
+    """Require an authenticated and email-verified user."""
+    if not current_user.is_email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Email verification required",
+        )
+    return current_user
 
 
 async def require_role(required_role: str):

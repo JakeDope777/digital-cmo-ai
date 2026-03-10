@@ -3,6 +3,7 @@ Database session management using SQLAlchemy.
 """
 
 from sqlalchemy import create_engine
+from sqlalchemy.engine.url import make_url
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 from ..core.config import settings
@@ -28,6 +29,9 @@ def get_db():
 
 
 def init_db():
-    """Create all tables defined in the models."""
+    """Create local development tables when migrations are not the release path."""
     from . import models  # noqa: F401
-    Base.metadata.create_all(bind=engine)
+
+    backend_name = make_url(settings.DATABASE_URL).get_backend_name()
+    if backend_name == "sqlite" or settings.DEBUG:
+        Base.metadata.create_all(bind=engine)

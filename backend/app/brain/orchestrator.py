@@ -17,7 +17,7 @@ Improvements over the original:
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from .router import IntentRouter, SKILL_GENERAL
 from .prompt_builder import PromptBuilder
@@ -50,7 +50,7 @@ class LLMClient:
         self.telegram_fallback_bot = telegram_fallback_bot
         self._client = None
 
-    async def generate(self, messages: list[dict] | str) -> str:
+    async def generate(self, messages: Union[list[dict], str]) -> str:
         """
         Send messages to the LLM and return the assistant's response.
 

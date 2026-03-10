@@ -22,7 +22,7 @@ from sqlalchemy.orm import Session
 
 from ..core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 from ..core.config import settings
-from ..core.dependencies import get_current_user
+from ..core.dependencies import get_current_user, require_verified_user
 from ..db.session import get_db
 from ..db import models
 from ..db.schemas import (
@@ -260,7 +260,7 @@ async def verify_email(
 @router.patch("/profile", response_model=UserResponse)
 async def update_profile(
     request: ProfileUpdateRequest,
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(require_verified_user),
     db: Session = Depends(get_db),
 ):
     """Update current user profile fields."""

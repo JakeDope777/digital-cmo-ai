@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models for TablePilot AI.
+SQLAlchemy ORM models for Digital CMO AI.
 
 Schema as defined in the specification:
 - users, tokens, usage_logs, contexts, memory_files, api_credentials
@@ -275,6 +275,9 @@ class GrowthEvent(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)
     event_name = Column(String, nullable=False, index=True)
     source = Column(String, default="web", nullable=False)
+    domain = Column(String, nullable=True, index=True)
+    module_id = Column(String, nullable=True, index=True)
+    anonymous_id = Column(String, nullable=True, index=True)
     properties = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
@@ -288,6 +291,9 @@ class WaitlistLead(Base):
     company = Column(String, nullable=True)
     note = Column(Text, nullable=True)
     source = Column(String, default="landing_page", nullable=False)
+    domain = Column(String, nullable=True, index=True)
+    module_id = Column(String, nullable=True, index=True)
+    anonymous_id = Column(String, nullable=True, index=True)
     utm_source = Column(String, nullable=True)
     utm_medium = Column(String, nullable=True)
     utm_campaign = Column(String, nullable=True)

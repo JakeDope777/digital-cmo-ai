@@ -1,0 +1,34 @@
+[build]
+  base = "frontend"
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[[redirects]]
+  from = "/login"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/register"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/verify-email"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/reset-password"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

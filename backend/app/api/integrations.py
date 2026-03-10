@@ -17,6 +17,7 @@ POST /integrations/{name}/action   - Execute connector action or endpoint call
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ..core.dependencies import require_verified_user
 from ..db.schemas import (
     IntegrationActionRequest,
     IntegrationConnectRequest,
@@ -25,7 +26,11 @@ from ..db.schemas import (
 from ..modules.integrations.n8n_catalog import n8n_catalog_stats
 from ..modules.integrations.service import IntegrationService
 
-router = APIRouter(prefix="/integrations", tags=["Integrations"])
+router = APIRouter(
+    prefix="/integrations",
+    tags=["Integrations"],
+    dependencies=[Depends(require_verified_user)],
+)
 
 _service = IntegrationService()
 
@@ -50,6 +55,25 @@ async def get_marketplace_catalog(
     service: IntegrationService = Depends(get_service),
 ):
     """List connector marketplace templates (snapshot)."""
+    return service.list_marketplace_catalog(
+        limit=limit,
+        offset=offset,
+        search=search or None,
+        provider=provider or "all",
+        category=category or None,
+    )
+
+
+@router.get("/marketplace/connectors")
+async def get_marketplace_catalog_alias(
+    limit: int = Query(default=200, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
+    search: str = Query(default=""),
+    provider: str = Query(default="all"),
+    category: str = Query(default=""),
+    service: IntegrationService = Depends(get_service),
+):
+    """Frontend-compatible alias for marketplace catalog route."""
     return service.list_marketplace_catalog(
         limit=limit,
         offset=offset,
@@ -146,6 +170,14 @@ async def get_connector_runs_summary(
 ):
     """Return aggregate run metrics for connector operations."""
     return service.get_run_summary(connector=connector or None)
+
+
+@router.get("/pilot-readiness")
+async def get_pilot_readiness(
+    service: IntegrationService = Depends(get_service),
+):
+    """Return live-pilot readiness for the launch connector set."""
+    return service.get_pilot_readiness()
 
 
 @router.post("/{name}/connect", response_model=IntegrationResponse)

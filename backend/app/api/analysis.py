@@ -10,6 +10,7 @@ POST     /analysis/personas    - Persona generation
 
 from fastapi import APIRouter, Depends
 
+from ..core.dependencies import require_verified_user
 from ..db.schemas import (
     MarketAnalysisRequest,
     CompetitorAnalysisRequest,
@@ -20,7 +21,11 @@ from ..db.schemas import (
 )
 from ..modules.business_analysis import BusinessAnalysisModule
 
-router = APIRouter(prefix="/analysis", tags=["Business Analysis"])
+router = APIRouter(
+    prefix="/analysis",
+    tags=["Business Analysis"],
+    dependencies=[Depends(require_verified_user)],
+)
 
 # Module instance
 _module = BusinessAnalysisModule()

@@ -101,14 +101,15 @@ def test_control_tower_margin_alerts_and_recommendations_flow(client):
     assert all("next_action" in r for r in rec_data["recommendations"])
 
 
-def test_chat_routes_restaurant_intent_to_restaurant_module(client):
+def test_chat_does_not_route_restaurant_intent_to_legacy_module(client, auth_headers):
     response = client.post(
         "/chat",
         json={"message": "Why was profit weak last week and what should I reorder tomorrow?"},
+        headers=auth_headers,
     )
     assert response.status_code == 200
     payload = response.json()
-    assert payload["module_used"] == "restaurant_ops"
+    assert payload["module_used"] != "restaurant_ops"
     assert isinstance(payload["reply"], str)
     assert payload["reply"]
 

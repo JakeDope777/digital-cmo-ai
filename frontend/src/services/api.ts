@@ -8,6 +8,7 @@ import type {
   AnalysisResponse,
   CreativeResponse,
 } from '../types';
+import { getOnboardingState } from './onboarding';
 
 const API_BASE = import.meta.env.VITE_API_URL || '';
 
@@ -15,6 +16,8 @@ const api = axios.create({
   baseURL: API_BASE,
   headers: { 'Content-Type': 'application/json' },
 });
+
+const ANONYMOUS_ID_KEY = 'dcmo_anon_id_v1';
 
 // Attach auth token to every request
 api.interceptors.request.use((config) => {
@@ -24,6 +27,38 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+function getAnonymousId() {
+  if (typeof window === 'undefined') return undefined;
+  let value = localStorage.getItem(ANONYMOUS_ID_KEY);
+  if (!value) {
+    value = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `anon-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(ANONYMOUS_ID_KEY, value);
+  }
+  return value;
+}
+
+function getStoredUtm() {
+  if (typeof window === 'undefined') {
+    return { utm_source: undefined, utm_medium: undefined, utm_campaign: undefined };
+  }
+  return {
+    utm_source: localStorage.getItem('utm_source') || undefined,
+    utm_medium: localStorage.getItem('utm_medium') || undefined,
+    utm_campaign: localStorage.getItem('utm_campaign') || undefined,
+  };
+}
+
+function getGrowthContext() {
+  const onboarding = getOnboardingState();
+  return {
+    domain: onboarding.selected_domain,
+    module_id: onboarding.selected_module,
+    anonymous_id: getAnonymousId(),
+  };
+}
 
 // ── Auth ────────────────────────────────────────────────────
 
@@ -284,7 +319,7 @@ export const integrationsService = {
       connectors: Array<{ key: string; name: string; provider: string; category: string; auth_type?: string; status?: string }>;
       total: number;
       has_more: boolean;
-    }>('/integrations/marketplace/connectors', { params });
+    }>('/integrations/marketplace', { params });
     return data;
   },
 
@@ -313,10 +348,12 @@ export const integrationsService = {
 
 export const growthService = {
   async trackEvent(eventName: string, properties?: Record<string, unknown>, source: string = 'web') {
+    const context = getGrowthContext();
     const { data } = await api.post('/growth/track', {
       event_name: eventName,
       source,
       properties: properties ?? {},
+      ...context,
     });
     return data;
   },
@@ -330,8 +367,15 @@ export const growthService = {
     utm_source?: string;
     utm_medium?: string;
     utm_campaign?: string;
+    domain?: string;
+    module_id?: string;
+    anonymous_id?: string;
   }) {
-    const { data } = await api.post('/growth/waitlist', payload);
+    const { data } = await api.post('/growth/waitlist', {
+      ...getStoredUtm(),
+      ...getGrowthContext(),
+      ...payload,
+    });
     return data as { message: string };
   },
 

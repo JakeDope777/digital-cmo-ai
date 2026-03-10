@@ -5,7 +5,9 @@ Pydantic schemas for API request/response validation.
 from datetime import datetime
 from typing import Optional, Any
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+from ..core.catalog import is_public_module, resolve_domain_id
 
 
 # ── Auth ──────────────────────────────────────────────────────────────
@@ -526,7 +528,29 @@ class BillingInvoicesResponse(BaseModel):
 class GrowthEventRequest(BaseModel):
     event_name: str
     source: str = "web"
+    domain: Optional[str] = None
+    module_id: Optional[str] = None
+    anonymous_id: Optional[str] = None
     properties: Optional[dict] = None
+
+    @field_validator("domain")
+    @classmethod
+    def validate_domain(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        resolved = resolve_domain_id(value)
+        if not resolved:
+            raise ValueError("Unsupported domain")
+        return resolved
+
+    @field_validator("module_id")
+    @classmethod
+    def validate_module_id(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        if not is_public_module(value):
+            raise ValueError("Unsupported module_id")
+        return value
 
 
 class WaitlistRequest(BaseModel):
@@ -535,9 +559,31 @@ class WaitlistRequest(BaseModel):
     company: Optional[str] = None
     note: Optional[str] = None
     source: str = "landing_page"
+    domain: Optional[str] = None
+    module_id: Optional[str] = None
+    anonymous_id: Optional[str] = None
     utm_source: Optional[str] = None
     utm_medium: Optional[str] = None
     utm_campaign: Optional[str] = None
+
+    @field_validator("domain")
+    @classmethod
+    def validate_waitlist_domain(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        resolved = resolve_domain_id(value)
+        if not resolved:
+            raise ValueError("Unsupported domain")
+        return resolved
+
+    @field_validator("module_id")
+    @classmethod
+    def validate_waitlist_module_id(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        if not is_public_module(value):
+            raise ValueError("Unsupported module_id")
+        return value
 
 
 class GrowthFunnelStep(BaseModel):

@@ -1,5 +1,5 @@
 """
-TablePilot AI - Main FastAPI Application
+Digital CMO AI - Main FastAPI Application
 
 Central entry point that registers all API routers, configures middleware,
 and initialises the database and brain components.
@@ -13,22 +13,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+from .core.catalog import PUBLIC_MODULES, list_public_domains
 from .core.config import settings
 from .db.session import init_db
+from .modules.integrations.service import IntegrationService
 from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth, integrations, restaurant
 
-PUBLIC_MODULES = [
-    "dashboard",
-    "chat",
-    "analysis",
-    "creative",
-    "crm",
-    "growth",
-    "integrations",
-    "billing",
-    "profile",
-    "settings",
-]
+_integration_service = IntegrationService()
 
 
 @asynccontextmanager
@@ -43,8 +34,8 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description=(
-        "AI operating partner for restaurants with control tower, margin, "
-        "inventory/waste, labor, and manager chat workflows."
+        "AI operating system for growth teams across ecommerce, SaaS, fintech, "
+        "iGaming, healthtech, proptech, edtech, and agency workflows."
     ),
     lifespan=lifespan,
 )
@@ -73,7 +64,7 @@ app.include_router(memory.router)
 app.include_router(billing.router)
 app.include_router(growth.router)
 app.include_router(integrations.router)
-app.include_router(restaurant.router)
+app.include_router(restaurant.router, include_in_schema=False)
 
 
 @app.get("/api/health", tags=["Health"])
@@ -84,6 +75,9 @@ async def api_health():
         "version": settings.APP_VERSION,
         "status": "running",
         "modules": PUBLIC_MODULES,
+        "domains": list_public_domains(),
+        "pilot_connectors": _integration_service.get_pilot_readiness(),
+        "legacy_scope_quarantined": True,
     }
 
 
@@ -95,6 +89,9 @@ async def health_check():
         "database": "connected",
         "llm_configured": bool(settings.OPENAI_API_KEY),
         "memory_path": settings.MEMORY_BASE_PATH,
+        "frontend_base_url": settings.FRONTEND_BASE_URL,
+        "email_verification_required": settings.REQUIRE_EMAIL_VERIFICATION,
+        "pilot_connectors": _integration_service.get_pilot_readiness(),
     }
 
 
@@ -105,6 +102,9 @@ async def readiness_check():
         "status": "ready",
         "database_url_configured": bool(settings.DATABASE_URL),
         "jwt_secret_configured": settings.SECRET_KEY != "change-me-in-production-use-a-strong-random-key",
+        "frontend_base_url": settings.FRONTEND_BASE_URL,
+        "email_verification_required": settings.REQUIRE_EMAIL_VERIFICATION,
+        "pilot_connectors": _integration_service.get_pilot_readiness(),
     }
 
 
@@ -126,6 +126,8 @@ async def root(request: Request):
         "version": settings.APP_VERSION,
         "status": "running",
         "modules": PUBLIC_MODULES,
+        "domains": list_public_domains(),
+        "pilot_connectors": _integration_service.get_pilot_readiness(),
     }
 
 

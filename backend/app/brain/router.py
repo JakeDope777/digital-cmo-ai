@@ -107,14 +107,7 @@ SKILL_EXEMPLARS: dict[str, list[str]] = {
         "Install the Slack notification integration",
     ],
     SKILL_RESTAURANT_OPS: [
-        "Why was profit weak last week?",
-        "Lunch sales are below forecast, what should I do?",
-        "What should I reorder tomorrow?",
-        "Which shift is inefficient?",
-        "How much waste did we have this week?",
-        "What is margin by dish and channel?",
-        "Why are Google reviews dropping?",
-        "Can I afford one more chef?",
+        # Legacy scope is quarantined from the Digital CMO production chat path.
     ],
     SKILL_SYSTEM: [
         "Change my account settings and preferences",
@@ -169,9 +162,7 @@ INTENT_PATTERNS: dict[str, list[str]] = {
         r"sendgrid|linkedin|webhook|sync|connector)\b",
     ],
     SKILL_RESTAURANT_OPS: [
-        r"\b(restaurant|table|covers|avg\s*check|labor\s*cost|food\s*cost|"
-        r"inventory|waste|supplier|reorder|portion|dish|menu|service|"
-        r"kitchen|gm|shift|payroll|p&l|profit|margin|review|sentiment|complaint)\b",
+        # Legacy scope is quarantined from the Digital CMO production chat path.
     ],
     SKILL_SYSTEM: [
         r"\b(settings|account|subscription|token|usage|password|"

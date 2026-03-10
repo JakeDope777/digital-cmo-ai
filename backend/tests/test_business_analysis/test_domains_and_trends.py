@@ -21,7 +21,7 @@ class TestDomainProfileManager:
 
     def test_init_default(self):
         mgr = DomainProfileManager()
-        assert len(mgr.list_domains()) == 7
+        assert len(mgr.list_domains()) == 8
 
     def test_init_with_custom(self):
         custom = {
@@ -32,7 +32,7 @@ class TestDomainProfileManager:
             }
         }
         mgr = DomainProfileManager(custom_profiles=custom)
-        assert len(mgr.list_domains()) == 8
+        assert len(mgr.list_domains()) == 9
 
     def test_list_domains(self):
         mgr = DomainProfileManager()
@@ -43,13 +43,12 @@ class TestDomainProfileManager:
             assert "name" in d
             assert "description" in d
 
-    def test_all_seven_domains_present(self):
+    def test_all_public_domains_present(self):
         mgr = DomainProfileManager()
         ids = mgr.get_all_domain_ids()
         expected = [
-            "tech_saas", "ecommerce_retail", "healthcare",
-            "finance_fintech", "real_estate", "education",
-            "travel_hospitality",
+            "ecommerce", "saas", "fintech", "igaming",
+            "healthtech", "proptech", "edtech", "agency",
         ]
         for domain_id in expected:
             assert domain_id in ids, f"Missing domain: {domain_id}"
@@ -196,9 +195,9 @@ class TestDomainProfileManager:
     def test_remove_profile(self):
         mgr = DomainProfileManager()
         initial_count = len(mgr.list_domains())
-        assert mgr.remove_profile("tech_saas") is True
+        assert mgr.remove_profile("saas") is True
         assert len(mgr.list_domains()) == initial_count - 1
-        assert mgr.get_profile("tech_saas") is None
+        assert mgr.get_profile("saas") is None
 
     def test_remove_profile_not_found(self):
         mgr = DomainProfileManager()
@@ -208,7 +207,7 @@ class TestDomainProfileManager:
         mgr = DomainProfileManager()
         ids = mgr.get_all_domain_ids()
         assert isinstance(ids, list)
-        assert len(ids) == 7
+        assert len(ids) == 8
 
     @pytest.mark.parametrize("domain_id", list(DOMAIN_PROFILES.keys()))
     def test_each_domain_has_required_fields(self, domain_id):

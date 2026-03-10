@@ -85,6 +85,7 @@ class Settings(BaseSettings):
 
     # Analytics & Data
     GOOGLE_ANALYTICS_PROPERTY_ID: Optional[str] = None
+    GOOGLE_ANALYTICS_ACCESS_TOKEN: Optional[str] = None
     GOOGLE_ANALYTICS_CREDENTIALS_JSON: Optional[str] = None
     MIXPANEL_API_SECRET: Optional[str] = None
     MIXPANEL_PROJECT_ID: Optional[str] = None

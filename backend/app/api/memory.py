@@ -9,10 +9,15 @@ GET  /memory/read     - Read a specific memory file
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from ..core.dependencies import require_verified_user
 from ..db.schemas import MemoryStoreRequest, MemoryRetrieveRequest, MemoryResponse
 from ..brain.memory_manager import MemoryManager
 
-router = APIRouter(prefix="/memory", tags=["Memory"])
+router = APIRouter(
+    prefix="/memory",
+    tags=["Memory"],
+    dependencies=[Depends(require_verified_user)],
+)
 
 _memory = MemoryManager()
 

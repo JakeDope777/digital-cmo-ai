@@ -16,6 +16,7 @@ GET      /analytics/industries    - List supported benchmark industries
 
 from fastapi import APIRouter, Depends
 
+from ..core.dependencies import require_verified_user
 from ..db.schemas import (
     DashboardRequest,
     ForecastRequest,
@@ -30,7 +31,11 @@ from ..db.schemas import (
 )
 from ..modules.analytics_reporting import AnalyticsReportingModule
 
-router = APIRouter(prefix="/analytics", tags=["Analytics & Reporting"])
+router = APIRouter(
+    prefix="/analytics",
+    tags=["Analytics & Reporting"],
+    dependencies=[Depends(require_verified_user)],
+)
 
 _module = AnalyticsReportingModule()
 

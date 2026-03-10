@@ -3,16 +3,22 @@ Shared test fixtures for the Digital CMO AI test suite.
 """
 
 import os
+import shutil
 import sys
 import tempfile
+import uuid
 
 import pytest
 
 # Set test environment before importing app modules
-os.environ["DATABASE_URL"] = "sqlite:///./test_data/test.db"
+TEST_ROOT = tempfile.mkdtemp(prefix="digital_cmo_tests_")
+TEST_DB_PATH = os.path.join(TEST_ROOT, "test.db")
+TEST_MEMORY_PATH = os.path.join(TEST_ROOT, "memory")
+
+os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH}"
 os.environ["SECRET_KEY"] = "test-secret-key-not-for-production"
 os.environ["DEBUG"] = "false"
-os.environ["MEMORY_BASE_PATH"] = "./test_memory"
+os.environ["MEMORY_BASE_PATH"] = TEST_MEMORY_PATH
 
 
 @pytest.fixture()
@@ -32,7 +38,7 @@ try:
     from app.main import app
 
     # Test database setup
-    TEST_DB_URL = "sqlite:///./test_data/test.db"
+    TEST_DB_URL = os.environ["DATABASE_URL"]
     engine = create_engine(TEST_DB_URL, connect_args={"check_same_thread": False})
     TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
@@ -46,10 +52,19 @@ try:
     @pytest.fixture(scope="session", autouse=True)
     def setup_test_db():
         """Create test database tables once for the entire test session."""
-        os.makedirs("test_data", exist_ok=True)
+        os.makedirs(TEST_MEMORY_PATH, exist_ok=True)
         Base.metadata.create_all(bind=engine)
         yield
         Base.metadata.drop_all(bind=engine)
+        shutil.rmtree(TEST_ROOT, ignore_errors=True)
+
+    @pytest.fixture(autouse=True)
+    def reset_test_db():
+        """Reset persisted rows between tests for deterministic results."""
+        with engine.begin() as connection:
+            for table in reversed(Base.metadata.sorted_tables):
+                connection.execute(table.delete())
+        yield
 
     @pytest.fixture()
     def db_session():
@@ -70,9 +85,26 @@ try:
         app.dependency_overrides.clear()
 
     @pytest.fixture()
-    def auth_headers(client):
-        """Register a test user and return authorization headers."""
-        signup_data = {"email": "test@example.com", "password": "testpassword123"}
+    def auth_headers(client, db_session):
+        """Register a verified test user and return authorization headers."""
+        from app.db import models
+
+        email = f"verified-{uuid.uuid4().hex[:8]}@example.com"
+        signup_data = {"email": email, "password": "testpassword123"}
+        response = client.post("/auth/signup", json=signup_data)
+        if response.status_code == 409:
+            response = client.post("/auth/login", json=signup_data)
+        user = db_session.query(models.User).filter(models.User.email == email).first()
+        user.is_email_verified = True
+        db_session.commit()
+        token = response.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+
+    @pytest.fixture()
+    def unverified_auth_headers(client):
+        """Register an unverified test user and return authorization headers."""
+        email = f"unverified-{uuid.uuid4().hex[:8]}@example.com"
+        signup_data = {"email": email, "password": "testpassword123"}
         response = client.post("/auth/signup", json=signup_data)
         if response.status_code == 409:
             response = client.post("/auth/login", json=signup_data)

@@ -7,9 +7,11 @@ typical competitors, SWOT/PESTEL factors, persona templates, and
 trend monitoring keywords.
 """
 
+from copy import deepcopy
 from datetime import datetime
 from typing import Optional
 
+from ...core.catalog import PUBLIC_DOMAINS, PUBLIC_DOMAIN_METADATA
 
 # ---------------------------------------------------------------------------
 # Domain profile registry
@@ -624,6 +626,119 @@ DOMAIN_PROFILES: dict[str, dict] = {
 }
 
 
+def _clone_profile(
+    source_id: str,
+    target_id: str,
+    name: str,
+    description: str,
+    *,
+    search_keywords: Optional[list[str]] = None,
+    trend_keywords: Optional[list[str]] = None,
+) -> dict:
+    profile = deepcopy(DOMAIN_PROFILES[source_id])
+    profile["id"] = target_id
+    profile["name"] = name
+    profile["description"] = description
+    if search_keywords is not None:
+        profile["research_parameters"]["search_keywords"] = search_keywords
+    if trend_keywords is not None:
+        profile["trend_keywords"] = trend_keywords
+    return profile
+
+
+DOMAIN_PROFILES.update(
+    {
+        "saas": _clone_profile(
+            "tech_saas",
+            "saas",
+            PUBLIC_DOMAIN_METADATA["saas"]["label"],
+            PUBLIC_DOMAIN_METADATA["saas"]["description"],
+        ),
+        "ecommerce": _clone_profile(
+            "ecommerce_retail",
+            "ecommerce",
+            PUBLIC_DOMAIN_METADATA["ecommerce"]["label"],
+            PUBLIC_DOMAIN_METADATA["ecommerce"]["description"],
+        ),
+        "healthtech": _clone_profile(
+            "healthcare",
+            "healthtech",
+            PUBLIC_DOMAIN_METADATA["healthtech"]["label"],
+            PUBLIC_DOMAIN_METADATA["healthtech"]["description"],
+        ),
+        "fintech": _clone_profile(
+            "finance_fintech",
+            "fintech",
+            PUBLIC_DOMAIN_METADATA["fintech"]["label"],
+            PUBLIC_DOMAIN_METADATA["fintech"]["description"],
+        ),
+        "proptech": _clone_profile(
+            "real_estate",
+            "proptech",
+            PUBLIC_DOMAIN_METADATA["proptech"]["label"],
+            PUBLIC_DOMAIN_METADATA["proptech"]["description"],
+        ),
+        "edtech": _clone_profile(
+            "education",
+            "edtech",
+            PUBLIC_DOMAIN_METADATA["edtech"]["label"],
+            PUBLIC_DOMAIN_METADATA["edtech"]["description"],
+        ),
+        "igaming": _clone_profile(
+            "ecommerce_retail",
+            "igaming",
+            PUBLIC_DOMAIN_METADATA["igaming"]["label"],
+            PUBLIC_DOMAIN_METADATA["igaming"]["description"],
+            search_keywords=[
+                "igaming",
+                "sports betting",
+                "casino",
+                "sportsbook",
+                "player retention",
+                "affiliate traffic",
+                "responsible gaming",
+                "payment fraud",
+                "bonus optimization",
+            ],
+            trend_keywords=[
+                "igaming trends",
+                "sports betting growth",
+                "casino retention",
+                "gaming affiliates",
+                "responsible gaming",
+                "player lifetime value",
+            ],
+        ),
+        "agency": _clone_profile(
+            "tech_saas",
+            "agency",
+            PUBLIC_DOMAIN_METADATA["agency"]["label"],
+            PUBLIC_DOMAIN_METADATA["agency"]["description"],
+            search_keywords=[
+                "marketing agency",
+                "creative agency",
+                "media buying agency",
+                "client retention",
+                "retainer growth",
+                "pitch win rate",
+                "utilization rate",
+                "cross-sell services",
+            ],
+            trend_keywords=[
+                "agency growth",
+                "client retention",
+                "marketing services trends",
+                "creative operations",
+                "media buying efficiency",
+                "agency profitability",
+            ],
+        ),
+    }
+)
+
+BUILT_IN_DOMAIN_IDS = set(DOMAIN_PROFILES.keys())
+
+
 class DomainProfileManager:
     """
     Manages industry domain profiles for the business analysis module.
@@ -638,8 +753,19 @@ class DomainProfileManager:
             custom_profiles: Optional dict of additional custom domain profiles.
         """
         self._profiles = dict(DOMAIN_PROFILES)
+        self._custom_profile_ids = set()
         if custom_profiles:
             self._profiles.update(custom_profiles)
+            self._custom_profile_ids.update(custom_profiles.keys())
+
+    def _listed_domain_ids(self) -> list[str]:
+        public_ids = [domain_id for domain_id in PUBLIC_DOMAINS if domain_id in self._profiles]
+        custom_ids = sorted(
+            domain_id
+            for domain_id in self._custom_profile_ids
+            if domain_id in self._profiles and domain_id not in public_ids
+        )
+        return public_ids + custom_ids
 
     def list_domains(self) -> list[dict]:
         """
@@ -650,11 +776,11 @@ class DomainProfileManager:
         """
         return [
             {
-                "id": profile["id"],
-                "name": profile["name"],
-                "description": profile["description"],
+                "id": self._profiles[domain_id]["id"],
+                "name": self._profiles[domain_id]["name"],
+                "description": self._profiles[domain_id]["description"],
             }
-            for profile in self._profiles.values()
+            for domain_id in self._listed_domain_ids()
         ]
 
     def get_profile(self, domain_id: str) -> Optional[dict]:
@@ -750,6 +876,8 @@ class DomainProfileManager:
         """
         profile["id"] = domain_id
         self._profiles[domain_id] = profile
+        if domain_id not in BUILT_IN_DOMAIN_IDS:
+            self._custom_profile_ids.add(domain_id)
 
     def remove_profile(self, domain_id: str) -> bool:
         """
@@ -763,9 +891,10 @@ class DomainProfileManager:
         """
         if domain_id in self._profiles:
             del self._profiles[domain_id]
+            self._custom_profile_ids.discard(domain_id)
             return True
         return False
 
     def get_all_domain_ids(self) -> list[str]:
         """Return all registered domain IDs."""
-        return list(self._profiles.keys())
+        return self._listed_domain_ids()
