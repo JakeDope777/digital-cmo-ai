@@ -1,34 +1,73 @@
 [build]
-  base = "frontend"
-  command = "npm ci && npm run build"
-  publish = "frontend/dist"
+    base = "frontend"
+    command = "npm ci && npm run build"
+    publish = "frontend/dist"
 
-[[redirects]]
-  from = "/login"
-  to = "/index.html"
-  status = 200
+  [build.environment]
+    NODE_VERSION = "20"
 
-[[redirects]]
-  from = "/register"
-  to = "/index.html"
-  status = 200
+  [[redirects]]
+    from = "/login"
+    to = "/index.html"
+    status = 200
 
-[[redirects]]
-  from = "/verify-email"
-  to = "/index.html"
-  status = 200
+  [[redirects]]
+    from = "/register"
+    to = "/index.html"
+    status = 200
 
-[[redirects]]
-  from = "/reset-password"
-  to = "/index.html"
-  status = 200
+  [[redirects]]
+    from = "/dashboard"
+    to = "/index.html"
+    status = 200
 
-[[redirects]]
-  from = "/app/*"
-  to = "/index.html"
-  status = 200
+  [[redirects]]
+    from = "/dashboard/*"
+    to = "/index.html"
+    status = 200
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+  [[redirects]]
+    from = "/chat"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/analysis"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/growth"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/creative"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/crm"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/integrations"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/billing"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/settings"
+    to = "/index.html"
+    status = 200
+
+  [[redirects]]
+    from = "/*"
+    to = "/index.html"
+    status = 200
+  
