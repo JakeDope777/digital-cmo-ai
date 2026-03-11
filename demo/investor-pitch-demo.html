@@ -500,7 +500,7 @@ nav.scrolled{background:rgba(15,23,42,.98)}
         <div class="step-num">01</div>
         <div class="step-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
         <div class="step-title">Connect your stack</div>
-        <div class="step-desc">Link HubSpot, Google Ads, Meta, GA4, Stripe and 15+ tools in minutes. Or start immediately with demo data — no API keys required.</div>
+        <div class="step-desc">Start with managed HubSpot, GA4, and Stripe workspace connections. Everything else stays available through deterministic demo fallback while broader self-serve OAuth rolls out after the pilot.</div>
       </div>
       <div class="step-card">
         <div class="step-num">02</div>
@@ -609,7 +609,7 @@ nav.scrolled{background:rgba(15,23,42,.98)}
           <div class="panel-title">Business Analysis</div>
           <div class="panel-sub">AI-powered strategic frameworks — displayed as formatted insights, not raw data</div>
           <div class="swot-grid">
-            <div class="swot-q S"><div class="swot-q-title">✦ Strengths</div><div class="swot-items"><div class="swot-item"><div class="swot-dot"></div>AI-first architecture — 10× faster than legacy tools</div><div class="swot-item"><div class="swot-dot"></div>Modular brain-skills design for rapid iteration</div><div class="swot-item"><div class="swot-dot"></div>20+ integrations with demo fallback</div></div></div>
+            <div class="swot-q S"><div class="swot-q-title">✦ Strengths</div><div class="swot-items"><div class="swot-item"><div class="swot-dot"></div>AI-first architecture — 10× faster than legacy tools</div><div class="swot-item"><div class="swot-dot"></div>Modular brain-skills design for rapid iteration</div><div class="swot-item"><div class="swot-dot"></div>Managed pilot connectors plus deterministic demo fallback</div></div></div>
             <div class="swot-q W"><div class="swot-q-title">✦ Weaknesses</div><div class="swot-items"><div class="swot-item"><div class="swot-dot"></div>Early-stage brand awareness in competitive market</div><div class="swot-item"><div class="swot-dot"></div>LLM API dependency (OpenAI uptime risk)</div><div class="swot-item"><div class="swot-dot"></div>Limited enterprise case studies at launch</div></div></div>
             <div class="swot-q O"><div class="swot-q-title">✦ Opportunities</div><div class="swot-items"><div class="swot-item"><div class="swot-dot"></div>$4.7B TAM growing 34% YoY</div><div class="swot-item"><div class="swot-dot"></div>CMO budgets shifting from agencies to tools</div><div class="swot-item"><div class="swot-dot"></div>HubSpot & Salesforce marketplace partner channels</div></div></div>
             <div class="swot-q T"><div class="swot-q-title">✦ Threats</div><div class="swot-items"><div class="swot-item"><div class="swot-dot"></div>Salesforce Einstein + HubSpot AI adding similar features</div><div class="swot-item"><div class="swot-dot"></div>Economic downturn may compress marketing budgets</div><div class="swot-item"><div class="swot-dot"></div>EU AI Act enforcement increasing compliance burden</div></div></div>
@@ -751,7 +751,7 @@ Are you using AI to go faster, or to think better?
         <div class="price-desc">For growth teams running live campaigns and replacing agency retainers.</div>
         <div class="price-features">
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited AI Chat</div>
-          <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Live integrations (5 connectors)</div>
+          <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Managed live pilot connectors: HubSpot, GA4, Stripe</div>
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited Creative Generation</div>
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Full CRM & Campaign Orchestration</div>
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Advanced Analytics & Forecasting</div>
@@ -766,7 +766,7 @@ Are you using AI to go faster, or to think better?
         <div class="price-desc">For scale-ups and agencies managing multiple brands and teams.</div>
         <div class="price-features">
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Everything in Pro</div>
-          <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Unlimited integrations</div>
+          <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Expanded managed connector rollout</div>
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>White-label option</div>
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Custom memory & brand voice</div>
           <div class="price-feature"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>Dedicated onboarding + SLA</div>
@@ -885,7 +885,7 @@ setTimeout(initDashCharts,300);
 
 // ── Chat ──
 const chatReplies={
-  swot:{t:"Here's the SWOT for your AI SaaS product:\n\n**Strengths**\n• AI-first architecture — 10× faster insights\n• 20+ integrations with demo fallback\n• Zero-friction onboarding\n\n**Weaknesses**\n• Early-stage brand awareness\n• OpenAI API dependency\n\n**Opportunities**\n• $4.7B TAM growing 34% YoY\n• CMOs consolidating martech stack\n\n**Threats**\n• HubSpot AI & Salesforce Einstein\n• Budget compression in downturns\n\nShall I generate a strategic response plan?",m:'Business Analysis → SWOT Engine'},
+  swot:{t:"Here's the SWOT for your AI SaaS product:\n\n**Strengths**\n• AI-first architecture — 10× faster insights\n• Managed pilot connectors plus deterministic demo fallback\n• Zero-friction onboarding\n\n**Weaknesses**\n• Early-stage brand awareness\n• OpenAI API dependency\n\n**Opportunities**\n• $4.7B TAM growing 34% YoY\n• CMOs consolidating martech stack\n\n**Threats**\n• HubSpot AI & Salesforce Einstein\n• Budget compression in downturns\n\nShall I generate a strategic response plan?",m:'Business Analysis → SWOT Engine'},
   linkedin:{t:"**LinkedIn Post Draft:**\n\nMost marketing teams are operating with the wrong mental model.\n\nThey treat AI as a content tool.\nLeaders treat it as a strategic OS.\n\nHere's the difference:\n❌ Production: \"Use AI to write faster\"\n✅ Strategy: \"Use AI to decide smarter\"\n\nIn Q1 2026 we ran 14 campaigns, generated 342 leads, and cut CAC by 31% — with 3 people.\n\nMarketing velocity is a compounding advantage.\n\nAre you using AI to go faster, or to think better?\n\n#Marketing #AI #B2BSaaS",m:'Creative Studio → Copy Engine (LinkedIn)'},
   kpi:{t:"**This Month's KPI Summary:**\n\n✅ ROAS: 5.3× (target 4.0×)\n✅ CAC: $125 (budget $150)\n✅ Conversion Rate: 4.2% (target 3.5%)\n✅ New Leads: 47 (target 40)\n✅ Email Open Rate: 24.5%\n\n⚠️ Watch areas:\n• CTR down 0.8% WoW on Google Ads\n• LinkedIn CPL up 12%\n\n**Recommended:** Reallocate $1,200 to Google Search. Want me to generate the plan?",m:'Analytics → KPI Engine'},
   email:{t:"**Welcome Email Sequence (3-email):**\n\nEmail 1 — Sent immediately\nSubject: \"Welcome, {{name}} — your AI CMO is ready\"\nGoal: First value moment in < 5 min\n\nEmail 2 — Day 2 (no action)\nSubject: \"One question about your goals\"\nGoal: Re-engage with personalised prompt\n\nEmail 3 — Day 5 (no upgrade)\nSubject: \"What Pro users did this week\"\nGoal: Social proof + single CTA\n\nAll 3 drafted in full — want the complete copy?",m:'CRM → Journey Mapping + Creative Studio'},
@@ -1376,7 +1376,7 @@ function useDeterministicFallback(reason = '') {
 
   const moduleDesc = document.getElementById('integrationsModuleDesc');
   if (moduleDesc) {
-    moduleDesc.textContent = `${Object.keys(FALLBACK_STATUS).length} native connectors + ${rows.length}/${rows.length} marketplace loaded (deterministic demo mode · ${DOMAIN_NAMES[selectedDemoDomain]}).`;
+    moduleDesc.textContent = `${Object.keys(FALLBACK_STATUS).length} native connectors + ${rows.length}/${rows.length} marketplace loaded (managed pilot live connectors where configured, deterministic demo fallback everywhere else · ${DOMAIN_NAMES[selectedDemoDomain]}).`;
   }
 
   const reasonSuffix = reason ? ` ${reason}` : '';
@@ -1414,8 +1414,8 @@ function connectorPillClass(key) {
   if (!coreConnectorKeys.has(key)) return '';
   const status = coreStatusMap[key];
   if (!status) return 'ready';
-  if (status.demo_mode) return 'demo';
-  if (status.authenticated) return 'live';
+  if (status.connection?.demo_fallback || status.demo_mode) return 'demo';
+  if (status.connection?.ready_for_live || status.authenticated) return 'live';
   return 'ready';
 }
 
@@ -1452,9 +1452,11 @@ function renderMarketplaceDetail(detail) {
     <div class="market-meta">
       ${providers.map((provider) => `<span class="market-chip">${provider}</span>`).join('')}
       ${(detail.category ? [`<span class="market-chip">${detail.category}</span>`] : []).join('')}
+      ${(detail.connection?.mode_label ? [`<span class="market-chip">${detail.connection.mode_label}</span>`] : []).join('')}
       <span class="market-chip">${variants.length} variant(s)</span>
     </div>
     <p style="margin-top:10px">Suggested actions: ${actions.length ? actions.join(', ') : 'n/a'}</p>
+    <p>${detail.connection?.last_tested_at ? `Last tested: ${detail.connection.last_tested_at}` : 'Last tested: pending'}</p>
     <p>${detail.n8n_template?.source_url ? `Template URL: <a href="${detail.n8n_template.source_url}" target="_blank" rel="noopener noreferrer">${detail.n8n_template.source_url}</a>` : 'No external template URL for this variant.'}</p>
   `;
 }
@@ -1560,7 +1562,7 @@ async function fetchMarketplacePage({ reset = false } = {}) {
 async function loadMoreMarketplace() {
   if (!marketplaceHasMore) return;
   try {
-    setIntegrationStatus('Loading more marketplace connectors…', 'warn');
+    setIntegrationStatus('Loading more marketplace connectors and mode labels…', 'warn');
     await fetchMarketplacePage({ reset: false });
     setIntegrationStatus(`Loaded ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace connectors`, 'ok');
   } catch (error) {
@@ -1576,7 +1578,7 @@ async function refreshIntegrationState() {
     return;
   }
 
-  setIntegrationStatus('Syncing native connectors + marketplace catalog…', 'warn');
+  setIntegrationStatus('Syncing managed pilot connectors + marketplace catalog…', 'warn');
   try {
     marketplaceProvider = (providerFilterInput?.value || 'all').trim().toLowerCase();
     marketplaceCategory = (categoryFilterInput?.value || '').trim().toLowerCase();
@@ -1604,7 +1606,22 @@ async function refreshIntegrationState() {
         const key = connector.key;
         try {
           const res = await apiRequest(`/integrations/${key}/status`);
-          return [key, res.details || null];
+          return [
+            key,
+            {
+              ...(res.details || {}),
+              connection: res.details?.connection || {
+                owner_scope: res.owner_scope,
+                auth_mode: res.auth_mode,
+                configured: res.configured,
+                ready_for_live: res.ready_for_live,
+                demo_fallback: res.demo_fallback,
+                last_tested_at: res.last_tested_at,
+                capability: res.capability,
+                mode_label: res.mode_label,
+              },
+            },
+          ];
         } catch {
           return [key, null];
         }
@@ -1617,7 +1634,7 @@ async function refreshIntegrationState() {
 
     const moduleDesc = document.getElementById('integrationsModuleDesc');
     if (moduleDesc) {
-      moduleDesc.textContent = `${connectors.length} native connectors + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace loaded (${marketplaceProvider}${marketplaceCategory ? `/${marketplaceCategory}` : ''} · ${DOMAIN_NAMES[selectedDemoDomain]}). ${liveCount} native live, ${demoCount} native demo mode.`;
+      moduleDesc.textContent = `${connectors.length} native connectors + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace loaded (${marketplaceProvider}${marketplaceCategory ? `/${marketplaceCategory}` : ''} · ${DOMAIN_NAMES[selectedDemoDomain]}). ${liveCount} managed live, ${demoCount} demo fallback.`;
     }
 
     if (marketplaceConnectors.length > 0) {
@@ -1637,7 +1654,7 @@ async function refreshIntegrationState() {
       { name: 'Native Demo', status: `${demoCount} fallback` },
     ]);
     await refreshRunHistory();
-    setIntegrationStatus(`Sync complete · ${connectors.length} native + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace`, 'ok');
+    setIntegrationStatus(`Sync complete · ${connectors.length} native + ${marketplaceConnectors.length}/${marketplaceTotalFiltered} marketplace (${liveCount} managed live / ${demoCount} demo fallback)`, 'ok');
   } catch (error) {
     marketplaceProvider = (providerFilterInput?.value || 'all').trim().toLowerCase();
     marketplaceCategory = (categoryFilterInput?.value || '').trim().toLowerCase();

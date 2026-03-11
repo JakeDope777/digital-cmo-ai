@@ -12,6 +12,7 @@
 2. Validate backend:
    - `GET /health`
    - `GET /health/ready`
+   - `GET /health/launch-readiness`
    - `GET /docs`
 3. Deploy frontend to Netlify.
 4. Validate frontend routes:
@@ -25,6 +26,7 @@
 
 ## 3) Smoke tests
 0. Run `./scripts/validate_release_readiness.sh https://<backend-url> https://<frontend-url>`
+   - Confirm `/health/launch-readiness` reports SMTP, Stripe, pilot connector, and growth pipeline state.
 1. Signup user -> verification email -> verify.
 2. Login and open dashboard.
 3. Send one chat message and run one analysis.

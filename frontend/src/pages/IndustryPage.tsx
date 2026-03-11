@@ -5,6 +5,7 @@ import { isDomainId, resolveDomainId, withDomainQuery } from '../data/domainModu
 import { growthService } from '../services/api';
 import { getStoredUtm, trackEvent } from '../services/analytics';
 import { setSelectedDomain } from '../services/onboarding';
+import { SUPPORT_EMAIL } from '../config/runtime';
 
 const Check = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -62,7 +63,7 @@ export default function IndustryPage() {
       setMessage(response.message);
       setName(''); setEmail(''); setCompany('');
     } catch {
-      setMessage('Unable to join waitlist. Email us at hello@tablepilot.ai');
+      setMessage(`Unable to join waitlist. Email us at ${SUPPORT_EMAIL}`);
     } finally {
       setSubmitting(false);
     }

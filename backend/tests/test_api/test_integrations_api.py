@@ -2,6 +2,8 @@
 API tests for integrations endpoints.
 """
 
+from app.db import models
+
 
 class TestIntegrationsAPI:
     def test_catalog(self, client, auth_headers):
@@ -14,6 +16,10 @@ class TestIntegrationsAPI:
         assert "n8n" in keys
         assert "marketplace" in data
         assert data["marketplace"]["snapshot_connectors"] >= 200
+        integrations = {item["name"]: item for item in data["integrations"]}
+        assert integrations["hubspot"]["owner_scope"] == "workspace"
+        assert "mode_label" in integrations["hubspot"]
+        assert "ready_for_live" in integrations["hubspot"]
 
     def test_marketplace_default(self, client, auth_headers):
         response = client.get("/integrations/marketplace", headers=auth_headers)
@@ -85,6 +91,8 @@ class TestIntegrationsAPI:
         assert data["key"] == "n8n"
         assert "suggested_actions" in data
         assert "trigger_workflow" in data["suggested_actions"]
+        assert data["connection"]["owner_scope"] == "workspace"
+        assert "mode_label" in data["connection"]
 
     def test_n8n_trigger_workflow_demo(self, client, auth_headers):
         response = client.post(
@@ -100,6 +108,8 @@ class TestIntegrationsAPI:
         data = response.json()
         assert data["status"] == "success"
         assert data["details"]["result"]["demo"] is True
+        assert data["demo_fallback"] is True
+        assert data["mode_label"] == "Demo fallback"
 
     def test_connector_runs_feed(self, client, auth_headers):
         warmup = client.get("/integrations/n8n/status", headers=auth_headers)
@@ -145,3 +155,32 @@ class TestIntegrationsAPI:
             second_data["details"]["result"]["execution_id"]
             == first_data["details"]["result"]["execution_id"]
         )
+
+    def test_pilot_readiness_exposes_connection_contract(self, client, auth_headers):
+        response = client.get("/integrations/pilot-readiness", headers=auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 3
+        hubspot = next(row for row in data["connectors"] if row["key"] == "hubspot")
+        assert hubspot["owner_scope"] == "workspace"
+        assert "auth_mode" in hubspot
+        assert "mode_label" in hubspot
+        assert "capability" in hubspot
+
+    def test_status_persists_connection_record(self, client, auth_headers, db_session):
+        response = client.get("/integrations/n8n/status", headers=auth_headers)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["owner_scope"] == "workspace"
+        assert data["demo_fallback"] is True
+        row = (
+            db_session.query(models.IntegrationConnection)
+            .filter(
+                models.IntegrationConnection.connector == "n8n",
+                models.IntegrationConnection.owner_scope == "workspace",
+                models.IntegrationConnection.owner_id == "default",
+            )
+            .one()
+        )
+        assert row.status in {"demo", "live", "error", "pending"}
+        assert row.last_tested_at is not None

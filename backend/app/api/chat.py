@@ -68,23 +68,26 @@ class IntegrationsBrainAdapter:
     def _format_connector_response(connector: str, details: dict, action: str) -> str:
         status = details.get("status") or "ok"
         connector_status = details.get("connector_status", details)
-        demo_mode = connector_status.get("demo_mode", False)
-        auth_state = "demo fallback" if demo_mode else "live-ready"
+        connection = details.get("connection", {})
+        auth_state = connection.get("mode_label") or (
+            "Demo fallback" if connector_status.get("demo_mode", False) else "Live via managed workspace connection"
+        )
         return (
             f"{connector} {action} completed with status '{status}'. "
-            f"Mode: {auth_state}. Authenticated: {connector_status.get('authenticated', False)}."
+            f"Mode: {auth_state}. Authenticated: {connector_status.get('authenticated', False)}. "
+            f"Ready for live: {connection.get('ready_for_live', False)}."
         )
 
     @staticmethod
     def _format_readiness(readiness: dict) -> str:
         rows = readiness.get("connectors", [])
         summary = ", ".join(
-            f"{row['key']}={row['status']}" for row in rows
+            f"{row['key']}={row['mode_label']}" for row in rows
         )
         return (
             "Launch connector readiness: "
-            f"{summary}. Live connectors use workspace-level credentials; "
-            "missing credentials automatically fall back to demo data."
+            f"{summary}. HubSpot, GA4, and Stripe use managed workspace connections during the pilot; "
+            "everything else stays on demo fallback until self-serve OAuth is added."
         )
 
 # Initialize brain components

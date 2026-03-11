@@ -308,9 +308,32 @@ export const billingService = {
 
 // ── Integrations ────────────────────────────────────────────
 
+type IntegrationConnectionSummary = {
+  id?: string;
+  connector?: string;
+  owner_scope?: string;
+  owner_id?: string;
+  auth_mode?: string;
+  status?: string;
+  configured?: boolean;
+  ready_for_live?: boolean;
+  demo_fallback?: boolean;
+  last_tested_at?: string | null;
+  capability?: string;
+  mode_label?: string;
+  authenticated?: boolean;
+};
+
 export const integrationsService = {
   async getCatalog() {
-    const { data } = await api.get<{ integrations: Array<{ name: string; status: string; demo_mode: boolean; authenticated: boolean }> }>('/integrations/catalog');
+    const { data } = await api.get<{
+      integrations: Array<{
+        name: string;
+        status: string;
+        demo_mode: boolean;
+        authenticated: boolean;
+      } & IntegrationConnectionSummary>;
+    }>('/integrations/catalog');
     return data;
   },
 
@@ -330,12 +353,26 @@ export const integrationsService = {
 
   async getConnectorDetail(key: string, provider?: string) {
     const { data } = await api.get(`/integrations/marketplace/connectors/${encodeURIComponent(key)}`, { params: provider ? { provider } : undefined });
-    return data as { key: string; display_name: string; category?: string; providers_available: string[]; suggested_actions: string[]; variants: unknown[] };
+    return data as {
+      key: string;
+      display_name: string;
+      category?: string;
+      providers_available: string[];
+      suggested_actions: string[];
+      variants: unknown[];
+      capability?: string;
+      mode_label?: string;
+      connection?: IntegrationConnectionSummary;
+    };
   },
 
   async getConnectorStatus(name: string) {
     const { data } = await api.get(`/integrations/${name}/status`);
-    return data as { name: string; status: string; demo_mode: boolean; authenticated: boolean };
+    return data as {
+      connector: string;
+      status: string;
+      details?: { connector_status?: { demo_mode?: boolean; authenticated?: boolean } };
+    } & IntegrationConnectionSummary;
   },
 
   async triggerAction(name: string, action: string, payload?: Record<string, unknown>) {

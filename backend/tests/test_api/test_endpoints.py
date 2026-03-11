@@ -14,12 +14,24 @@ class TestHealthEndpoints:
         data = response.json()
         assert data["status"] == "running"
         assert "modules" in data
+        assert "launch_readiness" in data
 
     def test_health_endpoint(self, client):
         response = client.get("/health")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "healthy"
+        assert "launch_readiness" in data
+
+    def test_launch_readiness_endpoint(self, client):
+        response = client.get("/health/launch-readiness")
+        assert response.status_code == 200
+        data = response.json()
+        assert "checks" in data
+        assert "smtp" in data
+        assert "stripe" in data
+        assert "pilot_connectors" in data
+        assert "growth" in data
 
 
 class TestAuthEndpoints:

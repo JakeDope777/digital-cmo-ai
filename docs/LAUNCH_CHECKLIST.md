@@ -2,6 +2,7 @@
 
 ## Environment
 - [ ] Render backend deployed and healthy at `/health/ready`
+- [ ] Launch readiness checklist healthy at `/health/launch-readiness`
 - [ ] Netlify frontend deployed and pointing `VITE_API_URL` to Render API
 - [ ] Postgres connected (`DATABASE_URL` set in Render)
 - [ ] `SECRET_KEY` set to strong generated value
@@ -10,6 +11,7 @@
 
 ## Auth + Email
 - [ ] SMTP configured (`SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`)
+- [ ] Public support/report sender values set (`SUPPORT_EMAIL`, `REPORTS_FROM_EMAIL`, `REPORTS_FROM_NAME`)
 - [ ] Signup works end-to-end
 - [ ] Forgot password email arrives with reset link
 - [ ] Reset password flow completes and user can login
@@ -29,6 +31,7 @@
 - [ ] `POSTHOG_API_KEY` configured
 - [ ] `VITE_GA_MEASUREMENT_ID` configured
 - [ ] Funnel summary endpoint healthy (`GET /growth/funnel-summary?days=14`)
+- [ ] Launch readiness shows recent growth ingestion state and pilot connector readiness
 - [ ] Landing view, signup_started/completed, verification_completed events captured
 - [ ] onboarding_completed, dashboard_viewed, analysis_run, chat_message_sent captured
 - [ ] checkout_started/completed captured

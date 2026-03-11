@@ -9,31 +9,34 @@ fi
 BACKEND_URL="${1%/}"
 FRONTEND_URL="${2%/}"
 
-echo "[1/9] Backend health"
+echo "[1/10] Backend health"
 curl -fsS "$BACKEND_URL/health" >/dev/null
 
-echo "[2/9] Backend readiness"
+echo "[2/10] Backend readiness"
 curl -fsS "$BACKEND_URL/health/ready" >/dev/null
 
-echo "[3/9] Billing health"
+echo "[3/10] Launch readiness"
+curl -fsS "$BACKEND_URL/health/launch-readiness" >/dev/null
+
+echo "[4/10] Billing health"
 curl -fsS "$BACKEND_URL/billing/health" >/dev/null
 
-echo "[4/9] Growth funnel summary"
+echo "[5/10] Growth funnel summary"
 curl -fsS "$BACKEND_URL/growth/funnel-summary?days=14" >/dev/null
 
-echo "[5/9] Frontend landing"
+echo "[6/10] Frontend landing"
 curl -fsS "$FRONTEND_URL/" >/dev/null
 
-echo "[6/9] Frontend login"
+echo "[7/10] Frontend login"
 curl -fsS "$FRONTEND_URL/login" >/dev/null
 
-echo "[7/9] Frontend register"
+echo "[8/10] Frontend register"
 curl -fsS "$FRONTEND_URL/register" >/dev/null
 
-echo "[8/9] Frontend verify-email"
+echo "[9/10] Frontend verify-email"
 curl -fsS "$FRONTEND_URL/verify-email" >/dev/null
 
-echo "[9/9] Frontend investor demo route"
+echo "[10/10] Frontend investor demo route"
 curl -fsS "$FRONTEND_URL/demo/investor-pitch-demo.html" >/dev/null
 
 echo "Smoke checks passed for:"

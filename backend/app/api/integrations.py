@@ -39,6 +39,23 @@ def get_service() -> IntegrationService:
     return _service
 
 
+def _integration_response(connector: str, status: str, details: dict) -> IntegrationResponse:
+    connection = details.get("connection", {})
+    return IntegrationResponse(
+        connector=connector,
+        status=status,
+        owner_scope=connection.get("owner_scope"),
+        auth_mode=connection.get("auth_mode"),
+        configured=connection.get("configured"),
+        ready_for_live=connection.get("ready_for_live"),
+        demo_fallback=connection.get("demo_fallback"),
+        last_tested_at=connection.get("last_tested_at"),
+        capability=connection.get("capability"),
+        mode_label=connection.get("mode_label"),
+        details=details,
+    )
+
+
 @router.get("/catalog")
 async def get_catalog(service: IntegrationService = Depends(get_service)):
     """List all connectors and categories."""
@@ -189,7 +206,7 @@ async def connect_integration(
     """Authenticate and initialize a connector instance."""
     try:
         details = await service.connect(name=name, credentials=request.credentials)
-        return IntegrationResponse(connector=name, status="connected", details=details)
+        return _integration_response(name, "connected", details)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except TypeError as exc:
@@ -207,7 +224,7 @@ async def test_integration(
     """Test connector authentication and readiness."""
     try:
         details = await service.test(name=name, credentials=request.credentials)
-        return IntegrationResponse(connector=name, status="ok", details=details)
+        return _integration_response(name, "ok", details)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except TypeError as exc:
@@ -224,7 +241,7 @@ async def get_integration_status(
     """Get current connector status."""
     try:
         details = await service.status(name=name)
-        return IntegrationResponse(connector=name, status="ok", details=details)
+        return _integration_response(name, "ok", details)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:
@@ -251,7 +268,7 @@ async def run_integration_action(
             data=request.data,
             credentials=request.credentials,
         )
-        return IntegrationResponse(connector=name, status="success", details=details)
+        return _integration_response(name, "success", details)
     except ValueError as exc:
         message = str(exc)
         status_code = 404 if "Unknown connector" in message else 400

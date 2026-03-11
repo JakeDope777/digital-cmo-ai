@@ -36,6 +36,27 @@ interface CatalogItem {
   status: string;
   demo_mode: boolean;
   authenticated: boolean;
+  owner_scope?: string;
+  auth_mode?: string;
+  configured?: boolean;
+  ready_for_live?: boolean;
+  demo_fallback?: boolean;
+  last_tested_at?: string | null;
+  capability?: string;
+  mode_label?: string;
+}
+
+interface ConnectionMeta {
+  id?: string;
+  owner_id?: string;
+  owner_scope?: string;
+  auth_mode?: string;
+  configured?: boolean;
+  ready_for_live?: boolean;
+  demo_fallback?: boolean;
+  last_tested_at?: string | null;
+  capability?: string;
+  mode_label?: string;
 }
 
 interface ConnectorDetail {
@@ -45,6 +66,9 @@ interface ConnectorDetail {
   providers_available: string[];
   suggested_actions: string[];
   variants: unknown[];
+  capability?: string;
+  mode_label?: string;
+  connection?: ConnectionMeta;
 }
 
 /* ── Category config ───────────────────────────────────── */
@@ -124,6 +148,14 @@ const DEMO_CONNECTORS: Connector[] = [
 ];
 
 const FEATURED_KEYS = ['google-ads', 'hubspot', 'shopify', 'ga4', 'meta-ads', 'stripe'];
+const CONNECTOR_KEY_ALIASES: Record<string, string> = {
+  'google-ads': 'google_ads',
+  'meta-ads': 'meta_ads',
+  'tiktok-ads': 'tiktok_ads',
+  'linkedin-ads': 'linkedin',
+  'twitter-x': 'twitter',
+  ga4: 'google_analytics',
+};
 
 /* ── Component ─────────────────────────────────────────── */
 function ConnectorIcon({ connectorKey, size = 'md' }: { connectorKey: string; size?: 'sm' | 'md' | 'lg' }) {
@@ -240,12 +272,29 @@ export default function IntegrationsPage() {
     finally { setActionLoading(false); }
   };
 
+  const resolveCatalogKey = (key: string) => CONNECTOR_KEY_ALIASES[key] || key.replace(/-/g, '_');
+
+  const connectorItem = (key: string) => catalog[resolveCatalogKey(key)] || catalog[key];
+
   const connectorStatus = (key: string): string => {
-    const item = catalog[key];
+    const item = connectorItem(key);
     if (!item) return '';
-    if (item.authenticated && !item.demo_mode) return 'live';
-    if (item.demo_mode) return 'demo';
+    if (item.ready_for_live) return 'live';
+    if (item.demo_fallback || item.demo_mode) return 'demo';
     return 'ready';
+  };
+
+  const connectorModeLabel = (key: string, provider?: string): string => {
+    const item = connectorItem(key);
+    if (item?.mode_label) return item.mode_label;
+    if (provider === 'n8n') return 'Demo fallback';
+    return 'Self-serve OAuth coming soon';
+  };
+
+  const formatLastTestedAt = (value?: string | null) => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date.toLocaleString();
   };
 
   const featured = DEMO_CONNECTORS.filter((c) => FEATURED_KEYS.includes(c.key));
@@ -272,17 +321,29 @@ export default function IntegrationsPage() {
           </div>
           <h2 className="text-3xl font-bold tracking-tight">Connect your stack</h2>
           <p className="mt-2 max-w-lg text-base text-slate-300">
-            {stats ? `${stats.total_connectors}+ native connectors` : '200+ connectors'} across ads, CRM, analytics, commerce, and more.
-            One click to sync your data.
+            HubSpot, GA4, and Stripe run live via managed workspace connections during the pilot.
+            {` ${stats ? `${stats.total_connectors}+ additional connectors` : '200+ additional connectors'} stay available with demo fallback or future self-serve OAuth.`}
           </p>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {[
+              'Live via managed workspace connection',
+              'Demo fallback',
+              'Self-serve OAuth coming soon',
+            ].map((label) => (
+              <span key={label} className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] text-slate-200">
+                {label}
+              </span>
+            ))}
+          </div>
 
           {/* Stats */}
           <div className="mt-6 flex flex-wrap gap-6">
             {[
               { val: stats?.total_connectors ?? 200, label: 'Connectors' },
               { val: '7', label: 'Categories' },
-              { val: '< 2 min', label: 'Setup time' },
-              { val: '99.9%', label: 'Uptime SLA' },
+              { val: '3', label: 'Managed live pilot connectors' },
+              { val: '200+', label: 'Demo-backed or roadmap connectors' },
             ].map((s) => (
               <div key={s.label}>
                 <p className="text-2xl font-bold text-white">{s.val}</p>
@@ -345,6 +406,9 @@ export default function IntegrationsPage() {
                       {st === 'live' && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
                     </div>
                     <p className="mt-0.5 text-xs text-slate-500">{meta?.description || c.category}</p>
+                    <p className="mt-2 inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-medium text-slate-700">
+                      {connectorModeLabel(c.key, c.provider)}
+                    </p>
                     <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-orange-600 opacity-0 group-hover:opacity-100 transition-opacity">
                       Connect <ArrowRight className="h-3 w-3" />
                     </div>
@@ -401,6 +465,7 @@ export default function IntegrationsPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-slate-900 truncate">{c.name}</p>
                   <p className="text-xs text-slate-500 truncate">{meta?.label || c.category}</p>
+                  <p className="mt-1 text-[11px] text-slate-600 truncate">{connectorModeLabel(c.key, c.provider)}</p>
                 </div>
                 {st === 'live' ? (
                   <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
@@ -460,8 +525,32 @@ export default function IntegrationsPage() {
                 {detail.providers_available.map((p) => (
                   <span key={p} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">{p}</span>
                 ))}
+                <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700">
+                  {detail.connection?.mode_label || detail.mode_label || 'Demo fallback'}
+                </span>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-500">{Array.isArray(detail.variants) ? detail.variants.length : 0} variant(s)</span>
               </div>
+
+              {detail.connection && (
+                <div className="mt-4 grid gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 sm:grid-cols-2">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Connection mode</p>
+                    <p className="mt-1 font-medium text-slate-900">{detail.connection.mode_label}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Owner scope</p>
+                    <p className="mt-1 font-medium text-slate-900 capitalize">{detail.connection.owner_scope || 'workspace'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Auth mode</p>
+                    <p className="mt-1 font-medium text-slate-900">{detail.connection.auth_mode || 'managed'}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Last tested</p>
+                    <p className="mt-1 font-medium text-slate-900">{formatLastTestedAt(detail.connection.last_tested_at) || 'Not tested yet'}</p>
+                  </div>
+                </div>
+              )}
 
               {detail.suggested_actions.length > 0 && (
                 <div className="mt-5">
@@ -492,7 +581,7 @@ export default function IntegrationsPage() {
       <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-slate-50 to-orange-50/40 p-8 text-center">
         <h3 className="text-lg font-semibold text-slate-900">Need a custom connector?</h3>
         <p className="mt-1 text-sm text-slate-600 max-w-md mx-auto">
-          We support 200+ integrations and can build custom connectors for your unique stack in days, not weeks.
+          We can onboard managed workspace connectors for pilot accounts now, while broader self-serve OAuth stays on the MVP 2.0 roadmap.
         </p>
         <button className="mt-4 inline-flex items-center gap-2 rounded-full bg-slate-900 px-6 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors">
           Request integration <ArrowRight className="h-4 w-4" />

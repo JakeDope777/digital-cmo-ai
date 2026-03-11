@@ -15,12 +15,12 @@ import uuid
 from sqlalchemy.exc import SQLAlchemyError
 
 from ...core.catalog import PILOT_CONNECTORS
-from ...core.config import settings
 from ...db.models import IntegrationRun
 from ...db.session import SessionLocal
 from . import ConnectorRegistry
 from .base import ConnectorInterface
 from .n8n_catalog import list_n8n_connectors, n8n_catalog_stats
+from .resolver import ConnectionResolver
 
 
 class IntegrationService:
@@ -28,6 +28,7 @@ class IntegrationService:
 
     def __init__(self) -> None:
         self.registry = ConnectorRegistry()
+        self._resolver = ConnectionResolver()
         self._active_connectors: dict[str, ConnectorInterface] = {}
         self._run_history: deque[dict[str, Any]] = deque(maxlen=2000)
         self._idempotency_cache: dict[str, dict[str, Any]] = {}
@@ -36,8 +37,13 @@ class IntegrationService:
 
     def list_catalog(self) -> dict[str, Any]:
         marketplace = n8n_catalog_stats()
+        raw_connectors = self.registry.list_connectors()
+        integrations = self._resolver.list_catalog_items(
+            [connector["key"] for connector in raw_connectors]
+        )
         return {
-            "connectors": self.registry.list_connectors(),
+            "connectors": raw_connectors,
+            "integrations": integrations,
             "categories": self.registry.list_categories(),
             "total": len(self.registry.CONNECTOR_MAP),
             "marketplace": {
@@ -73,6 +79,7 @@ class IntegrationService:
             "next_offset": next_offset,
             "has_more": next_offset < len(rows),
             "total_filtered": len(rows),
+            "total": len(rows),
             "search": search or "",
             "provider": requested_provider,
             "category": requested_category,
@@ -178,6 +185,7 @@ class IntegrationService:
         primary = matches[0]
         native_variant = next((row for row in matches if row["provider"] == "native"), None)
         n8n_variant = next((row for row in matches if row["provider"] == "n8n"), None)
+        connection = self._resolver.describe(key)
         return {
             "key": key,
             "display_name": primary["name"],
@@ -188,6 +196,9 @@ class IntegrationService:
             "n8n_template": n8n_variant,
             "suggested_actions": self._suggested_actions(key, providers=matches),
             "variants": matches,
+            "connection": connection,
+            "capability": connection["capability"],
+            "mode_label": connection["mode_label"],
         }
 
     def _list_native_marketplace(
@@ -209,6 +220,7 @@ class IntegrationService:
             if query and query not in key and query not in name.lower():
                 continue
 
+            connection = self._resolver.describe(key)
             rows.append(
                 {
                     "id": f"native-{idx:04d}",
@@ -220,6 +232,8 @@ class IntegrationService:
                     "class": connector.get("class"),
                     "base_url": connector.get("base_url"),
                     "source_url": None,
+                    "capability": connection["capability"],
+                    "mode_label": connection["mode_label"],
                 }
             )
         return rows
@@ -246,6 +260,10 @@ class IntegrationService:
                     category=category,
                 )
             )
+        for row in rows:
+            connection = self._resolver.describe(row["key"])
+            row["capability"] = connection["capability"]
+            row["mode_label"] = connection["mode_label"]
         return rows
 
     def list_runs(
@@ -370,7 +388,6 @@ class IntegrationService:
             )
         if any(row.get("provider") == "n8n" for row in providers):
             suggestions.append("create workflow in n8n")
-        # preserve order, remove duplicates
         return list(dict.fromkeys(suggestions))
 
     def _resolve(
@@ -381,80 +398,33 @@ class IntegrationService:
         if credentials is None and name in self._active_connectors:
             return self._active_connectors[name]
 
-        resolved_credentials = self._default_credentials(name)
-        if credentials:
-            resolved_credentials.update(credentials)
-
-        connector = self.registry.get(name, **resolved_credentials)
-        self._active_connectors[name] = connector
+        connector = self.registry.get(name, **(credentials or {}))
+        if credentials is None:
+            self._active_connectors[name] = connector
         return connector
-
-    @classmethod
-    def _is_live_configured(cls, name: str, credentials: dict[str, Any]) -> bool:
-        if name == "hubspot":
-            return bool(credentials.get("api_key") or credentials.get("access_token"))
-        if name == "google_analytics":
-            return bool(credentials.get("property_id") and credentials.get("access_token"))
-        if name == "stripe":
-            return bool(credentials.get("api_key"))
-        if name == "n8n":
-            return bool(credentials.get("base_url"))
-        return bool(credentials)
-
-    @staticmethod
-    def _default_credentials(name: str) -> dict[str, Any]:
-        """Default connector credentials sourced from app settings."""
-        if name == "n8n":
-            defaults: dict[str, Any] = {"base_url": settings.N8N_BASE_URL}
-            if settings.N8N_API_KEY:
-                defaults["api_key"] = settings.N8N_API_KEY
-            if settings.N8N_DEFAULT_WEBHOOK_URL:
-                defaults["default_webhook_url"] = settings.N8N_DEFAULT_WEBHOOK_URL
-            if settings.N8N_DEFAULT_WEBHOOK_PATH:
-                defaults["default_webhook_path"] = settings.N8N_DEFAULT_WEBHOOK_PATH
-            return defaults
-        if name == "hubspot":
-            defaults = {}
-            if settings.HUBSPOT_API_KEY:
-                defaults["api_key"] = settings.HUBSPOT_API_KEY
-            if settings.HUBSPOT_ACCESS_TOKEN:
-                defaults["access_token"] = settings.HUBSPOT_ACCESS_TOKEN
-            return defaults
-        if name == "google_analytics":
-            defaults = {}
-            if settings.GOOGLE_ANALYTICS_PROPERTY_ID:
-                defaults["property_id"] = settings.GOOGLE_ANALYTICS_PROPERTY_ID
-            if settings.GOOGLE_ANALYTICS_ACCESS_TOKEN:
-                defaults["access_token"] = settings.GOOGLE_ANALYTICS_ACCESS_TOKEN
-            return defaults
-        if name == "stripe":
-            defaults = {}
-            if settings.STRIPE_SECRET_KEY:
-                defaults["api_key"] = settings.STRIPE_SECRET_KEY
-            return defaults
-        return {}
 
     def get_pilot_readiness(self) -> dict[str, Any]:
         """Return readiness metadata for the launch connector set."""
         rows: list[dict[str, Any]] = []
         live_ready = 0
         for connector_name in PILOT_CONNECTORS:
-            credentials = self._default_credentials(connector_name)
-            connector = self.registry.get(connector_name, **credentials)
-            status = connector.get_status()
-            configured = self._is_live_configured(connector_name, credentials)
-            ready_for_live = configured and not status.get("demo_mode", False)
-            if ready_for_live:
+            connection = self._resolver.describe(connector_name)
+            if connection["ready_for_live"]:
                 live_ready += 1
             rows.append(
                 {
                     "key": connector_name,
-                    "workspace_level": True,
-                    "configured": configured,
-                    "ready_for_live": ready_for_live,
-                    "demo_fallback": status.get("demo_mode", False),
-                    "authenticated": status.get("authenticated", False),
-                    "status": "live" if ready_for_live else "demo",
+                    "workspace_level": connection["owner_scope"] == "workspace",
+                    "configured": connection["configured"],
+                    "ready_for_live": connection["ready_for_live"],
+                    "demo_fallback": connection["demo_fallback"],
+                    "authenticated": connection["authenticated"],
+                    "status": connection["status"],
+                    "owner_scope": connection["owner_scope"],
+                    "auth_mode": connection["auth_mode"],
+                    "last_tested_at": connection["last_tested_at"],
+                    "capability": connection["capability"],
+                    "mode_label": connection["mode_label"],
                 }
             )
         return {
@@ -505,7 +475,6 @@ class IntegrationService:
                 )
                 db.commit()
         except SQLAlchemyError:
-            # Persist failure should never break connector execution flows.
             return
 
     def _idempotency_cache_key(self, connector: str, idempotency_key: str) -> str:
@@ -554,56 +523,94 @@ class IntegrationService:
             oldest = self._idempotency_order.popleft()
             self._idempotency_cache.pop(oldest, None)
 
+    def _run_metadata(self, connection: dict[str, Any], **extra: Any) -> dict[str, Any]:
+        metadata = {
+            "owner_scope": connection["owner_scope"],
+            "auth_mode": connection["auth_mode"],
+            "configured": connection["configured"],
+            "ready_for_live": connection["ready_for_live"],
+            "demo_mode": connection["demo_fallback"],
+            "mode_label": connection["mode_label"],
+        }
+        metadata.update(extra)
+        return metadata
+
     async def connect(
         self,
         name: str,
         credentials: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         start = time.perf_counter()
+        resolved = self._resolver.resolve(name, credential_overrides=credentials)
         try:
-            connector = self._resolve(name, credentials)
+            connector = self._resolve(name, resolved.credentials or None)
             await connector.authenticate()
-            details = connector.get_status()
+            connector_status = connector.get_status()
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                connector_status=connector_status,
+                mark_tested=True,
+            )
+            details = {**connector_status, "connection": connection}
             self._record_run(
                 name,
                 "connect",
                 "success",
                 (time.perf_counter() - start) * 1000,
-                metadata={"demo_mode": details.get("demo_mode", False)},
+                metadata=self._run_metadata(connection),
             )
             return details
         except Exception as exc:
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                error=str(exc),
+                mark_tested=True,
+            )
             self._record_run(
                 name,
                 "connect",
                 "error",
                 (time.perf_counter() - start) * 1000,
                 error=str(exc),
+                metadata=self._run_metadata(connection),
             )
             raise
 
     async def status(self, name: str) -> dict[str, Any]:
         start = time.perf_counter()
+        resolved = self._resolver.resolve(name)
         try:
-            connector = self._resolve(name)
+            connector = self._resolve(name, resolved.credentials or None)
             if not connector.get_status().get("authenticated") and not connector.demo_mode:
                 await connector.authenticate()
-            details = connector.get_status()
+            connector_status = connector.get_status()
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                connector_status=connector_status,
+                mark_tested=True,
+            )
+            details = {**connector_status, "connection": connection}
             self._record_run(
                 name,
                 "status",
                 "success",
                 (time.perf_counter() - start) * 1000,
-                metadata={"demo_mode": details.get("demo_mode", False)},
+                metadata=self._run_metadata(connection),
             )
             return details
         except Exception as exc:
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                error=str(exc),
+                mark_tested=True,
+            )
             self._record_run(
                 name,
                 "status",
                 "error",
                 (time.perf_counter() - start) * 1000,
                 error=str(exc),
+                metadata=self._run_metadata(connection),
             )
             raise
 
@@ -613,12 +620,20 @@ class IntegrationService:
         credentials: Optional[dict[str, Any]] = None,
     ) -> dict[str, Any]:
         start = time.perf_counter()
+        resolved = self._resolver.resolve(name, credential_overrides=credentials)
         try:
-            connector = self._resolve(name, credentials)
+            connector = self._resolve(name, resolved.credentials or None)
             await connector.authenticate()
+            connector_status = connector.get_status()
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                connector_status=connector_status,
+                mark_tested=True,
+            )
             details = {
                 "status": "ok",
-                "connector_status": connector.get_status(),
+                "connector_status": connector_status,
+                "connection": connection,
                 "message": "Connection test completed",
             }
             self._record_run(
@@ -626,16 +641,22 @@ class IntegrationService:
                 "test",
                 "success",
                 (time.perf_counter() - start) * 1000,
-                metadata={"demo_mode": connector.get_status().get("demo_mode", False)},
+                metadata=self._run_metadata(connection),
             )
             return details
         except Exception as exc:
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                error=str(exc),
+                mark_tested=True,
+            )
             self._record_run(
                 name,
                 "test",
                 "error",
                 (time.perf_counter() - start) * 1000,
                 error=str(exc),
+                metadata=self._run_metadata(connection),
             )
             raise
 
@@ -656,20 +677,23 @@ class IntegrationService:
         event_name = action or f"{method.upper()} {endpoint or ''}".strip()
         cached = self._get_cached_idempotent_response(name, idempotency_key)
         if cached is not None:
+            cached_connection = cached.get("connection") or self._resolver.describe(name)
             self._record_run(
                 name,
                 event_name,
                 "success",
                 (time.perf_counter() - start) * 1000,
-                metadata={
-                    "idempotency_key": (idempotency_key or "").strip(),
-                    "replayed": True,
-                },
+                metadata=self._run_metadata(
+                    cached_connection,
+                    idempotency_key=(idempotency_key or "").strip(),
+                    replayed=True,
+                ),
             )
             return cached
 
+        resolved = self._resolver.resolve(name, credential_overrides=credentials)
         try:
-            connector = self._resolve(name, credentials)
+            connector = self._resolve(name, resolved.credentials or None)
             await connector.authenticate()
 
             result: Any
@@ -696,9 +720,16 @@ class IntegrationService:
                         f"Unsupported method '{method}'. Supported methods: GET, POST."
                     )
 
+            connector_status = connector.get_status()
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                connector_status=connector_status,
+                mark_tested=True,
+            )
             details = {
                 "status": "success",
-                "connector_status": connector.get_status(),
+                "connector_status": connector_status,
+                "connection": connection,
                 "result": result,
                 "idempotency": {
                     "enabled": bool((idempotency_key or "").strip()),
@@ -712,19 +743,25 @@ class IntegrationService:
                 event_name,
                 "success",
                 (time.perf_counter() - start) * 1000,
-                metadata={
-                    "demo_mode": connector.get_status().get("demo_mode", False),
-                    "idempotency_key": (idempotency_key or "").strip() or None,
-                    "context": context or {},
-                },
+                metadata=self._run_metadata(
+                    connection,
+                    idempotency_key=(idempotency_key or "").strip() or None,
+                    context=context or {},
+                ),
             )
             return details
         except Exception as exc:
+            connection = self._resolver.describe_from_resolved(
+                resolved,
+                error=str(exc),
+                mark_tested=True,
+            )
             self._record_run(
                 name,
                 event_name,
                 "error",
                 (time.perf_counter() - start) * 1000,
                 error=str(exc),
+                metadata=self._run_metadata(connection),
             )
             raise

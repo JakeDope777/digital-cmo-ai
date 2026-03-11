@@ -24,6 +24,8 @@ from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
+from ....core.config import settings
+
 # Optional imports
 try:
     from fpdf import FPDF
@@ -50,7 +52,7 @@ class ExportConfig:
     format: str = "pdf"  # "pdf", "csv", "json"
     title: str = "Marketing Analytics Report"
     subtitle: str = ""
-    company_name: str = "TablePilot AI"
+    company_name: str = field(default_factory=lambda: settings.APP_NAME)
     period: str = "Last 30 Days"
     include_charts: bool = True
     include_insights: bool = True
@@ -91,6 +93,10 @@ class ExportEngine:
 
     def __init__(self, sendgrid_api_key: Optional[str] = None):
         self.sendgrid_api_key = sendgrid_api_key or os.environ.get("SENDGRID_API_KEY")
+        self.report_sender_email = (
+            settings.REPORTS_FROM_EMAIL or settings.SMTP_FROM_EMAIL or settings.SUPPORT_EMAIL
+        )
+        self.report_sender_name = settings.REPORTS_FROM_NAME or settings.APP_NAME
 
     def export(
         self,
@@ -483,7 +489,10 @@ class ExportEngine:
                 "personalizations": [
                     {"to": [{"email": r} for r in schedule.recipients]}
                 ],
-                "from": {"email": "reports@tablepilot.ai", "name": "TablePilot AI"},
+                "from": {
+                    "email": self.report_sender_email,
+                    "name": self.report_sender_name,
+                },
                 "subject": schedule.subject,
                 "content": [
                     {
@@ -492,7 +501,7 @@ class ExportEngine:
                             f"<h2>{schedule.subject}</h2>"
                             f"<p>Please find your scheduled marketing analytics report attached.</p>"
                             f"<p>Generated: {datetime.now(timezone.utc).strftime('%B %d, %Y %H:%M UTC')}</p>"
-                            f"<p><em>This is an automated report from TablePilot AI.</em></p>"
+                            f"<p><em>This is an automated report from {self.report_sender_name}.</em></p>"
                         ),
                     }
                 ],

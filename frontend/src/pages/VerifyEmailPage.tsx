@@ -5,6 +5,7 @@ import { trackEvent, trackOnboardingStep } from '../services/analytics';
 import { useAuth } from '../context/AuthContext';
 import { resolveDomainId, withDomainQuery } from '../data/domainModuleCatalog';
 import { setSelectedDomain } from '../services/onboarding';
+import { SUPPORT_EMAIL } from '../config/runtime';
 
 type VerifyStatus = 'idle' | 'loading' | 'success' | 'error' | 'expired' | 'already_used';
 
@@ -167,7 +168,7 @@ export default function VerifyEmailPage() {
 
             <p className="mt-6 text-xs text-slate-500 text-center">
               Link not arriving?{' '}
-              <a href="mailto:hello@digitalcmo.ai" className="text-orange-400 hover:text-orange-300">
+              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-orange-400 hover:text-orange-300">
                 Contact support
               </a>
               {' · '}

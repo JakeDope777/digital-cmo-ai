@@ -118,7 +118,7 @@ const INTEGRATIONS = [
 const faqs = [
   { q: 'Do I need technical skills to use Digital CMO AI?', a: 'Not at all. The entire product works through a conversational interface. Describe your goal in plain English and the AI handles the rest. No SQL, no dashboards to configure.' },
   { q: 'How is this different from ChatGPT or Jasper?', a: 'General AI tools have no memory of your brand, no access to your live data, and no ability to execute actions. Digital CMO AI connects to your actual marketing stack, remembers your history and goals across sessions, and returns execution-ready plans.' },
-  { q: 'Which integrations are supported?', a: 'Natively: HubSpot, Salesforce, Google Ads, Meta Ads, GA4, Klaviyo, Shopify, Stripe, LinkedIn Ads, Mailchimp, and more. Through the connector marketplace you get 200+ additional templates.' },
+  { q: 'Which integrations are supported?', a: 'Live during the pilot: HubSpot, GA4, and Stripe through managed workspace connections. The connector marketplace also includes 200+ additional templates and demo-backed connectors, with self-serve OAuth rolling out after the pilot.' },
   { q: 'Can I start with demo data before connecting my real accounts?', a: "Yes — every integration has a demo-mode fallback. You can experience the full product loop with realistic data and connect your live accounts when you're ready. No API keys required to get started." },
   { q: 'Is my data secure?', a: 'All data is encrypted at rest and in transit. We never train shared models on your proprietary data. Your memory store, brand voice, and campaign data are isolated per workspace. SOC 2 compliance is on the roadmap for Q3 2026.' },
   { q: 'What does the pilot programme include?', a: "Pilot users get full Pro-tier access, a personal onboarding session, a direct Slack channel with the founding team, and input on the roadmap. We read every piece of feedback and ship weekly." },
@@ -405,7 +405,7 @@ export default function LandingPage() {
                 step: '01', accent: 'card-accent-orange',
                 icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
                 title: 'Connect your stack',
-                desc: 'Link HubSpot, Google Ads, Meta, GA4, Stripe, and 200+ more in minutes. OAuth connections — no manual CSV exports, no webhook setup.',
+                desc: 'Start with managed HubSpot, GA4, and Stripe workspace connections, then explore 200+ additional connectors in demo mode while self-serve OAuth rolls out after the pilot.',
               },
               {
                 step: '02', accent: 'card-accent-violet',
@@ -509,7 +509,7 @@ export default function LandingPage() {
             </div>
             {[
               'Persistent memory of your brand', 'Live data access', 'Multi-module orchestration',
-              'Brand voice lock', '200+ integrations', 'Marketing-specific skills',
+              'Brand voice lock', '200+ connector templates', 'Marketing-specific skills',
               'Demo mode (no setup)', 'Available 24/7',
             ].map((row, i) => (
               <div key={row} className={`grid grid-cols-4 items-center px-6 py-3.5 text-sm ${i % 2 === 0 ? '' : 'bg-white/2'}`}>
@@ -685,7 +685,7 @@ export default function LandingPage() {
                 <p className="mt-1 text-xs text-white/30">Billed monthly, cancel anytime</p>
               </div>
               <ul className="mb-8 space-y-3 text-sm">
-                {['Unlimited AI Chat', 'Live integrations (5 connectors)', 'Unlimited Creative Generation', 'Full CRM & Campaign Orchestration', 'Advanced Analytics & Forecasting', 'A/B significance testing', 'Priority support'].map((f) => (
+                {['Unlimited AI Chat', 'Managed live pilot connectors: HubSpot, GA4, Stripe', 'Unlimited Creative Generation', 'Full CRM & Campaign Orchestration', 'Advanced Analytics & Forecasting', 'A/B significance testing', 'Priority support'].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-white/70"><span className="text-orange-500"><Check /></span>{f}</li>
                 ))}
               </ul>
@@ -698,7 +698,7 @@ export default function LandingPage() {
                 <p className="mt-1 text-xs text-white/30">Tailored to your scale</p>
               </div>
               <ul className="mb-8 space-y-3 text-sm">
-                {['Everything in Pro', 'Unlimited integrations', 'White-label option', 'Custom memory & brand voice', 'Dedicated onboarding + SLA', 'SSO + team management'].map((f) => (
+                {['Everything in Pro', 'Expanded managed connector rollout', 'White-label option', 'Custom memory & brand voice', 'Dedicated onboarding + SLA', 'SSO + team management'].map((f) => (
                   <li key={f} className="flex items-center gap-2.5 text-white/55"><span className="text-white/25"><Check /></span>{f}</li>
                 ))}
               </ul>

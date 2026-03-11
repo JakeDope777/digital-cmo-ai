@@ -379,6 +379,14 @@ class IntegrationActionRequest(BaseModel):
 class IntegrationResponse(BaseModel):
     connector: str
     status: str
+    owner_scope: Optional[str] = None
+    auth_mode: Optional[str] = None
+    configured: Optional[bool] = None
+    ready_for_live: Optional[bool] = None
+    demo_fallback: Optional[bool] = None
+    last_tested_at: Optional[str] = None
+    capability: Optional[str] = None
+    mode_label: Optional[str] = None
     details: Optional[dict[str, Any]] = None
 
 

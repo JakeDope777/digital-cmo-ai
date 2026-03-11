@@ -8,7 +8,7 @@ import { setSelectedDomain } from '../services/onboarding';
 
 const BENEFITS = [
   'AI chat, analysis & creative studio — free to start',
-  'Realistic demo data — no integrations needed on day one',
+  'Managed HubSpot, GA4, and Stripe pilot connectors with demo fallback for everything else',
   'No credit card required · Cancel anytime',
 ];
 

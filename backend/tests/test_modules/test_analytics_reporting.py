@@ -22,6 +22,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 import numpy as np
 
+from app.modules.analytics_reporting.engines import export_engine as export_engine_module
 from app.modules.analytics_reporting import AnalyticsReportingModule
 from app.modules.analytics_reporting.engines.kpi_engine import (
     KPIEngine,
@@ -49,8 +50,10 @@ from app.modules.analytics_reporting.engines.cohort_engine import (
 )
 from app.modules.analytics_reporting.engines.benchmarking_engine import BenchmarkingEngine
 from app.modules.analytics_reporting.engines.export_engine import (
+    EmailSchedule,
     ExportEngine,
     ExportConfig,
+    ExportResult,
 )
 
 
@@ -776,6 +779,56 @@ class TestExportEngine:
             config = ExportConfig(format="csv", output_dir=tmpdir)
             result = export_engine.export(data, config)
             assert result.success is True
+
+    @pytest.mark.asyncio
+    async def test_email_report_uses_configured_sender(self, monkeypatch):
+        monkeypatch.setattr(export_engine_module.settings, "REPORTS_FROM_EMAIL", "reports@digitalcmo.ai", raising=False)
+        monkeypatch.setattr(export_engine_module.settings, "REPORTS_FROM_NAME", "Digital CMO AI", raising=False)
+        monkeypatch.setattr(export_engine_module.settings, "SMTP_FROM_EMAIL", "no-reply@digitalcmo.ai", raising=False)
+        monkeypatch.setattr(export_engine_module, "HAS_HTTPX", True)
+
+        captured: dict[str, object] = {}
+
+        class FakeResponse:
+            status_code = 202
+
+        class FakeAsyncClient:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, exc_type, exc, tb):
+                return False
+
+            async def post(self, url, json, headers):
+                captured["url"] = url
+                captured["json"] = json
+                captured["headers"] = headers
+                return FakeResponse()
+
+        monkeypatch.setattr(export_engine_module.httpx, "AsyncClient", FakeAsyncClient)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            report_path = os.path.join(tmpdir, "report.pdf")
+            with open(report_path, "wb") as handle:
+                handle.write(b"demo-report")
+
+            engine = ExportEngine(sendgrid_api_key="sg_test")
+            result = await engine.send_email_report(
+                ExportResult(
+                    success=True,
+                    format="pdf",
+                    file_path=report_path,
+                    file_size_bytes=os.path.getsize(report_path),
+                ),
+                EmailSchedule(recipients=["founder@example.com"], subject="Weekly Report"),
+            )
+
+        assert result["success"] is True
+        assert captured["url"] == "https://api.sendgrid.com/v3/mail/send"
+        payload = captured["json"]
+        assert payload["from"]["email"] == "reports@digitalcmo.ai"
+        assert payload["from"]["name"] == "Digital CMO AI"
+        assert "Digital CMO AI" in payload["content"][0]["value"]
 
 
 # ==================================================================

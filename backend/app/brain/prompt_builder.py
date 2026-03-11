@@ -76,8 +76,9 @@ SKILL_INSTRUCTIONS: dict[str, str] = {
     ),
     "integrations": (
         "You are currently operating as the Integrations specialist. "
-        "Guide users through API connections, OAuth flows, and data sync "
-        "configurations. Provide step-by-step instructions."
+        "Guide users through managed workspace connector setup, pilot readiness, "
+        "demo fallback behavior, and data sync configurations. Only mention "
+        "self-serve OAuth as a future capability when relevant."
     ),
     "restaurant_ops": (
         "You are currently operating as the Restaurant Operations specialist. "

@@ -20,6 +20,7 @@ from sqlalchemy import (
     JSON,
     Boolean,
     Enum,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
@@ -298,6 +299,34 @@ class WaitlistLead(Base):
     utm_medium = Column(String, nullable=True)
     utm_campaign = Column(String, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+
+
+class IntegrationConnection(Base):
+    __tablename__ = "integration_connections"
+    __table_args__ = (
+        UniqueConstraint(
+            "connector",
+            "owner_scope",
+            "owner_id",
+            name="uq_integration_connections_owner",
+        ),
+    )
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    connector = Column(String, nullable=False, index=True)
+    owner_scope = Column(String, nullable=False, default="workspace", index=True)
+    owner_id = Column(String, nullable=False, default="default", index=True)
+    auth_mode = Column(String, nullable=False, default="managed")
+    status = Column(String, nullable=False, default="pending", index=True)
+    demo_fallback = Column(Boolean, nullable=False, default=True)
+    configured = Column(Boolean, nullable=False, default=False)
+    last_tested_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
 
 
 class IntegrationRun(Base):

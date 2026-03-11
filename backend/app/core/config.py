@@ -136,6 +136,9 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None
     SMTP_FROM_EMAIL: str = "no-reply@digitalcmo.ai"
     SMTP_USE_TLS: bool = True
+    SUPPORT_EMAIL: Optional[str] = None
+    REPORTS_FROM_EMAIL: Optional[str] = None
+    REPORTS_FROM_NAME: Optional[str] = None
 
     # Growth analytics
     POSTHOG_API_KEY: Optional[str] = None

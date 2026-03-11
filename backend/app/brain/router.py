@@ -95,7 +95,7 @@ SKILL_EXEMPLARS: dict[str, list[str]] = {
         "Build a KPI dashboard for the marketing team",
     ],
     SKILL_INTEGRATIONS: [
-        "Connect our Google Ads account via OAuth",
+        "Set up our managed HubSpot workspace connection",
         "Set up the HubSpot integration",
         "Configure a webhook for Stripe events",
         "Sync our LinkedIn Ads data",
