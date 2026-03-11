@@ -68,3 +68,21 @@ services:
         sync: false
       - key: POSTHOG_HOST
         value: "https://app.posthog.com"
+    - type: web
+      name: digital-cmo-frontend
+      env: static
+      rootDir: frontend
+      buildCommand: npm ci && npm run build
+      staticPublishPath: ./dist
+      headers:
+        - path: /*
+          name: Cache-Control
+          value: no-cache
+      routes:
+        - type: rewrite
+          source: /*
+          destination: /index.html
+      envVars:
+        - key: VITE_API_URL
+          value: "https://digital-cmo-api.onrender.com"
+  
