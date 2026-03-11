@@ -6,6 +6,6 @@
   export VITE_SUPPORT_EMAIL="${VITE_SUPPORT_EMAIL:-hello@digitalcmo.ai}"
 
   cd frontend
-  npm ci --legacy-peer-deps
+  npm install --legacy-peer-deps
   npm run build
   
