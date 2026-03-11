@@ -2,6 +2,8 @@
 Integration tests for API endpoints.
 """
 
+import re
+
 import pytest
 from fastapi import status
 
@@ -211,6 +213,30 @@ class TestHealthEndpoints:
         assert public_status["billing_state"] == "setup_in_progress"
         assert public_status["email_state"] == "setup_in_progress"
         assert public_status["analytics_state"] == "observable"
+
+    def test_cors_origin_regex_supports_vercel_project_aliases(self, monkeypatch):
+        monkeypatch.setattr(
+            main_module.settings,
+            "FRONTEND_BASE_URL",
+            "https://digital-cmo-ai-live.vercel.app",
+        )
+        regex = main_module._cors_origin_regex()
+
+        assert regex is not None
+        assert re.match(regex, "https://digital-cmo-ai-live.vercel.app")
+        assert re.match(
+            regex,
+            "https://digital-cmo-ai-live-2vx7bx8rr-artemivanytskyi-5767s-projects.vercel.app",
+        )
+
+    def test_cors_origin_regex_is_disabled_for_non_vercel_hosts(self, monkeypatch):
+        monkeypatch.setattr(
+            main_module.settings,
+            "FRONTEND_BASE_URL",
+            "https://app.digitalcmo.ai",
+        )
+
+        assert main_module._cors_origin_regex() is None
 
 
 class TestAuthEndpoints:

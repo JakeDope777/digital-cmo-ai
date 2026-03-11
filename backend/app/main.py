@@ -7,6 +7,9 @@ and initialises the database and brain components.
 
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+import re
+from typing import Optional
+from urllib.parse import urlparse
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,6 +25,28 @@ from .modules.integrations.service import IntegrationService
 from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth, integrations, restaurant
 
 _integration_service = IntegrationService()
+
+
+def _configured_cors_origins() -> list[str]:
+    if settings.CORS_ORIGINS_CSV:
+        return [origin.strip() for origin in settings.CORS_ORIGINS_CSV.split(",") if origin.strip()]
+    return settings.CORS_ORIGINS
+
+
+def _cors_origin_regex() -> Optional[str]:
+    frontend_base_url = (settings.FRONTEND_BASE_URL or "").strip()
+    if not frontend_base_url:
+        return None
+
+    parsed = urlparse(frontend_base_url)
+    hostname = parsed.hostname or ""
+    scheme = parsed.scheme or "https"
+
+    if hostname.endswith(".vercel.app"):
+        project_slug = hostname[: -len(".vercel.app")]
+        if project_slug:
+            return rf"^{re.escape(scheme)}://{re.escape(project_slug)}(?:-[A-Za-z0-9-]+)?\.vercel\.app$"
+    return None
 
 
 def _smtp_readiness() -> dict[str, object]:
@@ -223,11 +248,8 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=(
-        [origin.strip() for origin in settings.CORS_ORIGINS_CSV.split(",") if origin.strip()]
-        if settings.CORS_ORIGINS_CSV
-        else settings.CORS_ORIGINS
-    ),
+    allow_origins=_configured_cors_origins(),
+    allow_origin_regex=_cors_origin_regex(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
