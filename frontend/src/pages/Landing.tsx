@@ -59,7 +59,32 @@ const FAQ_ITEMS = [
   { q: "Do I need a marketing team to use this?", a: "No. Digital CMO AI is designed to replace or augment your marketing team. Solo founders, lean teams, and enterprise marketers all use it effectively." },
 ];
 
-const STATS = [
+// ── A/B Variant Configuration ─────────────────────────────────────────────
+// Set VITE_VARIANT=B in Netlify env vars to activate Version B.
+// Vercel (no env var set) defaults to Version A.
+const IS_B = import.meta.env.VITE_VARIANT === "B";
+
+const HERO = {
+  badge:        IS_B ? "7-day money-back guarantee · No credit card needed"              : "Limited beta pricing — locks in forever",
+  badgeColor:   IS_B ? "text-emerald-400"                                                : "text-amber-400",
+  badgeBg:      IS_B ? "bg-emerald-400/10 border-emerald-400/25"                         : "bg-amber-400/10 border-amber-400/25",
+  headlinePt1:  IS_B ? "Replace Your Agency."                                            : "Your AI Chief Marketing Officer,",
+  headlinePt2:  IS_B ? "10× Output. 1/10th the Cost."                                   : "Always On.",
+  gradient:     IS_B ? "from-emerald-400 via-teal-400 to-cyan-400"                       : "from-indigo-400 via-violet-400 to-blue-400",
+  sub1:         IS_B ? "One AI platform that runs SEO, paid ads, content, email and analytics for you — 24/7, without a marketing hire." : "10 AI agents that plan, execute, and optimize every channel — SEO, paid ads, content, email, and more.",
+  sub2:         IS_B ? "2,400+ teams already made the switch. Average saving: $8,400/month vs. agency retainers." : "Join 2,400+ marketing teams. Start free, see results in 48 hours, no credit card needed.",
+  ctaPrimary:   IS_B ? "Replace My Agency Free"                                          : "Start Free Trial",
+  ctaSecondary: IS_B ? "See the ROI"                                                     : "Watch Demo",
+  trust:        IS_B ? ["Avg. $8,400/mo saved vs agency", "Cancel anytime", "Results in 48 hours"] : ["14-day free trial", "Cancel anytime", "Setup in 5 minutes"],
+  social:       IS_B ? ["↑ 124% avg ROI", "4.9/5 on G2", "Teams in 68 countries"]       : ["★ G2 Leader Winter 2024", "4.9/5 on Capterra", "Teams in 68 countries"],
+};
+
+const STATS = IS_B ? [
+  { val: 8400,  prefix: "$", suffix: "/mo", label: "Average savings vs. agency retainer" },
+  { val: 78,    prefix: "", suffix: "%",   label: "Average cost reduction vs. status quo" },
+  { val: 2400,  prefix: "", suffix: "+",   label: "Teams that switched from agencies" },
+  { val: 124,   prefix: "", suffix: "%",   label: "Average marketing ROI increase" },
+] : [
   { val: 2400, prefix: "", suffix: "+", label: "Active paying teams" },
   { val: 4.2, prefix: "$", suffix: "M", label: "MRR — 18 months from zero" },
   { val: 8, prefix: "$", suffix: "M", label: "Series A · Sequoia Capital led" },
@@ -594,17 +619,17 @@ export function LandingPage() {
 
         <div className="max-w-5xl mx-auto px-4 relative z-10 text-center mt-8">
           <motion.div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-400/10 border border-amber-400/25 text-sm font-semibold text-amber-400 mb-8"
+            className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full ${HERO.badgeBg} text-sm font-semibold ${HERO.badgeColor} mb-8`}
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <motion.span
-              className="flex h-2 w-2 rounded-full bg-amber-400"
+              className={`flex h-2 w-2 rounded-full ${IS_B ? "bg-emerald-400" : "bg-amber-400"}`}
               animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
               transition={{ duration: 1.8, repeat: Infinity }}
             />
-            Limited beta pricing — locks in forever
+            {HERO.badge}
           </motion.div>
 
           <motion.h1
@@ -613,10 +638,10 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            Your AI Chief Marketing Officer,{" "}
+            {HERO.headlinePt1}{" "}
             <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-violet-400 to-blue-400">
-              Always On.
+            <span className={`text-transparent bg-clip-text bg-gradient-to-r ${HERO.gradient}`}>
+              {HERO.headlinePt2}
             </span>
           </motion.h1>
 
@@ -626,7 +651,7 @@ export function LandingPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            10 AI agents that plan, execute, and optimize every channel — SEO, paid ads, content, email, and more.
+            {HERO.sub1}
           </motion.p>
 
           <motion.p
@@ -635,7 +660,7 @@ export function LandingPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            Join 2,400+ marketing teams. Start free, see results in 48 hours, no credit card needed.
+            {HERO.sub2}
           </motion.p>
 
           <motion.div
@@ -651,7 +676,7 @@ export function LandingPage() {
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                Start Free Trial
+                {HERO.ctaPrimary}
                 <ChevronRightIcon className="ml-2 w-5 h-5" />
               </motion.button>
             </Link>
@@ -663,7 +688,7 @@ export function LandingPage() {
                 whileTap={{ scale: 0.98 }}
               >
                 <PlayCircleIcon className="w-5 h-5" />
-                Watch Demo
+                {HERO.ctaSecondary}
               </motion.button>
             </Link>
           </motion.div>
@@ -672,7 +697,7 @@ export function LandingPage() {
             className="flex flex-wrap justify-center gap-3 mb-3"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
           >
-            {["14-day free trial", "Cancel anytime", "Setup in 5 minutes"].map((t) => (
+            {HERO.trust.map((t) => (
               <span key={t} className="flex items-center gap-1.5 text-sm text-muted-foreground px-3 py-1.5 rounded-full border border-border/30 bg-card/30">
                 <CheckIcon className="w-3.5 h-3.5 text-emerald-400" /> {t}
               </span>
@@ -683,7 +708,7 @@ export function LandingPage() {
             className="flex flex-wrap justify-center gap-3 mb-16"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.55 }}
           >
-            {["G2 Leader Winter 2024", "4.9/5 on Capterra", "Teams in 68 countries"].map((t) => (
+            {HERO.social.map((t) => (
               <span key={t} className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/25 bg-card/20 text-sm text-muted-foreground/80">
                 <StarIcon className="w-3 h-3 text-amber-400 fill-amber-400" style={{ fill: "rgb(251 191 36)" }} /> {t}
               </span>
