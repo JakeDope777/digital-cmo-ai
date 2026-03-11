@@ -273,7 +273,7 @@ function FeatureBento() {
   ];
 
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "0px" });
 
   return (
     <section ref={ref} className="py-24 max-w-6xl mx-auto px-4">
@@ -344,7 +344,7 @@ function IntegrationMarquee() {
 
 function ProblemSection() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "0px" });
 
   return (
     <section ref={ref} className="py-20 border-y border-white/5 bg-black/25">
@@ -449,7 +449,7 @@ function CoordinationDiagram() {
 
 function PricingSection() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const inView = useInView(ref, { once: true, margin: "0px" });
 
   const plans = [
     {
@@ -539,11 +539,11 @@ function PricingSection() {
 
 export function LandingPage() {
   const statsRef = useRef(null);
-  const statsInView = useInView(statsRef, { once: true, margin: "-80px" });
+  const statsInView = useInView(statsRef, { once: true, margin: "0px" });
   const agentsRef = useRef(null);
-  const agentsInView = useInView(agentsRef, { once: true, margin: "-80px" });
+  const agentsInView = useInView(agentsRef, { once: true, margin: "0px" });
   const testimonialsRef = useRef(null);
-  const testimonialsInView = useInView(testimonialsRef, { once: true, margin: "-80px" });
+  const testimonialsInView = useInView(testimonialsRef, { once: true, margin: "0px" });
 
   return (
     <div className="min-h-screen bg-background text-foreground font-sans selection:bg-primary/30">
@@ -655,15 +655,17 @@ export function LandingPage() {
                 <ChevronRightIcon className="ml-2 w-5 h-5" />
               </motion.button>
             </Link>
-            <motion.button
-              className="h-13 px-8 rounded-full text-lg font-semibold border border-border bg-card/50 backdrop-blur hover:bg-border/50 text-foreground w-full sm:w-auto transition-colors flex items-center justify-center gap-2"
-              style={{ height: 52 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <PlayCircleIcon className="w-5 h-5" />
-              Watch Demo
-            </motion.button>
+            <Link to="/login">
+              <motion.button
+                className="h-13 px-8 rounded-full text-lg font-semibold border border-border bg-card/50 backdrop-blur hover:bg-border/50 text-foreground w-full sm:w-auto transition-colors flex items-center justify-center gap-2"
+                style={{ height: 52 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <PlayCircleIcon className="w-5 h-5" />
+                Watch Demo
+              </motion.button>
+            </Link>
           </motion.div>
 
           <motion.div
@@ -873,7 +875,7 @@ export function LandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: true, margin: "0px" }}
             transition={{ duration: 0.6 }}
           >
             <SparklesIcon className="w-8 h-8 text-primary/60 mx-auto mb-5" />
