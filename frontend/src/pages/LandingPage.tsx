@@ -14,6 +14,7 @@ import {
 } from '../data/domainModuleCatalog';
 import { getOnboardingState, setSelectedDomain, setSelectedModule } from '../services/onboarding';
 import type { DomainId, ModuleId } from '../types/catalog';
+import LaunchReadinessPanel from '../components/common/LaunchReadinessPanel';
 
 // ── Icons ────────────────────────────────────────────────────────────────────
 const ArrowRight = ({ size = 16 }: { size?: number }) => (
@@ -117,7 +118,7 @@ const INTEGRATIONS = [
 // ── FAQ data ──────────────────────────────────────────────────────────────────
 const faqs = [
   { q: 'Do I need technical skills to use Digital CMO AI?', a: 'Not at all. The entire product works through a conversational interface. Describe your goal in plain English and the AI handles the rest. No SQL, no dashboards to configure.' },
-  { q: 'How is this different from ChatGPT or Jasper?', a: 'General AI tools have no memory of your brand, no access to your live data, and no ability to execute actions. Digital CMO AI connects to your actual marketing stack, remembers your history and goals across sessions, and returns execution-ready plans.' },
+  { q: 'How is this different from ChatGPT or Jasper?', a: 'General AI tools have no memory of your brand, no access to your workspace context, and no ability to execute actions. Digital CMO AI connects to your managed live pilot stack or demo fallback, remembers your history and goals across sessions, and returns execution-ready plans.' },
   { q: 'Which integrations are supported?', a: 'Live during the pilot: HubSpot, GA4, and Stripe through managed workspace connections. The connector marketplace also includes 200+ additional templates and demo-backed connectors, with self-serve OAuth rolling out after the pilot.' },
   { q: 'Can I start with demo data before connecting my real accounts?', a: "Yes — every integration has a demo-mode fallback. You can experience the full product loop with realistic data and connect your live accounts when you're ready. No API keys required to get started." },
   { q: 'Is my data secure?', a: 'All data is encrypted at rest and in transit. We never train shared models on your proprietary data. Your memory store, brand voice, and campaign data are isolated per workspace. SOC 2 compliance is on the roadmap for Q3 2026.' },
@@ -337,7 +338,7 @@ export default function LandingPage() {
               <span className="bg-gradient-to-r from-orange-400 to-orange-500 bg-clip-text text-transparent">your marketing.</span>
             </h1>
             <p className="mt-6 text-lg leading-relaxed text-white/55 max-w-lg">
-              Strategy, execution, and reporting — through a single conversational interface. Replace agency retainers with AI that knows your brand, acts on live data, and executes in minutes.
+              Strategy, execution, and reporting — through a single conversational interface. Replace agency retainers with AI that knows your brand, works with managed live pilot data or demo fallback, and executes in minutes.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-base font-bold text-black hover:bg-orange-400 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 hover:scale-[1.02]">
@@ -348,6 +349,13 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="mt-3 text-xs text-white/30">No credit card · No setup required · Demo works instantly</p>
+            <LaunchReadinessPanel
+              title="Pilot workspace status"
+              tone="dark"
+              variant="compact"
+              className="mt-6 max-w-xl"
+              showModeLegend
+            />
             <div className="mt-6 flex items-center gap-3">
               <div className="flex items-center gap-0.5 text-amber-400">
                 {[0,1,2,3,4].map((i) => <StarIcon key={i} />)}
@@ -405,7 +413,7 @@ export default function LandingPage() {
                 step: '01', accent: 'card-accent-orange',
                 icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-400"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
                 title: 'Connect your stack',
-                desc: 'Start with managed HubSpot, GA4, and Stripe workspace connections, then explore 200+ additional connectors in demo mode while self-serve OAuth rolls out after the pilot.',
+                desc: 'Start with managed HubSpot, GA4, and Stripe pilot setup, then explore 200+ additional connectors in demo mode while self-serve OAuth rolls out after the pilot.',
               },
               {
                 step: '02', accent: 'card-accent-violet',

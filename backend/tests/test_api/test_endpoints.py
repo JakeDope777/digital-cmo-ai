@@ -5,6 +5,26 @@ Integration tests for API endpoints.
 import pytest
 from fastapi import status
 
+from app import main as main_module
+
+
+def _stub_launch_readiness(
+    monkeypatch,
+    *,
+    pilot_connectors,
+    smtp,
+    stripe,
+    growth,
+):
+    monkeypatch.setattr(
+        main_module._integration_service,
+        "get_pilot_readiness",
+        lambda: pilot_connectors,
+    )
+    monkeypatch.setattr(main_module, "_smtp_readiness", lambda: smtp)
+    monkeypatch.setattr(main_module, "_stripe_readiness", lambda: stripe)
+    monkeypatch.setattr(main_module, "_growth_readiness", lambda: growth)
+
 
 class TestHealthEndpoints:
     """Tests for health check endpoints."""
@@ -38,6 +58,159 @@ class TestHealthEndpoints:
         assert "stripe" in data
         assert "pilot_connectors" in data
         assert "growth" in data
+        assert "public_status" in data
+        assert {
+            "pilot_state",
+            "billing_state",
+            "email_state",
+            "analytics_state",
+            "headline",
+            "summary",
+            "cta_label",
+        } <= set(data["public_status"])
+
+    def test_launch_readiness_public_status_when_all_core_systems_are_ready(
+        self, client, monkeypatch
+    ):
+        _stub_launch_readiness(
+            monkeypatch,
+            pilot_connectors={
+                "connectors": [
+                    {
+                        "key": "hubspot",
+                        "workspace_level": True,
+                        "configured": True,
+                        "ready_for_live": True,
+                        "demo_fallback": False,
+                    },
+                    {
+                        "key": "google_analytics",
+                        "workspace_level": True,
+                        "configured": True,
+                        "ready_for_live": True,
+                        "demo_fallback": False,
+                    },
+                    {
+                        "key": "stripe",
+                        "workspace_level": True,
+                        "configured": True,
+                        "ready_for_live": True,
+                        "demo_fallback": False,
+                    },
+                ],
+                "total": 3,
+                "live_ready": 3,
+                "demo_fallback": 0,
+            },
+            smtp={"configured": True},
+            stripe={"ready": True},
+            growth={"status": "ok"},
+        )
+
+        response = client.get("/health/launch-readiness")
+        assert response.status_code == 200
+        public_status = response.json()["public_status"]
+
+        assert public_status["pilot_state"] == "live"
+        assert public_status["billing_state"] == "ready"
+        assert public_status["email_state"] == "ready"
+        assert public_status["analytics_state"] == "observable"
+        assert public_status["cta_label"] == "Open live workspace"
+
+    def test_launch_readiness_public_status_uses_setup_in_progress_when_demo_fallback_is_active(
+        self, client, monkeypatch
+    ):
+        _stub_launch_readiness(
+            monkeypatch,
+            pilot_connectors={
+                "connectors": [
+                    {
+                        "key": "hubspot",
+                        "workspace_level": True,
+                        "configured": False,
+                        "ready_for_live": False,
+                        "demo_fallback": True,
+                    },
+                    {
+                        "key": "google_analytics",
+                        "workspace_level": True,
+                        "configured": False,
+                        "ready_for_live": False,
+                        "demo_fallback": True,
+                    },
+                    {
+                        "key": "stripe",
+                        "workspace_level": True,
+                        "configured": False,
+                        "ready_for_live": False,
+                        "demo_fallback": True,
+                    },
+                ],
+                "total": 3,
+                "live_ready": 0,
+                "demo_fallback": 3,
+            },
+            smtp={"configured": True},
+            stripe={"ready": True},
+            growth={"status": "ok"},
+        )
+
+        response = client.get("/health/launch-readiness")
+        assert response.status_code == 200
+        public_status = response.json()["public_status"]
+
+        assert public_status["pilot_state"] == "setup_in_progress"
+        assert public_status["billing_state"] == "ready"
+        assert public_status["email_state"] == "ready"
+        assert public_status["analytics_state"] == "observable"
+        assert public_status["cta_label"] == "Start with demo mode"
+
+    def test_launch_readiness_public_status_tracks_billing_and_email_setup(
+        self, client, monkeypatch
+    ):
+        _stub_launch_readiness(
+            monkeypatch,
+            pilot_connectors={
+                "connectors": [
+                    {
+                        "key": "hubspot",
+                        "workspace_level": True,
+                        "configured": True,
+                        "ready_for_live": True,
+                        "demo_fallback": False,
+                    },
+                    {
+                        "key": "google_analytics",
+                        "workspace_level": True,
+                        "configured": True,
+                        "ready_for_live": True,
+                        "demo_fallback": False,
+                    },
+                    {
+                        "key": "stripe",
+                        "workspace_level": True,
+                        "configured": True,
+                        "ready_for_live": True,
+                        "demo_fallback": False,
+                    },
+                ],
+                "total": 3,
+                "live_ready": 3,
+                "demo_fallback": 0,
+            },
+            smtp={"configured": False},
+            stripe={"ready": False},
+            growth={"status": "ok"},
+        )
+
+        response = client.get("/health/launch-readiness")
+        assert response.status_code == 200
+        public_status = response.json()["public_status"]
+
+        assert public_status["pilot_state"] == "live"
+        assert public_status["billing_state"] == "setup_in_progress"
+        assert public_status["email_state"] == "setup_in_progress"
+        assert public_status["analytics_state"] == "observable"
 
 
 class TestAuthEndpoints:

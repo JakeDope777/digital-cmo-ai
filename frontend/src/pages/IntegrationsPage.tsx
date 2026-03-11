@@ -20,6 +20,7 @@ import {
 import { integrationsService } from '../services/api';
 import { useDemoMode } from '../context/DemoModeContext';
 import DemoDataBadge from '../components/common/DemoDataBadge';
+import LaunchReadinessPanel from '../components/common/LaunchReadinessPanel';
 
 /* ── Types ─────────────────────────────────────────────── */
 interface Connector {
@@ -321,7 +322,7 @@ export default function IntegrationsPage() {
           </div>
           <h2 className="text-3xl font-bold tracking-tight">Connect your stack</h2>
           <p className="mt-2 max-w-lg text-base text-slate-300">
-            HubSpot, GA4, and Stripe run live via managed workspace connections during the pilot.
+            HubSpot, GA4, and Stripe are the managed live pilot connector set during the pilot.
             {` ${stats ? `${stats.total_connectors}+ additional connectors` : '200+ additional connectors'} stay available with demo fallback or future self-serve OAuth.`}
           </p>
 
@@ -353,6 +354,12 @@ export default function IntegrationsPage() {
           </div>
         </div>
       </section>
+
+      <LaunchReadinessPanel
+        title="Pilot workspace status"
+        tone="light"
+        className="shadow-sm"
+      />
 
       {/* ── Category browser ── */}
       <section>

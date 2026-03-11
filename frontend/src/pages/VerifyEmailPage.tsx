@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { resolveDomainId, withDomainQuery } from '../data/domainModuleCatalog';
 import { setSelectedDomain } from '../services/onboarding';
 import { SUPPORT_EMAIL } from '../config/runtime';
+import LaunchReadinessPanel from '../components/common/LaunchReadinessPanel';
 
 type VerifyStatus = 'idle' | 'loading' | 'success' | 'error' | 'expired' | 'already_used';
 
@@ -20,7 +21,7 @@ function statusBg(s: VerifyStatus) {
 const NEXT_STEPS = [
   { icon: '📧', text: 'Check your inbox — the link arrives in under a minute.' },
   { icon: '📁', text: 'Can\'t find it? Check your spam or promotions folder.' },
-  { icon: '🚀', text: 'Once verified, your AI CMO is ready — no setup needed.' },
+  { icon: '🚀', text: 'Once verified, you can start in demo immediately while live pilot setup continues.' },
 ];
 
 export default function VerifyEmailPage() {
@@ -140,6 +141,13 @@ export default function VerifyEmailPage() {
               ))}
             </ul>
 
+            <LaunchReadinessPanel
+              title="What happens next"
+              tone="dark"
+              variant="compact"
+              className="mt-6"
+            />
+
             {resendSuccess ? (
               <p className="mt-6 rounded-xl bg-emerald-500/15 border border-emerald-500/25 px-4 py-3 text-sm text-emerald-300">
                 New email sent — check your inbox.
@@ -207,6 +215,13 @@ export default function VerifyEmailPage() {
             ? 'Your account is active. Redirecting you to the dashboard…'
             : 'Enter your email to receive a new verification link.'}
         </p>
+
+        <LaunchReadinessPanel
+          title="What happens next"
+          tone="light"
+          variant="compact"
+          className="mt-5"
+        />
 
         {status === 'success' && (
           <div className="mt-4 flex items-center gap-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3">

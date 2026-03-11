@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { resolveDomainId, withDomainQuery } from '../data/domainModuleCatalog';
 import { trackEvent } from '../services/analytics';
 import { setSelectedDomain } from '../services/onboarding';
+import LaunchReadinessPanel from '../components/common/LaunchReadinessPanel';
 
 function Spinner() {
   return (
@@ -77,6 +78,13 @@ export default function LoginPage() {
         <div className="rounded-2xl border border-white/10 bg-[#111111] p-8">
           <h1 className="text-2xl font-extrabold text-white">Welcome back</h1>
           <p className="mt-1.5 text-sm text-white/50">Sign in to your AI Chief Marketing Officer.</p>
+
+          <LaunchReadinessPanel
+            title="Pilot launch status"
+            tone="dark"
+            variant="compact"
+            className="mt-6"
+          />
 
           <form className="mt-7 space-y-4" onSubmit={onSubmit}>
             <div>

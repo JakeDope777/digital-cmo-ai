@@ -5,10 +5,11 @@ import { useAuth } from '../context/AuthContext';
 import { resolveDomainId, withDomainQuery } from '../data/domainModuleCatalog';
 import { trackOnboardingStep } from '../services/analytics';
 import { setSelectedDomain } from '../services/onboarding';
+import LaunchReadinessPanel from '../components/common/LaunchReadinessPanel';
 
 const BENEFITS = [
   'AI chat, analysis & creative studio — free to start',
-  'Managed HubSpot, GA4, and Stripe pilot connectors with demo fallback for everything else',
+  'One workspace for strategy, execution, and reporting across all 10 modules',
   'No credit card required · Cancel anytime',
 ];
 
@@ -119,6 +120,13 @@ export default function RegisterPage() {
                 </li>
               ))}
             </ul>
+
+            <LaunchReadinessPanel
+              title="Pilot launch status"
+              tone="dark"
+              variant="compact"
+              className="mt-8"
+            />
 
             <div className="mt-10 space-y-3">
               {SOCIAL_PROOF.map((p) => (

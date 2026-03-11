@@ -94,6 +94,72 @@ export interface CreativeResponse {
   schedule?: Array<Record<string, unknown>>;
 }
 
+// ── Launch Readiness Types ─────────────────────────────────
+
+export type PilotState = 'live' | 'setup_in_progress' | 'demo_only';
+export type LaunchSetupState = 'ready' | 'setup_in_progress';
+export type AnalyticsState = 'observable' | 'setup_in_progress';
+
+export interface PublicLaunchStatus {
+  pilot_state: PilotState;
+  billing_state: LaunchSetupState;
+  email_state: LaunchSetupState;
+  analytics_state: AnalyticsState;
+  headline: string;
+  summary: string;
+  cta_label: string;
+}
+
+export interface LaunchReadinessConnector {
+  key: string;
+  workspace_level: boolean;
+  configured: boolean;
+  ready_for_live: boolean;
+  demo_fallback: boolean;
+  authenticated: boolean;
+  status: string;
+  owner_scope?: string;
+  auth_mode?: string;
+  last_tested_at?: string | null;
+  capability?: string;
+  mode_label?: string;
+}
+
+export interface LaunchReadiness {
+  status: string;
+  ready: boolean;
+  frontend_base_url: string;
+  checks: Record<string, boolean>;
+  smtp: {
+    configured: boolean;
+    host_configured?: boolean;
+    port?: number | null;
+    username_configured?: boolean;
+    sender_email?: string | null;
+    support_email?: string | null;
+  };
+  stripe: {
+    ready: boolean;
+    stripe_secret_configured?: boolean;
+    stripe_webhook_secret_configured?: boolean;
+    stripe_prices_configured?: boolean;
+  };
+  pilot_connectors: {
+    connectors: LaunchReadinessConnector[];
+    total: number;
+    live_ready: number;
+    demo_fallback: number;
+  };
+  growth: {
+    status: string;
+    posthog_configured?: boolean;
+    recent_events_24h: number;
+    last_event_at?: string | null;
+    waitlist_leads_total?: number;
+  };
+  public_status: PublicLaunchStatus;
+}
+
 // ── CRM Types ───────────────────────────────────────────────
 
 export interface Lead {

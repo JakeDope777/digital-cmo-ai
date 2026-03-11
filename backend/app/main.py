@@ -92,11 +92,83 @@ def _growth_readiness() -> dict[str, object]:
         }
 
 
+def _public_launch_status(
+    *,
+    pilot_connectors: dict[str, object],
+    smtp: dict[str, object],
+    stripe: dict[str, object],
+    growth: dict[str, object],
+) -> dict[str, str]:
+    connector_rows = [
+        row for row in pilot_connectors.get("connectors", []) if isinstance(row, dict)
+    ]
+    total = int(pilot_connectors.get("total", 0) or 0)
+    live_ready = int(pilot_connectors.get("live_ready", 0) or 0)
+    has_workspace_rollout = any(bool(row.get("workspace_level")) for row in connector_rows)
+
+    if total > 0 and live_ready == total:
+        pilot_state = "live"
+        headline = "Managed live pilot connectors are ready"
+        summary = (
+            "HubSpot, GA4, and Stripe are available through managed workspace "
+            "connections, with demo fallback still available across the wider catalog."
+        )
+        cta_label = "Open live workspace"
+    elif has_workspace_rollout:
+        pilot_state = "setup_in_progress"
+        headline = "Managed live pilot connectors are rolling out"
+        summary = (
+            "HubSpot, GA4, and Stripe are being enabled through managed workspace "
+            "setup. Demo fallback is available immediately while the live pilot "
+            "finishes configuration."
+        )
+        cta_label = "Start with demo mode"
+    else:
+        pilot_state = "demo_only"
+        headline = "Demo workspace is ready now"
+        summary = (
+            "Explore the full product loop with demo data while managed live "
+            "connectors are configured for the pilot."
+        )
+        cta_label = "Open demo workspace"
+
+    billing_state = "ready" if bool(stripe.get("ready")) else "setup_in_progress"
+    email_state = "ready" if bool(smtp.get("configured")) else "setup_in_progress"
+    analytics_state = (
+        "observable" if growth.get("status") == "ok" else "setup_in_progress"
+    )
+
+    if pilot_state == "live" and (
+        billing_state == "setup_in_progress" or email_state == "setup_in_progress"
+    ):
+        headline = "Live pilot workspace is available"
+        summary = (
+            "Managed live pilot connectors are active now. Billing or email setup is "
+            "still being finalised for the wider launch workflow."
+        )
+
+    return {
+        "pilot_state": pilot_state,
+        "billing_state": billing_state,
+        "email_state": email_state,
+        "analytics_state": analytics_state,
+        "headline": headline,
+        "summary": summary,
+        "cta_label": cta_label,
+    }
+
+
 def _launch_readiness() -> dict[str, object]:
     pilot_connectors = _integration_service.get_pilot_readiness()
     smtp = _smtp_readiness()
     stripe = _stripe_readiness()
     growth = _growth_readiness()
+    public_status = _public_launch_status(
+        pilot_connectors=pilot_connectors,
+        smtp=smtp,
+        stripe=stripe,
+        growth=growth,
+    )
     checks = {
         "database_url_configured": bool(settings.DATABASE_URL),
         "jwt_secret_configured": settings.SECRET_KEY
@@ -126,6 +198,7 @@ def _launch_readiness() -> dict[str, object]:
         "stripe": stripe,
         "pilot_connectors": pilot_connectors,
         "growth": growth,
+        "public_status": public_status,
     }
 
 

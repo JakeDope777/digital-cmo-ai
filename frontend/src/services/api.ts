@@ -7,6 +7,7 @@ import type {
   DashboardData,
   AnalysisResponse,
   CreativeResponse,
+  LaunchReadiness,
 } from '../types';
 import { API_BASE_URL, assertApiBaseConfigured } from '../config/runtime';
 import { getOnboardingState } from './onboarding';
@@ -303,6 +304,15 @@ export const billingService = {
       }>;
       demo?: boolean;
     };
+  },
+};
+
+// ── Health / Readiness ─────────────────────────────────────
+
+export const healthService = {
+  async getLaunchReadiness(): Promise<LaunchReadiness> {
+    const { data } = await api.get<LaunchReadiness>('/health/launch-readiness');
+    return data;
   },
 };
 
