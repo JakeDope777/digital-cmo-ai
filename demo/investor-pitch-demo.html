@@ -1115,11 +1115,11 @@ function renderModuleCatalog() {
 
 const queryApiBase = (urlParams.get('api') || urlParams.get('api_base') || '').trim();
 const isFileMode = window.location.protocol === 'file:';
-const isVercelStaticHost = !isFileMode && window.location.hostname.endsWith('vercel.app');
+const isStaticFrontendHost = !isFileMode && ['vercel.app', 'netlify.app'].some((suffix) => window.location.hostname.endsWith(suffix));
 const storedApiBase = (localStorage.getItem('investor_demo_api_base') || '').trim();
 const defaultApiBase = queryApiBase
   || storedApiBase
-  || (isFileMode ? 'http://localhost:8000' : (isVercelStaticHost ? '' : `${window.location.protocol}//${window.location.host}`));
+  || (isFileMode ? 'http://localhost:8000' : (isStaticFrontendHost ? '' : `${window.location.protocol}//${window.location.host}`));
 const integrationApiInput = document.getElementById('integrationApiBase');
 if (integrationApiInput) {
   integrationApiInput.value = defaultApiBase;

@@ -81,8 +81,8 @@ export default function IndustryPage() {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-900 leading-tight">TablePilot AI</p>
-              <p className="text-[10px] text-slate-400 leading-tight">TablePilot OS</p>
+              <p className="text-sm font-bold text-slate-900 leading-tight">Digital CMO AI</p>
+              <p className="text-[10px] text-slate-400 leading-tight">Digital CMO OS</p>
             </div>
           </Link>
 
@@ -209,7 +209,7 @@ export default function IndustryPage() {
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400">KPIs we track</p>
                 <h3 className="mt-2 text-2xl font-extrabold text-slate-900">Every {industry.shortName} metric, unified.</h3>
                 <p className="mt-2 text-sm leading-relaxed text-slate-500">
-                  TablePilot AI comes pre-loaded with {industry.shortName}-specific KPI definitions. No custom setup, no analyst needed.
+                  Digital CMO AI comes pre-loaded with {industry.shortName}-specific KPI definitions. No custom setup, no analyst needed.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -291,7 +291,7 @@ export default function IndustryPage() {
             Start growing your<br />{industry.shortName} business with AI.
           </h2>
           <p className="mx-auto mt-5 max-w-lg text-lg leading-relaxed text-slate-300">
-            Join {industry.shortName} teams already using TablePilot AI to replace manual work with intelligent, data-driven marketing.
+            Join {industry.shortName} teams already using Digital CMO AI to replace manual work with intelligent, data-driven marketing.
           </p>
 
           <form onSubmit={submitWaitlist} className="mt-10 space-y-3">
@@ -328,9 +328,9 @@ export default function IndustryPage() {
                 <path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className="text-sm font-bold text-slate-900">TablePilot AI</span>
+            <span className="text-sm font-bold text-slate-900">Digital CMO AI</span>
           </Link>
-          <p className="text-xs text-slate-400">© 2026 TablePilot AI. All rights reserved.</p>
+          <p className="text-xs text-slate-400">© 2026 Digital CMO AI. All rights reserved.</p>
           <div className="flex gap-4 text-xs text-slate-400">
             <Link to="/" className="hover:text-slate-700">Home</Link>
             <Link to="/login" className="hover:text-slate-700">Sign in</Link>

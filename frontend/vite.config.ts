@@ -1,9 +1,20 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 import { copyFileSync } from 'fs'
 
-// Plugin: copy vercel.json into dist so SPA routing works on Vercel deployments
+const requireProductionEnv = (env: Record<string, string>) => ({
+  name: 'require-production-env',
+  configResolved(config: { command: string; mode: string }) {
+    if (config.command !== 'build' || config.mode !== 'production') return;
+    const missing = ['VITE_API_URL'].filter((key) => !env[key]?.trim());
+    if (missing.length) {
+      throw new Error(`Missing required production env var(s): ${missing.join(', ')}`);
+    }
+  },
+});
+
+// Keep Vercel preview deploys functional while Netlify remains production.
 const copyVercelJson = {
   name: 'copy-vercel-json',
   closeBundle() {
@@ -11,21 +22,25 @@ const copyVercelJson = {
   },
 };
 
-export default defineConfig({
-  plugins: [react(), copyVercelJson],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, __dirname, '');
+
+  return {
+    plugins: [react(), requireProductionEnv(env), copyVercelJson],
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, './src'),
       },
     },
-  },
+    server: {
+      port: 3000,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      },
+    },
+  };
 })

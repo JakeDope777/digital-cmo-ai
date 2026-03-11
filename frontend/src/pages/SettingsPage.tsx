@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Save, Key, Database, Brain } from 'lucide-react';
+import { API_BASE_URL } from '../config/runtime';
 
 export default function SettingsPage() {
-  const [apiUrl, setApiUrl] = useState(import.meta.env.VITE_API_URL || 'http://localhost:8000');
+  const [apiUrl, setApiUrl] = useState(API_BASE_URL || 'Not configured in this build');
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
@@ -14,7 +15,7 @@ export default function SettingsPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h2 className="text-xl font-bold text-gray-900">Settings</h2>
-        <p className="text-sm text-gray-500">Configure your TablePilot AI instance</p>
+        <p className="text-sm text-gray-500">Configure your Digital CMO AI workspace</p>
       </div>
 
       {/* API Configuration */}
@@ -36,17 +37,17 @@ export default function SettingsPage() {
           <h3 className="text-sm font-semibold text-gray-700">Integration Keys</h3>
         </div>
         <p className="text-sm text-gray-500">
-          API keys are configured on the backend via environment variables. See the
+          Credentials are configured on the backend via environment variables. See the
           <code className="mx-1 px-1.5 py-0.5 bg-gray-100 rounded text-xs">.env.example</code>
-          file for all available settings.
+          file or deployment dashboard for the active environment.
         </p>
         <div className="bg-gray-50 rounded-lg p-4 text-xs font-mono text-gray-600 space-y-1">
           <p>OPENAI_API_KEY=sk-...</p>
-          <p>HUBSPOT_API_KEY=pat-...</p>
-          <p>SENDGRID_API_KEY=SG....</p>
-          <p>GOOGLE_ADS_CLIENT_ID=...</p>
+          <p>HUBSPOT_ACCESS_TOKEN=...</p>
           <p>GOOGLE_ANALYTICS_PROPERTY_ID=...</p>
-          <p>LINKEDIN_CLIENT_ID=...</p>
+          <p>STRIPE_SECRET_KEY=sk_live_...</p>
+          <p>SMTP_HOST=smtp.example.com</p>
+          <p>POSTHOG_API_KEY=phc_...</p>
         </div>
       </div>
 
@@ -57,9 +58,9 @@ export default function SettingsPage() {
           <h3 className="text-sm font-semibold text-gray-700">AI Model</h3>
         </div>
         <p className="text-sm text-gray-500">
-          The default model is <code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">gpt-4</code>.
-          Change the <code className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">OPENAI_MODEL</code> environment
-          variable to use a different model.
+          The active model is configured on the backend with
+          <code className="mx-1 px-1.5 py-0.5 bg-gray-100 rounded text-xs">OPENAI_MODEL</code>.
+          Update that environment variable to change the model used by live requests.
         </p>
       </div>
 

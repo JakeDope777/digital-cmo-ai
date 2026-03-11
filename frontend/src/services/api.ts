@@ -8,12 +8,11 @@ import type {
   AnalysisResponse,
   CreativeResponse,
 } from '../types';
+import { API_BASE_URL, assertApiBaseConfigured } from '../config/runtime';
 import { getOnboardingState } from './onboarding';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
-
 const api = axios.create({
-  baseURL: API_BASE,
+  baseURL: API_BASE_URL || undefined,
   headers: { 'Content-Type': 'application/json' },
 });
 
@@ -21,6 +20,7 @@ const ANONYMOUS_ID_KEY = 'dcmo_anon_id_v1';
 
 // Attach auth token to every request
 api.interceptors.request.use((config) => {
+  assertApiBaseConfigured();
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;

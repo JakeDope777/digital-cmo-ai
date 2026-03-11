@@ -2,10 +2,11 @@
 
 ## Environment
 - [ ] Render backend deployed and healthy at `/health/ready`
-- [ ] Vercel frontend deployed and pointing `VITE_API_URL` to Render API
+- [ ] Netlify frontend deployed and pointing `VITE_API_URL` to Render API
 - [ ] Postgres connected (`DATABASE_URL` set in Render)
 - [ ] `SECRET_KEY` set to strong generated value
 - [ ] `CORS_ORIGINS_CSV` set to frontend production domain
+- [ ] `VITE_APP_URL` set to the Netlify production domain
 
 ## Auth + Email
 - [ ] SMTP configured (`SMTP_HOST`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL`)

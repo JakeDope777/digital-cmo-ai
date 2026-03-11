@@ -5,7 +5,7 @@ Launch a pilot-ready Digital CMO AI MVP by **Sunday, March 16, 2026** with real 
 
 ## Current Status (as of March 6, 2026)
 - Backend test suite is green: **795/795 passing**.
-- Deployment scaffolding exists for Vercel + Render (`vercel.json`, `render.yaml`).
+- Deployment scaffolding exists for Netlify + Render (`netlify.toml`, `render.yaml`) with Vercel retained for previews.
 - Auth lifecycle APIs and billing test-mode APIs are present.
 - Frontend has landing/auth/dashboard/billing/profile base flows.
 - Remaining work is execution quality: hardening, UX polish, analytics completeness, and launch operations.

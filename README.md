@@ -219,9 +219,10 @@ Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeh
 | `POST` | `/memory/store` | Save to memory |
 | `POST` | `/memory/retrieve` | Retrieve similar memories |
 
-## Deployment (Vercel + Render + Postgres)
+## Deployment (Netlify + Render + Postgres)
 
-- Frontend config: `frontend/vercel.json` and root `vercel.json`
+- Frontend config: `netlify.toml`
+- Preview config: `frontend/vercel.json` and root `vercel.json`
 - Backend infra: `render.yaml`
 - Launch docs:
   - `docs/LAUNCH_CHECKLIST.md`
@@ -230,7 +231,10 @@ Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeh
   - `docs/ANALYTICS_QA_MATRIX_MAR6_2026.md`
 - Automation helpers:
   - `scripts/validate_deploy_env.py`
+  - `scripts/release_preflight.sh`
   - `scripts/smoke_check.sh`
+  - `scripts/smoke_frontend_routes.sh`
+  - `scripts/validate_release_readiness.sh`
 
 ## Memory System
 
