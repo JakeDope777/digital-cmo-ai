@@ -1,64 +1,73 @@
-import { Routes, Route } from 'react-router-dom';
-import { Navigate } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import ChatPage from './pages/ChatPage';
-import DashboardPage from './pages/DashboardPage';
-import AnalysisPage from './pages/AnalysisPage';
-import CreativePage from './pages/CreativePage';
-import CRMPage from './pages/CRMPage';
-import SettingsPage from './pages/SettingsPage';
-import IntegrationsPage from './pages/IntegrationsPage';
-import IndustryPage from './pages/IndustryPage';
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import BillingPage from './pages/BillingPage';
-import GrowthPage from './pages/GrowthPage';
-import DemoEntryPage from './pages/DemoEntryPage';
-import ProfilePage from './pages/ProfilePage';
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import PublicOnlyRoute from './components/auth/PublicOnlyRoute';
-import ForgotPasswordPage from './pages/ForgotPasswordPage';
-import ResetPasswordPage from './pages/ResetPasswordPage';
-import VerifyEmailPage from './pages/VerifyEmailPage';
-import UseCasesPage from './pages/UseCasesPage';
-import WhitePaperPage from './pages/WhitePaperPage';
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-export default function App() {
+import { LandingPage } from "./pages/Landing";
+import { Login } from "./pages/auth/Login";
+import { Register } from "./pages/auth/Register";
+import { Dashboard } from "./pages/Dashboard";
+import { Chat } from "./pages/Chat";
+import { Analysis } from "./pages/Analysis";
+import { Creative } from "./pages/Creative";
+import { Crm } from "./pages/Crm";
+import { Growth } from "./pages/Growth";
+import { Integrations } from "./pages/Integrations";
+import { Billing } from "./pages/Billing";
+import { Settings } from "./pages/Settings";
+import { AppLayout } from "./components/layout/AppLayout";
+import NotFound from "./pages/not-found";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
+const ProtectedRoute = ({ component: Component, noPadding = false }: { component: any, noPadding?: boolean }) => {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
+    <AppLayout noPadding={noPadding}>
+      <Component />
+    </AppLayout>
+  );
+};
 
-      <Route element={<PublicOnlyRoute />}>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-      </Route>
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={LandingPage} />
+      <Route path="/login" component={Login} />
+      <Route path="/register" component={Register} />
+      
+      <Route path="/dashboard"><ProtectedRoute component={Dashboard} /></Route>
+      <Route path="/chat"><ProtectedRoute component={Chat} noPadding /></Route>
+      <Route path="/analysis"><ProtectedRoute component={Analysis} /></Route>
+      <Route path="/creative"><ProtectedRoute component={Creative} /></Route>
+      <Route path="/crm"><ProtectedRoute component={Crm} /></Route>
+      <Route path="/growth"><ProtectedRoute component={Growth} /></Route>
+      <Route path="/integrations"><ProtectedRoute component={Integrations} /></Route>
+      <Route path="/billing"><ProtectedRoute component={Billing} /></Route>
+      <Route path="/settings"><ProtectedRoute component={Settings} /></Route>
 
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/demo" element={<DemoEntryPage />} />
-      <Route path="/industries/:slug" element={<IndustryPage />} />
-      <Route path="/use-cases" element={<UseCasesPage />} />
-      <Route path="/white-paper" element={<WhitePaperPage />} />
-
-      <Route element={<ProtectedRoute />}>
-        <Route path="/app" element={<Layout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="chat" element={<ChatPage />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="analysis" element={<AnalysisPage />} />
-          <Route path="creative" element={<CreativePage />} />
-          <Route path="crm" element={<CRMPage />} />
-          <Route path="growth" element={<GrowthPage />} />
-          <Route path="billing" element={<BillingPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="integrations" element={<IntegrationsPage />} />
-          <Route path="settings" element={<SettingsPage />} />
-        </Route>
-      </Route>
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      <Route component={NotFound} />
+    </Switch>
   );
 }
+
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+          <Router />
+        </WouterRouter>
+        <Toaster />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
