@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 # revision identifiers, used by Alembic.
@@ -19,19 +20,40 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column("growth_events", sa.Column("domain", sa.String(), nullable=True))
-    op.add_column("growth_events", sa.Column("module_id", sa.String(), nullable=True))
-    op.add_column("growth_events", sa.Column("anonymous_id", sa.String(), nullable=True))
-    op.create_index(op.f("ix_growth_events_domain"), "growth_events", ["domain"], unique=False)
-    op.create_index(op.f("ix_growth_events_module_id"), "growth_events", ["module_id"], unique=False)
-    op.create_index(op.f("ix_growth_events_anonymous_id"), "growth_events", ["anonymous_id"], unique=False)
+    bind = op.get_bind()
+    inspector = inspect(bind)
 
-    op.add_column("waitlist_leads", sa.Column("domain", sa.String(), nullable=True))
-    op.add_column("waitlist_leads", sa.Column("module_id", sa.String(), nullable=True))
-    op.add_column("waitlist_leads", sa.Column("anonymous_id", sa.String(), nullable=True))
-    op.create_index(op.f("ix_waitlist_leads_domain"), "waitlist_leads", ["domain"], unique=False)
-    op.create_index(op.f("ix_waitlist_leads_module_id"), "waitlist_leads", ["module_id"], unique=False)
-    op.create_index(op.f("ix_waitlist_leads_anonymous_id"), "waitlist_leads", ["anonymous_id"], unique=False)
+    growth_columns = {column["name"] for column in inspector.get_columns("growth_events")}
+    if "domain" not in growth_columns:
+        op.add_column("growth_events", sa.Column("domain", sa.String(), nullable=True))
+    if "module_id" not in growth_columns:
+        op.add_column("growth_events", sa.Column("module_id", sa.String(), nullable=True))
+    if "anonymous_id" not in growth_columns:
+        op.add_column("growth_events", sa.Column("anonymous_id", sa.String(), nullable=True))
+
+    growth_indexes = {index["name"] for index in inspect(bind).get_indexes("growth_events")}
+    if op.f("ix_growth_events_domain") not in growth_indexes:
+        op.create_index(op.f("ix_growth_events_domain"), "growth_events", ["domain"], unique=False)
+    if op.f("ix_growth_events_module_id") not in growth_indexes:
+        op.create_index(op.f("ix_growth_events_module_id"), "growth_events", ["module_id"], unique=False)
+    if op.f("ix_growth_events_anonymous_id") not in growth_indexes:
+        op.create_index(op.f("ix_growth_events_anonymous_id"), "growth_events", ["anonymous_id"], unique=False)
+
+    waitlist_columns = {column["name"] for column in inspect(bind).get_columns("waitlist_leads")}
+    if "domain" not in waitlist_columns:
+        op.add_column("waitlist_leads", sa.Column("domain", sa.String(), nullable=True))
+    if "module_id" not in waitlist_columns:
+        op.add_column("waitlist_leads", sa.Column("module_id", sa.String(), nullable=True))
+    if "anonymous_id" not in waitlist_columns:
+        op.add_column("waitlist_leads", sa.Column("anonymous_id", sa.String(), nullable=True))
+
+    waitlist_indexes = {index["name"] for index in inspect(bind).get_indexes("waitlist_leads")}
+    if op.f("ix_waitlist_leads_domain") not in waitlist_indexes:
+        op.create_index(op.f("ix_waitlist_leads_domain"), "waitlist_leads", ["domain"], unique=False)
+    if op.f("ix_waitlist_leads_module_id") not in waitlist_indexes:
+        op.create_index(op.f("ix_waitlist_leads_module_id"), "waitlist_leads", ["module_id"], unique=False)
+    if op.f("ix_waitlist_leads_anonymous_id") not in waitlist_indexes:
+        op.create_index(op.f("ix_waitlist_leads_anonymous_id"), "waitlist_leads", ["anonymous_id"], unique=False)
 
 
 def downgrade() -> None:

@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 revision: str = "20260311_0005"
@@ -18,27 +19,38 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "integration_connections",
-        sa.Column("id", sa.String(), nullable=False),
-        sa.Column("connector", sa.String(), nullable=False),
-        sa.Column("owner_scope", sa.String(), nullable=False, server_default="workspace"),
-        sa.Column("owner_id", sa.String(), nullable=False, server_default="default"),
-        sa.Column("auth_mode", sa.String(), nullable=False, server_default="managed"),
-        sa.Column("status", sa.String(), nullable=False, server_default="pending"),
-        sa.Column("demo_fallback", sa.Boolean(), nullable=False, server_default=sa.text("1")),
-        sa.Column("configured", sa.Boolean(), nullable=False, server_default=sa.text("0")),
-        sa.Column("last_tested_at", sa.DateTime(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("connector", "owner_scope", "owner_id", name="uq_integration_connections_owner"),
-    )
-    op.create_index(op.f("ix_integration_connections_connector"), "integration_connections", ["connector"], unique=False)
-    op.create_index(op.f("ix_integration_connections_owner_scope"), "integration_connections", ["owner_scope"], unique=False)
-    op.create_index(op.f("ix_integration_connections_owner_id"), "integration_connections", ["owner_id"], unique=False)
-    op.create_index(op.f("ix_integration_connections_status"), "integration_connections", ["status"], unique=False)
-    op.create_index(op.f("ix_integration_connections_created_at"), "integration_connections", ["created_at"], unique=False)
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    if "integration_connections" not in inspector.get_table_names():
+        op.create_table(
+            "integration_connections",
+            sa.Column("id", sa.String(), nullable=False),
+            sa.Column("connector", sa.String(), nullable=False),
+            sa.Column("owner_scope", sa.String(), nullable=False, server_default="workspace"),
+            sa.Column("owner_id", sa.String(), nullable=False, server_default="default"),
+            sa.Column("auth_mode", sa.String(), nullable=False, server_default="managed"),
+            sa.Column("status", sa.String(), nullable=False, server_default="pending"),
+            sa.Column("demo_fallback", sa.Boolean(), nullable=False, server_default=sa.text("1")),
+            sa.Column("configured", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("last_tested_at", sa.DateTime(), nullable=True),
+            sa.Column("created_at", sa.DateTime(), nullable=True),
+            sa.Column("updated_at", sa.DateTime(), nullable=True),
+            sa.PrimaryKeyConstraint("id"),
+            sa.UniqueConstraint("connector", "owner_scope", "owner_id", name="uq_integration_connections_owner"),
+        )
+        inspector = inspect(bind)
+
+    existing_indexes = {index["name"] for index in inspector.get_indexes("integration_connections")}
+    if op.f("ix_integration_connections_connector") not in existing_indexes:
+        op.create_index(op.f("ix_integration_connections_connector"), "integration_connections", ["connector"], unique=False)
+    if op.f("ix_integration_connections_owner_scope") not in existing_indexes:
+        op.create_index(op.f("ix_integration_connections_owner_scope"), "integration_connections", ["owner_scope"], unique=False)
+    if op.f("ix_integration_connections_owner_id") not in existing_indexes:
+        op.create_index(op.f("ix_integration_connections_owner_id"), "integration_connections", ["owner_id"], unique=False)
+    if op.f("ix_integration_connections_status") not in existing_indexes:
+        op.create_index(op.f("ix_integration_connections_status"), "integration_connections", ["status"], unique=False)
+    if op.f("ix_integration_connections_created_at") not in existing_indexes:
+        op.create_index(op.f("ix_integration_connections_created_at"), "integration_connections", ["created_at"], unique=False)
 
 
 def downgrade() -> None:

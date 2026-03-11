@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 # revision identifiers, used by Alembic.
@@ -19,22 +20,31 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.create_table(
-        "stripe_webhook_events",
-        sa.Column("id", sa.String(), nullable=False),
-        sa.Column("stripe_event_id", sa.String(), nullable=False),
-        sa.Column("event_type", sa.String(), nullable=False),
-        sa.Column("payload_hash", sa.String(), nullable=False),
-        sa.Column("status", sa.String(), nullable=False, server_default="processing"),
-        sa.Column("processed_at", sa.DateTime(), nullable=True),
-        sa.Column("last_error", sa.Text(), nullable=True),
-        sa.Column("created_at", sa.DateTime(), nullable=True),
-        sa.Column("updated_at", sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint("id"),
-    )
-    op.create_index(op.f("ix_stripe_webhook_events_stripe_event_id"), "stripe_webhook_events", ["stripe_event_id"], unique=True)
-    op.create_index(op.f("ix_stripe_webhook_events_event_type"), "stripe_webhook_events", ["event_type"], unique=False)
-    op.create_index(op.f("ix_stripe_webhook_events_status"), "stripe_webhook_events", ["status"], unique=False)
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    if "stripe_webhook_events" not in inspector.get_table_names():
+        op.create_table(
+            "stripe_webhook_events",
+            sa.Column("id", sa.String(), nullable=False),
+            sa.Column("stripe_event_id", sa.String(), nullable=False),
+            sa.Column("event_type", sa.String(), nullable=False),
+            sa.Column("payload_hash", sa.String(), nullable=False),
+            sa.Column("status", sa.String(), nullable=False, server_default="processing"),
+            sa.Column("processed_at", sa.DateTime(), nullable=True),
+            sa.Column("last_error", sa.Text(), nullable=True),
+            sa.Column("created_at", sa.DateTime(), nullable=True),
+            sa.Column("updated_at", sa.DateTime(), nullable=True),
+            sa.PrimaryKeyConstraint("id"),
+        )
+        inspector = inspect(bind)
+
+    existing_indexes = {index["name"] for index in inspector.get_indexes("stripe_webhook_events")}
+    if op.f("ix_stripe_webhook_events_stripe_event_id") not in existing_indexes:
+        op.create_index(op.f("ix_stripe_webhook_events_stripe_event_id"), "stripe_webhook_events", ["stripe_event_id"], unique=True)
+    if op.f("ix_stripe_webhook_events_event_type") not in existing_indexes:
+        op.create_index(op.f("ix_stripe_webhook_events_event_type"), "stripe_webhook_events", ["event_type"], unique=False)
+    if op.f("ix_stripe_webhook_events_status") not in existing_indexes:
+        op.create_index(op.f("ix_stripe_webhook_events_status"), "stripe_webhook_events", ["status"], unique=False)
 
 
 def downgrade() -> None:
