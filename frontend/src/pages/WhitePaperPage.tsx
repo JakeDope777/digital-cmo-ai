@@ -16,7 +16,7 @@ export default function WhitePaperPage() {
     void trackEvent('white_paper_view', {});
     document.title = 'The AI CMO Playbook — Digital CMO AI';
     return () => {
-      document.title = 'Digital CMO AI — Your AI Chief Marketing Officer';
+      document.title = 'Digital CMO AI — Your AI-Powered Chief Marketing Officer';
     };
   }, []);
 

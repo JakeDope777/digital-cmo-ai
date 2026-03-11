@@ -23,9 +23,9 @@ services:
       - key: APP_BASE_URL
         value: "https://digital-cmo-api.onrender.com"
       - key: FRONTEND_BASE_URL
-        value: "https://digital-cmo-ai.netlify.app"
+        sync: false
       - key: CORS_ORIGINS_CSV
-        value: "https://digital-cmo-ai.netlify.app"
+        sync: false
       - key: REQUIRE_EMAIL_VERIFICATION
         value: "true"
       - key: SECRET_KEY

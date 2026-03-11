@@ -219,10 +219,10 @@ Without an `OPENAI_API_KEY`, the system runs in **demo mode** and returns placeh
 | `POST` | `/memory/store` | Save to memory |
 | `POST` | `/memory/retrieve` | Retrieve similar memories |
 
-## Deployment (Netlify + Render + Postgres)
+## Deployment (Vercel + Render + Postgres)
 
-- Frontend config: `netlify.toml`
-- Preview config: `frontend/vercel.json` and root `vercel.json`
+- Frontend config: root `vercel.json`
+- Legacy frontend fallback config: `netlify.toml`
 - Backend infra: `render.yaml`
 - Launch docs:
   - `docs/LAUNCH_CHECKLIST.md`

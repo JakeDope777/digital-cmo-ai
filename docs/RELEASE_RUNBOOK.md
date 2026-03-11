@@ -2,7 +2,7 @@
 
 ## 1) Pre-deploy
 1. Ensure backend migrations are applied.
-2. Confirm required env vars are set on Render and Netlify.
+2. Confirm required env vars are set on Render and Vercel.
    - Run `./scripts/release_preflight.sh` with target env vars exported.
 3. Verify Stripe test keys and webhook signing secret.
 4. Verify SMTP credentials by sending a test verification email.
@@ -14,7 +14,7 @@
    - `GET /health/ready`
    - `GET /health/launch-readiness`
    - `GET /docs`
-3. Deploy frontend to Netlify.
+3. Deploy frontend to Vercel.
 4. Validate frontend routes:
    - `/`
    - `/login`
@@ -37,9 +37,9 @@
 
 ## 4) Monitoring and rollback
 1. Watch Render logs for 5xx and webhook errors.
-2. Watch Netlify logs for build or route/runtime errors.
+2. Watch Vercel logs for build or route/runtime errors.
 3. If critical break:
-   - Roll back frontend to previous Netlify deployment.
+   - Roll back frontend to previous Vercel deployment.
    - Roll back backend to previous Render deploy.
    - Disable checkout CTA temporarily if billing-specific outage.
 

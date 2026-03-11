@@ -7,14 +7,14 @@ const requireProductionEnv = (env: Record<string, string>) => ({
   name: 'require-production-env',
   configResolved(config: { command: string; mode: string }) {
     if (config.command !== 'build' || config.mode !== 'production') return;
-    const missing = ['VITE_API_URL'].filter((key) => !env[key]?.trim());
+    const missing = ['VITE_API_URL', 'VITE_APP_URL'].filter((key) => !env[key]?.trim());
     if (missing.length) {
       throw new Error(`Missing required production env var(s): ${missing.join(', ')}`);
     }
   },
 });
 
-// Keep Vercel preview deploys functional while Netlify remains production.
+// Copy routing config into the output so Vercel serves SPA routes correctly.
 const copyVercelJson = {
   name: 'copy-vercel-json',
   closeBundle() {

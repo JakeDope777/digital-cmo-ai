@@ -3,6 +3,7 @@ Integration tests for API endpoints.
 """
 
 import pytest
+from fastapi import status
 
 
 class TestHealthEndpoints:
@@ -15,6 +16,11 @@ class TestHealthEndpoints:
         assert data["status"] == "running"
         assert "modules" in data
         assert "launch_readiness" in data
+
+    def test_root_endpoint_redirects_html_to_frontend(self, client):
+        response = client.get("/", headers={"accept": "text/html"}, follow_redirects=False)
+        assert response.status_code == status.HTTP_307_TEMPORARY_REDIRECT
+        assert response.headers["location"] == "http://localhost:3000"
 
     def test_health_endpoint(self, client):
         response = client.get("/health")

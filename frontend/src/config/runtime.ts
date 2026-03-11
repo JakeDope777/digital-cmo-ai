@@ -11,3 +11,9 @@ export function assertApiBaseConfigured() {
     throw new Error('VITE_API_URL is not configured for this deployment.');
   }
 }
+
+export function assertAppBaseConfigured() {
+  if (!APP_BASE_URL) {
+    throw new Error('VITE_APP_URL is not configured for this deployment.');
+  }
+}

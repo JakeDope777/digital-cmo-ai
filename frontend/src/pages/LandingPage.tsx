@@ -243,7 +243,7 @@ export default function LandingPage() {
   useEffect(() => {
     if (selectedDomain) setSelectedDomain(selectedDomain);
     void trackOnboardingStep('landing_seen', { source: 'landing' });
-    document.title = 'Digital CMO AI — Your AI Chief Marketing Officer';
+    document.title = 'Digital CMO AI — Your AI-Powered Chief Marketing Officer';
   }, [selectedDomain]);
 
   useEffect(() => {

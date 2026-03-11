@@ -117,7 +117,7 @@ export default function UseCasesPage() {
     void trackEvent('use_cases_view', {});
     document.title = 'Use Cases — Digital CMO AI';
     return () => {
-      document.title = 'Digital CMO AI — Your AI Chief Marketing Officer';
+      document.title = 'Digital CMO AI — Your AI-Powered Chief Marketing Officer';
     };
   }, []);
 

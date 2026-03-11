@@ -5,14 +5,12 @@ Central entry point that registers all API routers, configures middleware,
 and initialises the database and brain components.
 """
 
-import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import RedirectResponse
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -230,15 +228,13 @@ async def launch_readiness():
 async def root(request: Request):
     """Root endpoint.
 
-    Returns JSON for API clients by default and serves SPA only when
-    the client explicitly asks for HTML.
+    Returns JSON for API clients by default and redirects browser HTML
+    requests to the canonical frontend host.
     """
-    static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
-    index_path = os.path.join(static_dir, "index.html")
     accept = request.headers.get("accept", "")
     wants_html = "text/html" in accept and "application/json" not in accept
-    if os.path.exists(index_path) and wants_html:
-        return FileResponse(index_path)
+    if wants_html:
+        return RedirectResponse(settings.FRONTEND_BASE_URL.rstrip("/") or "/", status_code=307)
     return {
         "name": settings.APP_NAME,
         "version": settings.APP_VERSION,
@@ -248,18 +244,3 @@ async def root(request: Request):
         "pilot_connectors": _integration_service.get_pilot_readiness(),
         "launch_readiness": _launch_readiness(),
     }
-
-
-# Mount static files for the built frontend (after API routes)
-static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
-if os.path.exists(static_dir):
-    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="static-assets")
-
-    # SPA catch-all: serve index.html for any unmatched route
-    @app.get("/{full_path:path}")
-    async def serve_spa(request: Request, full_path: str):
-        """Serve the SPA for any route not matched by API endpoints."""
-        file_path = os.path.join(static_dir, full_path)
-        if os.path.isfile(file_path):
-            return FileResponse(file_path)
-        return FileResponse(os.path.join(static_dir, "index.html"))

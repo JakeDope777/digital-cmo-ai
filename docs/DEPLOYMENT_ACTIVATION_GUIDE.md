@@ -1,7 +1,7 @@
-# Deployment Activation Guide (Netlify + Render)
+# Deployment Activation Guide (Vercel + Render)
 
 ## Target
-- Frontend: Netlify
+- Frontend: Vercel
 - Backend: Render
 - Database: Render Postgres
 
@@ -23,11 +23,11 @@
 - `GET /billing/health`
 - `GET /growth/funnel-summary?days=14`
 
-## 2) Netlify Frontend Activation
-1. Link the repo root to the existing Netlify site or create a new site for the repo.
+## 2) Vercel Frontend Activation
+1. Link the repo root to the existing Vercel project or create a new project for the repo.
 2. Set env values:
 - `VITE_API_URL=https://<render-backend-domain>`
-- `VITE_APP_URL=https://<netlify-domain>`
+- `VITE_APP_URL=https://<vercel-production-domain>`
 - `VITE_GA_MEASUREMENT_ID`
 - `VITE_POSTHOG_KEY`
 - `VITE_POSTHOG_HOST`
@@ -41,7 +41,7 @@
 - `/demo/investor-pitch-demo.html`
 4. Run frontend-only smoke checks:
 ```bash
-./scripts/smoke_frontend_routes.sh https://<netlify-domain>
+./scripts/smoke_frontend_routes.sh https://<vercel-production-domain>
 ```
 
 ## 3) Stripe Webhook Activation
@@ -62,7 +62,7 @@
 ## 4) Smoke Command
 Run from repo root:
 ```bash
-./scripts/validate_release_readiness.sh https://<render-backend-domain> https://<netlify-domain>
+./scripts/validate_release_readiness.sh https://<render-backend-domain> https://<vercel-production-domain>
 ```
 
 Or run GitHub Actions workflow:
@@ -74,4 +74,4 @@ Or run GitHub Actions workflow:
 ## 5) Demo URL Output
 After successful deploy, record:
 - Backend URL: `https://<render-backend-domain>`
-- Frontend demo URL: `https://<netlify-domain>`
+- Frontend demo URL: `https://<vercel-production-domain>`
