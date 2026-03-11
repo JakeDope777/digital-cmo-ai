@@ -107,17 +107,18 @@ export function Analysis() {
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { title: "Strengths", items: analysis.swot?.strengths, icon: TrendingUp, color: "text-emerald-400", bg: "bg-emerald-500/5 border-emerald-500/20", dot: "bg-emerald-400" },
-            { title: "Weaknesses", items: analysis.swot?.weaknesses, icon: AlertTriangle, color: "text-rose-400", bg: "bg-rose-500/5 border-rose-500/20", dot: "bg-rose-400" },
-            { title: "Opportunities", items: analysis.swot?.opportunities, icon: Lightbulb, color: "text-sky-400", bg: "bg-sky-500/5 border-sky-500/20", dot: "bg-sky-400" },
-            { title: "Threats", items: analysis.swot?.threats, icon: AlertTriangle, color: "text-amber-400", bg: "bg-amber-500/5 border-amber-500/20", dot: "bg-amber-400" },
+            { title: "Strengths",     items: analysis.swot?.strengths,     icon: TrendingUp,  textColor: "text-emerald-400", accent: "bg-emerald-500", dot: "bg-emerald-400" },
+            { title: "Weaknesses",    items: analysis.swot?.weaknesses,    icon: AlertTriangle, textColor: "text-rose-400",    accent: "bg-rose-500",    dot: "bg-rose-400" },
+            { title: "Opportunities", items: analysis.swot?.opportunities, icon: Lightbulb,   textColor: "text-sky-400",    accent: "bg-sky-500",     dot: "bg-sky-400" },
+            { title: "Threats",       items: analysis.swot?.threats,       icon: AlertTriangle, textColor: "text-amber-400",  accent: "bg-amber-500",   dot: "bg-amber-400" },
           ].map((q) => (
-            <Card key={q.title} className={`${q.bg} border shadow-lg`}>
-              <CardHeader className="pb-3 flex flex-row items-center gap-2">
-                <q.icon className={`w-4 h-4 ${q.color}`} />
-                <CardTitle className={`text-base ${q.color}`}>{q.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <div key={q.title} className="bg-card border border-border/60 rounded-2xl overflow-hidden flex">
+              <div className={`w-1 shrink-0 ${q.accent} opacity-70`} />
+              <div className="flex-1 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <q.icon className={`w-4 h-4 ${q.textColor}`} />
+                  <h4 className={`font-semibold text-sm ${q.textColor}`}>{q.title}</h4>
+                </div>
                 <ul className="space-y-2.5">
                   {q.items?.map((s: string, i: number) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
@@ -126,8 +127,8 @@ export function Analysis() {
                     </li>
                   ))}
                 </ul>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       </div>
