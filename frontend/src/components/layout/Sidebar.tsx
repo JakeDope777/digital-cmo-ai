@@ -12,6 +12,9 @@ import {
   ArrowLeftOnRectangleIcon,
   CpuChipIcon,
   BoltIcon,
+  MagnifyingGlassCircleIcon,
+  CalendarDaysIcon,
+  DocumentChartBarIcon,
 } from "@heroicons/react/24/outline";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/hooks/use-api";
@@ -25,6 +28,9 @@ const NAV_ITEMS = [
   { name: "Creative",     href: "/creative",      icon: PencilSquareIcon },
   { name: "CRM",          href: "/crm",           icon: UsersIcon },
   { name: "Growth",       href: "/growth",        icon: ArrowTrendingUpIcon },
+  { name: "SEO",          href: "/seo",           icon: MagnifyingGlassCircleIcon },
+  { name: "Calendar",     href: "/calendar",      icon: CalendarDaysIcon },
+  { name: "Reports",      href: "/reports",       icon: DocumentChartBarIcon },
   { name: "Integrations", href: "/integrations",  icon: PuzzlePieceIcon },
 ];
 
