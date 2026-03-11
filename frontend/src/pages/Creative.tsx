@@ -5,7 +5,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Copy, Sparkles, CheckCircle2, Zap, TrendingUp, Star, Clock, PenTool, Bot } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  DocumentDuplicateIcon, SparklesIcon, CheckCircleIcon, BoltIcon,
+  ArrowTrendingUpIcon, StarIcon, ClockIcon, PencilSquareIcon, CpuChipIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 
 const TEMPLATES = [
   { name: "SaaS Trial Email",       channel: "email",  tone: "professional", goal: "Drive free trial signups for our AI marketing platform targeting growth-stage SaaS companies",           badge: "🔥 Popular" },
@@ -57,7 +63,7 @@ export const Creative = memo(function Creative() {
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center gap-3 mb-1">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
-              <PenTool className="w-4 h-4 text-white" />
+              <PencilSquareIcon className="w-4 h-4 text-white" />
             </div>
             <div>
               <h2 className="font-bold text-base text-slate-100">Creative Studio</h2>
@@ -116,7 +122,7 @@ export const Creative = memo(function Creative() {
             >
               {generateMutation.isPending
                 ? <><Loader2 className="w-4 h-4 animate-spin mr-2" />Generating...</>
-                : <><Sparkles className="w-4 h-4 mr-2" />Generate 3 Variants</>}
+                : <><SparklesIcon className="w-4 h-4 mr-2" />Generate 3 Variants</>}
             </Button>
           </form>
         </div>
@@ -147,7 +153,7 @@ export const Creative = memo(function Creative() {
         {/* Output Header */}
         <div className="h-14 border-b border-slate-800 flex items-center justify-between px-6 bg-[#111827] shrink-0">
           <div className="flex items-center gap-2">
-            <Bot className="w-4 h-4 text-indigo-400" />
+            <CpuChipIcon className="w-4 h-4 text-indigo-400" />
             <span className="text-sm font-semibold text-slate-200">Generated Output</span>
           </div>
           {generateMutation.data && (
@@ -166,7 +172,7 @@ export const Creative = memo(function Creative() {
             <div className="space-y-5">
               <div>
                 <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Clock className="w-3 h-3" />Recently Generated
+                  <ClockIcon className="w-3 h-3" />Recently Generated
                 </p>
                 <div className="space-y-2.5">
                   {RECENT_CREATIVES.map((c) => (
@@ -183,7 +189,7 @@ export const Creative = memo(function Creative() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1 shrink-0 pr-4">
-                        <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                        <StarIcon className="w-3 h-3 text-amber-400 fill-amber-400" />
                         <span className="text-xs font-bold text-amber-400">{c.score}</span>
                       </div>
                     </div>
@@ -192,7 +198,7 @@ export const Creative = memo(function Creative() {
               </div>
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center mb-4">
-                  <Sparkles className="w-8 h-8 text-indigo-400" />
+                  <SparklesIcon className="w-8 h-8 text-indigo-400" />
                 </div>
                 <p className="text-slate-300 font-medium">Ready to generate</p>
                 <p className="text-sm text-slate-500 mt-1">Fill in a campaign goal and click Generate</p>
@@ -236,8 +242,8 @@ export const Creative = memo(function Creative() {
                         className="shrink-0 w-8 h-8 rounded-lg bg-slate-900 border border-slate-700 hover:border-slate-600 flex items-center justify-center transition-colors"
                       >
                         {copiedId === v.id
-                          ? <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                          : <Copy className="w-4 h-4 text-slate-400" />}
+                          ? <CheckCircleIcon className="w-4 h-4 text-emerald-400" />
+                          : <DocumentDuplicateIcon className="w-4 h-4 text-slate-400" />}
                       </button>
                     </div>
                     <h4 className="text-base font-semibold text-slate-100 leading-snug mb-3">{v.headline}</h4>
@@ -248,11 +254,11 @@ export const Creative = memo(function Creative() {
                       </div>
                       <div className="flex items-center gap-4 text-xs font-medium text-slate-500">
                         <span className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                          <StarIcon className="w-3 h-3 text-amber-400 fill-amber-400" />
                           Score: <span className="text-amber-400 font-bold">{v.score}</span>
                         </span>
                         <span className="flex items-center gap-1">
-                          <TrendingUp className="w-3 h-3 text-emerald-400" />
+                          <ArrowTrendingUpIcon className="w-3 h-3 text-emerald-400" />
                           Est. CTR: {(v.score * 0.04).toFixed(1)}%
                         </span>
                         <span>{v.wordCount}w</span>

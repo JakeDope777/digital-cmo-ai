@@ -10,17 +10,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-api";
 import {
-  Save, Bell, Shield, Brain, User, Palette, Check, CreditCard,
-  KeyRound, Zap, BellRing, Volume2, Mail, Smartphone,
-} from "lucide-react";
+  CloudArrowUpIcon, BellIcon, ShieldCheckIcon, CpuChipIcon, UserIcon,
+  PaintBrushIcon, CheckIcon, CreditCardIcon, KeyIcon, BoltIcon,
+  BellAlertIcon, SpeakerWaveIcon, EnvelopeIcon, DevicePhoneMobileIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 
 const BRAND_TONES = ["Professional", "Bold & Direct", "Friendly", "Technical", "Casual", "Luxury"];
 const NAV_ITEMS = [
-  { id: "profile",       label: "Profile",        icon: User },
-  { id: "ai",            label: "AI Config",      icon: Brain },
-  { id: "notifications", label: "Notifications",  icon: Bell },
-  { id: "security",      label: "Security",       icon: Shield },
-  { id: "billing",       label: "Billing",        icon: CreditCard },
+  { id: "profile",       label: "Profile",        icon: UserIcon },
+  { id: "ai",            label: "AI Config",      icon: CpuChipIcon },
+  { id: "notifications", label: "Notifications",  icon: BellIcon },
+  { id: "security",      label: "Security",       icon: ShieldCheckIcon },
+  { id: "billing",       label: "Billing",        icon: CreditCardIcon },
 ] as const;
 
 type TabId = typeof NAV_ITEMS[number]["id"];
@@ -76,7 +79,7 @@ export const Settings = memo(function Settings() {
             <>
               <Card className="bg-[#111827] border-slate-800 rounded-2xl">
                 <CardHeader className="border-b border-slate-800 pb-4 flex flex-row items-center gap-2">
-                  <User className="w-4 h-4 text-indigo-400" />
+                  <UserIcon className="w-4 h-4 text-indigo-400" />
                   <CardTitle className="text-base text-slate-100 m-0">Profile & Workspace</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
@@ -152,7 +155,7 @@ export const Settings = memo(function Settings() {
 
               <div className="flex justify-end">
                 <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6">
-                  {saved ? <><Check className="w-4 h-4 mr-2" />Saved!</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
+                  {saved ? <><CheckIcon className="w-4 h-4 mr-2" />Saved!</> : <><CloudArrowUpIcon className="w-4 h-4 mr-2" />Save Changes</>}
                 </Button>
               </div>
             </>
@@ -163,7 +166,7 @@ export const Settings = memo(function Settings() {
             <>
               <Card className="bg-[#111827] border-slate-800 rounded-2xl">
                 <CardHeader className="border-b border-slate-800 pb-4 flex flex-row items-center gap-2">
-                  <Brain className="w-4 h-4 text-indigo-400" />
+                  <CpuChipIcon className="w-4 h-4 text-indigo-400" />
                   <CardTitle className="text-base text-slate-100 m-0">AI Model & Preferences</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6 space-y-6">
@@ -234,7 +237,7 @@ export const Settings = memo(function Settings() {
               </Card>
               <div className="flex justify-end">
                 <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700 text-white px-6">
-                  {saved ? <><Check className="w-4 h-4 mr-2" />Saved!</> : <><Save className="w-4 h-4 mr-2" />Save Changes</>}
+                  {saved ? <><CheckIcon className="w-4 h-4 mr-2" />Saved!</> : <><CloudArrowUpIcon className="w-4 h-4 mr-2" />Save Changes</>}
                 </Button>
               </div>
             </>
@@ -244,15 +247,15 @@ export const Settings = memo(function Settings() {
           {activeTab === "notifications" && (
             <Card className="bg-[#111827] border-slate-800 rounded-2xl">
               <CardHeader className="border-b border-slate-800 pb-4 flex flex-row items-center gap-2">
-                <BellRing className="w-4 h-4 text-indigo-400" />
+                <BellAlertIcon className="w-4 h-4 text-indigo-400" />
                 <CardTitle className="text-base text-slate-100 m-0">Notification Preferences</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-2">
                 {[
                   { key: "email",   icon: Mail,       label: "Email summaries",         desc: "Daily digest of agent activity and KPI changes" },
-                  { key: "slack",   icon: Volume2,    label: "Slack notifications",      desc: "Real-time alerts pushed to your Slack workspace" },
-                  { key: "browser", icon: Smartphone, label: "Browser push",             desc: "Push notifications in your browser" },
-                  { key: "weekly",  icon: Bell,       label: "Weekly report",            desc: "Every Monday: performance summary and recommendations" },
+                  { key: "slack",   icon: SpeakerWaveIcon,    label: "Slack notifications",      desc: "Real-time alerts pushed to your Slack workspace" },
+                  { key: "browser", icon: DevicePhoneMobileIcon, label: "Browser push",             desc: "Push notifications in your browser" },
+                  { key: "weekly",  icon: BellIcon,       label: "Weekly report",            desc: "Every Monday: performance summary and recommendations" },
                   { key: "anomaly", icon: Zap,        label: "Anomaly alerts",           desc: "Immediate alert when any KPI drops more than 15%" },
                 ].map((n) => (
                   <div key={n.key} className="flex items-start justify-between gap-4 py-4 border-b border-slate-800/60 last:border-0">
@@ -280,7 +283,7 @@ export const Settings = memo(function Settings() {
           {activeTab === "security" && (
             <Card className="bg-[#111827] border-slate-800 rounded-2xl">
               <CardHeader className="border-b border-slate-800 pb-4 flex flex-row items-center gap-2">
-                <KeyRound className="w-4 h-4 text-indigo-400" />
+                <KeyIcon className="w-4 h-4 text-indigo-400" />
                 <CardTitle className="text-base text-slate-100 m-0">Security & Authentication</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-6">
@@ -338,7 +341,7 @@ export const Settings = memo(function Settings() {
           {activeTab === "billing" && (
             <Card className="bg-[#111827] border-slate-800 rounded-2xl">
               <CardHeader className="border-b border-slate-800 pb-4 flex flex-row items-center gap-2">
-                <CreditCard className="w-4 h-4 text-indigo-400" />
+                <CreditCardIcon className="w-4 h-4 text-indigo-400" />
                 <CardTitle className="text-base text-slate-100 m-0">Billing Overview</CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-5">

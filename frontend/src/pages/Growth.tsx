@@ -4,7 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatNumber } from "@/lib/utils";
-import { Loader2, TrendingUp, Users, Target, Zap, ArrowUpRight, ArrowDownRight, FlaskConical, Trophy, BarChart3 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  ArrowTrendingUpIcon, UsersIcon, CursorArrowRaysIcon, BoltIcon,
+  ArrowUpRightIcon, ArrowDownRightIcon, BeakerIcon, TrophyIcon, ChartBarIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area, ReferenceLine, CartesianGrid } from "recharts";
 
 const FUNNEL_STAGES = [
@@ -84,7 +90,7 @@ export function Growth() {
           <p className="text-slate-400 mt-1">Full-funnel optimization powered by your Growth Agent.</p>
         </div>
         <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-lg shadow-indigo-600/20 h-9 text-sm">
-          <Zap className="w-4 h-4 mr-2" />Run Growth Audit
+          <BoltIcon className="w-4 h-4 mr-2" />Run Growth Audit
         </Button>
       </div>
 
@@ -101,7 +107,7 @@ export function Growth() {
               <div className="flex items-center justify-between mb-3">
                 <k.icon className={`w-5 h-5 ${k.color}`} />
                 <span className={`text-xs font-semibold flex items-center gap-0.5 px-1.5 py-0.5 rounded ${k.change > 0 ? "text-emerald-400 bg-emerald-400/10" : "text-rose-400 bg-rose-400/10"}`}>
-                  {k.change > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  {k.change > 0 ? <ArrowUpRightIcon className="w-3 h-3" /> : <ArrowDownRightIcon className="w-3 h-3" />}
                   {Math.abs(k.change)}%
                 </span>
               </div>
@@ -221,7 +227,7 @@ export function Growth() {
               );
             })}
             <div className="mt-2 pt-3 border-t border-slate-800 bg-slate-900 rounded-xl p-3">
-              <p className="text-xs font-semibold text-indigo-400 mb-1.5 flex items-center gap-1.5"><Zap className="w-3 h-3" />AI Recommendation</p>
+              <p className="text-xs font-semibold text-indigo-400 mb-1.5 flex items-center gap-1.5"><BoltIcon className="w-3 h-3" />AI Recommendation</p>
               <p className="text-xs text-slate-400 leading-relaxed">Email referral has the lowest CAC ($18). Investing $2K in a referral incentive program could generate ~111 additional trial signups at current rates.</p>
             </div>
           </CardContent>
@@ -231,7 +237,7 @@ export function Growth() {
       {/* A/B Tests */}
       <Card className="bg-[#111827] border-slate-800 rounded-2xl overflow-hidden">
         <CardHeader className="border-b border-slate-800 pb-4 flex flex-row items-center gap-2">
-          <FlaskConical className="w-4 h-4 text-indigo-400" />
+          <BeakerIcon className="w-4 h-4 text-indigo-400" />
           <CardTitle className="text-base text-slate-100 m-0">Active A/B Tests</CardTitle>
           <Badge className="ml-auto bg-amber-500/10 text-amber-400 border-0 text-xs">3 Running</Badge>
         </CardHeader>
@@ -258,7 +264,7 @@ export function Growth() {
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-[10px] text-slate-500">Variant</p>
                       {test.winnerConversionB > test.winnerConversionA && (
-                        <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5"><Trophy className="w-2.5 h-2.5" />Win</span>
+                        <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5"><TrophyIcon className="w-2.5 h-2.5" />Win</span>
                       )}
                     </div>
                     <p className="text-xs font-medium text-slate-300 truncate">"{test.variantB}"</p>

@@ -6,9 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/hooks/use-api";
 import {
-  Download, Check, TrendingUp, Zap, CreditCard, Users, Brain,
-  Search, PenTool, Mail, Share2, BarChart3, Megaphone, Target, ArrowUpRight, Bot,
-} from "lucide-react";
+  ArrowDownTrayIcon, CheckIcon, ArrowTrendingUpIcon, BoltIcon, CreditCardIcon,
+  UsersIcon, CpuChipIcon, MagnifyingGlassIcon, PencilSquareIcon, EnvelopeIcon,
+  ShareIcon, ChartBarIcon, MegaphoneIcon, CursorArrowRaysIcon, ArrowUpRightIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 
 const INVOICES = [
   { id: "INV-2025-03", date: "Mar 1, 2025", amount: "$299.00", status: "Paid" },
@@ -18,16 +21,16 @@ const INVOICES = [
 ];
 
 const AGENT_USAGE = [
-  { name: "Orchestrator",     calls: 12500, icon: Brain,      color: "bg-indigo-500",  pct: 100 },
-  { name: "SEO Agent",        calls: 2840,  icon: Search,     color: "bg-sky-500",     pct: 94  },
-  { name: "Analytics Agent",  calls: 2210,  icon: BarChart3,  color: "bg-violet-500",  pct: 74  },
-  { name: "Creative Agent",   calls: 1840,  icon: PenTool,    color: "bg-purple-500",  pct: 61  },
-  { name: "Email/CRM Agent",  calls: 1560,  icon: Mail,       color: "bg-emerald-500", pct: 52  },
-  { name: "Paid Ads Agent",   calls: 1200,  icon: Megaphone,  color: "bg-orange-500",  pct: 40  },
-  { name: "Social Agent",     calls: 980,   icon: Share2,     color: "bg-pink-500",    pct: 33  },
-  { name: "Content Agent",    calls: 840,   icon: PenTool,    color: "bg-amber-500",   pct: 28  },
-  { name: "Growth Agent",     calls: 720,   icon: TrendingUp, color: "bg-teal-500",    pct: 24  },
-  { name: "PR & Media Agent", calls: 540,   icon: Users,      color: "bg-rose-500",    pct: 18  },
+  { name: "Orchestrator",     calls: 12500, icon: CpuChipIcon,        color: "bg-indigo-500",  pct: 100 },
+  { name: "SEO Agent",        calls: 2840,  icon: MagnifyingGlassIcon,color: "bg-sky-500",     pct: 94  },
+  { name: "Analytics Agent",  calls: 2210,  icon: ChartBarIcon,       color: "bg-violet-500",  pct: 74  },
+  { name: "Creative Agent",   calls: 1840,  icon: PencilSquareIcon,   color: "bg-purple-500",  pct: 61  },
+  { name: "Email/CRM Agent",  calls: 1560,  icon: EnvelopeIcon,       color: "bg-emerald-500", pct: 52  },
+  { name: "Paid Ads Agent",   calls: 1200,  icon: MegaphoneIcon,      color: "bg-orange-500",  pct: 40  },
+  { name: "Social Agent",     calls: 980,   icon: ShareIcon,          color: "bg-pink-500",    pct: 33  },
+  { name: "Content Agent",    calls: 840,   icon: PencilSquareIcon,   color: "bg-amber-500",   pct: 28  },
+  { name: "Growth Agent",     calls: 720,   icon: ArrowTrendingUpIcon, color: "bg-teal-500",    pct: 24  },
+  { name: "PR & Media Agent", calls: 540,   icon: UsersIcon,           color: "bg-rose-500",    pct: 18  },
 ];
 
 const PLANS = [
@@ -68,7 +71,7 @@ export const Billing = memo(function Billing() {
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600/30 via-[#111827] to-blue-900/20 border border-indigo-500/30 p-8">
         {/* Bot watermark */}
         <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-5 pointer-events-none">
-          <Bot className="w-48 h-48 text-indigo-400" />
+          <CpuChipIcon className="w-48 h-48 text-indigo-400" />
         </div>
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
@@ -86,10 +89,10 @@ export const Billing = memo(function Billing() {
           </div>
           <div className="flex flex-col sm:flex-row gap-3 shrink-0">
             <Button variant="outline" className="border-slate-600 text-slate-300 bg-transparent hover:bg-slate-800 text-sm">
-              <CreditCard className="w-4 h-4 mr-2" />Manage Billing
+              <CreditCardIcon className="w-4 h-4 mr-2" />Manage Billing
             </Button>
             <Button className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow-lg shadow-indigo-600/25">
-              <Zap className="w-4 h-4 mr-2" />Upgrade to Scale
+              <BoltIcon className="w-4 h-4 mr-2" />Upgrade to Scale
             </Button>
           </div>
         </div>
@@ -115,7 +118,7 @@ export const Billing = memo(function Billing() {
       {/* ROI Calculator */}
       <Card className="bg-[#111827] border-slate-800 rounded-2xl">
         <CardHeader className="border-b border-slate-800 pb-4 flex flex-row items-center gap-2">
-          <TrendingUp className="w-4 h-4 text-emerald-400" />
+          <ArrowTrendingUpIcon className="w-4 h-4 text-emerald-400" />
           <CardTitle className="text-base text-slate-100 m-0">ROI vs. Traditional Agency</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
@@ -129,7 +132,7 @@ export const Billing = memo(function Billing() {
                 <p className="text-xs text-slate-500 mb-2 uppercase tracking-wider font-medium">{item.label}</p>
                 <p className={`text-3xl font-bold ${item.color}`}>{item.val}</p>
                 <div className={`flex items-center justify-center gap-1 mt-2 text-xs ${item.color}`}>
-                  <ArrowUpRight className="w-3 h-3" />{item.desc}
+                  <ArrowUpRightIcon className="w-3 h-3" />{item.desc}
                 </div>
               </div>
             ))}
@@ -189,7 +192,7 @@ export const Billing = memo(function Billing() {
               <ul className="space-y-2.5 flex-1 mb-6">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-slate-300">
-                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <CheckIcon className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                     {f}
                   </li>
                 ))}
@@ -231,12 +234,12 @@ export const Billing = memo(function Billing() {
                   <td className="px-5 py-4 text-right font-semibold text-slate-200 tabular-nums">{inv.amount}</td>
                   <td className="px-5 py-4 text-center">
                     <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-xs">
-                      <Check className="w-3 h-3 mr-1" />{inv.status}
+                      <CheckIcon className="w-3 h-3 mr-1" />{inv.status}
                     </Badge>
                   </td>
                   <td className="px-5 py-4 text-center">
                     <button className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center mx-auto transition-colors">
-                      <Download className="w-3.5 h-3.5 text-slate-400" />
+                      <ArrowDownTrayIcon className="w-3.5 h-3.5 text-slate-400" />
                     </button>
                   </td>
                 </tr>

@@ -5,7 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/utils";
-import { Search, Plus, Filter, Mail, Phone, Loader2, Zap, Users, TrendingUp, DollarSign, LayoutList, Kanban, ArrowRight, Star } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  MagnifyingGlassIcon, PlusIcon, FunnelIcon, EnvelopeIcon, PhoneIcon,
+  BoltIcon, UsersIcon, ArrowTrendingUpIcon, CurrencyDollarIcon,
+  ListBulletIcon, ViewColumnsIcon, ArrowRightIcon, StarIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
@@ -72,7 +79,7 @@ export function Crm() {
           <div className="flex bg-card border border-border/50 rounded-xl overflow-hidden">
             {(["table", "kanban"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)} className={`px-3 py-2 flex items-center gap-1.5 text-xs font-semibold transition-colors ${view === v ? "bg-primary text-white" : "text-muted-foreground hover:text-foreground"}`}>
-                {v === "table" ? <LayoutList className="w-3.5 h-3.5" /> : <Kanban className="w-3.5 h-3.5" />}
+                {v === "table" ? <ListBulletIcon className="w-3.5 h-3.5" /> : <ViewColumnsIcon className="w-3.5 h-3.5" />}
                 {v.charAt(0).toUpperCase() + v.slice(1)}
               </button>
             ))}
@@ -80,7 +87,7 @@ export function Crm() {
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 text-white rounded-xl shadow-md h-9 text-sm">
-                <Plus className="w-4 h-4 mr-1.5" />Add Lead
+                <PlusIcon className="w-4 h-4 mr-1.5" />Add Lead
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-card border-border">
@@ -123,10 +130,10 @@ export function Crm() {
           {/* Search bar */}
           <div className="mb-4 flex gap-3 shrink-0">
             <div className="relative flex-1 max-w-sm">
-              <Search className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
+              <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-2.5 text-muted-foreground" />
               <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search leads..." className="pl-9 bg-card border-border/50 h-9 text-sm" />
             </div>
-            <Button variant="outline" className="bg-background border-border/50 h-9 text-xs"><Filter className="w-3.5 h-3.5 mr-1.5" />Filters</Button>
+            <Button variant="outline" className="bg-background border-border/50 h-9 text-xs"><FunnelIcon className="w-3.5 h-3.5 mr-1.5" />Filters</Button>
           </div>
 
           {view === "table" && (
@@ -239,21 +246,21 @@ export function Crm() {
             <CardContent className="flex-1 overflow-y-auto p-5 space-y-5">
               <div className="flex gap-2">
                 <Button size="sm" className="flex-1 bg-primary text-white hover:bg-primary/90 h-8 text-xs">
-                  <Mail className="w-3.5 h-3.5 mr-1.5" />Email
+                  <EnvelopeIcon className="w-3.5 h-3.5 mr-1.5" />Email
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1 bg-background border-border/50 h-8 text-xs">
-                  <Phone className="w-3.5 h-3.5 mr-1.5" />Call
+                  <PhoneIcon className="w-3.5 h-3.5 mr-1.5" />Call
                 </Button>
               </div>
 
               {/* AI Suggestion */}
               <div className="bg-primary/8 border border-primary/20 rounded-xl p-4">
                 <div className="flex items-center gap-2 text-primary font-semibold text-xs mb-2">
-                  <Zap className="w-3.5 h-3.5" />AI Recommendation
+                  <BoltIcon className="w-3.5 h-3.5" />AI Recommendation
                 </div>
                 <p className="text-xs text-foreground/80 leading-relaxed mb-3">{selectedLead.aiSuggestion}</p>
                 <Button size="sm" className="w-full bg-primary hover:bg-primary/90 h-7 text-xs">
-                  Execute <ArrowRight className="w-3 h-3 ml-1" />
+                  Execute <ArrowRightIcon className="w-3 h-3 ml-1" />
                 </Button>
               </div>
 

@@ -1,16 +1,23 @@
 import { useState, useRef, useEffect, memo, useMemo } from "react";
-import { Bot, Send, Sparkles, TrendingUp, Search, PenTool, BarChart3, Target, Zap, ChevronRight, Users, Briefcase, Plus, MessageSquare, Clock } from "lucide-react";
+import {
+  CpuChipIcon, PaperAirplaneIcon, SparklesIcon, ArrowTrendingUpIcon,
+  MagnifyingGlassIcon, PencilSquareIcon, ChartBarIcon, CursorArrowRaysIcon,
+  BoltIcon, ChevronRightIcon, UsersIcon, BriefcaseIcon, PlusIcon,
+  ChatBubbleLeftRightIcon, ClockIcon,
+} from "@heroicons/react/24/outline";
 import { useChatHistory, useSendChatMessage } from "@/hooks/use-api";
+import { motion, AnimatePresence } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 
 const PROMPT_SUGGESTIONS = [
-  { icon: TrendingUp, label: "Grow organic traffic",   prompt: "Analyze our current organic traffic and give me a 90-day SEO plan to grow it by 40%." },
-  { icon: Target,     label: "Launch a paid campaign",  prompt: "Design a Google Ads campaign for our SaaS product targeting mid-market CFOs. Budget $5K/mo." },
-  { icon: PenTool,    label: "Write email sequence",    prompt: "Write a 5-email onboarding sequence for trial users who haven't set up their first integration." },
-  { icon: BarChart3,  label: "Revenue attribution",     prompt: "Which marketing channels are driving the most revenue? Break down our attribution model." },
-  { icon: Search,     label: "Competitor analysis",     prompt: "Compare us against our top 3 competitors on positioning, pricing, and content strategy." },
-  { icon: Sparkles,   label: "Content strategy",        prompt: "Build a Q2 content calendar targeting decision-makers in B2B SaaS. Include SEO clusters." },
+  { icon: ArrowTrendingUpIcon, label: "Grow organic traffic",   prompt: "Analyze our current organic traffic and give me a 90-day SEO plan to grow it by 40%." },
+  { icon: CursorArrowRaysIcon, label: "Launch a paid campaign",  prompt: "Design a Google Ads campaign for our SaaS product targeting mid-market CFOs. Budget $5K/mo." },
+  { icon: PencilSquareIcon,    label: "Write email sequence",    prompt: "Write a 5-email onboarding sequence for trial users who haven't set up their first integration." },
+  { icon: ChartBarIcon,        label: "Revenue attribution",     prompt: "Which marketing channels are driving the most revenue? Break down our attribution model." },
+  { icon: MagnifyingGlassIcon, label: "Competitor analysis",     prompt: "Compare us against our top 3 competitors on positioning, pricing, and content strategy." },
+  { icon: SparklesIcon,        label: "Content strategy",        prompt: "Build a Q2 content calendar targeting decision-makers in B2B SaaS. Include SEO clusters." },
 ];
 
 const KNOWLEDGE_SOURCES = [
@@ -73,15 +80,18 @@ export const Chat = memo(function Chat() {
   const isEmpty = messages.length === 0 && !sendMutation.isPending;
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] -m-6 lg:-m-8 overflow-hidden animate-in fade-in">
+    <div className="flex h-[calc(100vh-5rem)] -m-6 lg:-m-8 overflow-hidden">
 
       {/* History Sidebar */}
       <div className="hidden lg:flex w-60 xl:w-64 flex-col bg-[#111827] border-r border-slate-800 flex-shrink-0">
         <div className="h-14 flex items-center justify-between px-4 border-b border-slate-800">
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Chat History</span>
-          <button className="w-7 h-7 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/20 flex items-center justify-center transition-colors">
-            <Plus className="w-3.5 h-3.5 text-indigo-400" />
-          </button>
+          <motion.button
+            className="w-7 h-7 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/20 flex items-center justify-center transition-colors"
+            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+          >
+            <PlusIcon className="w-3.5 h-3.5 text-indigo-400" />
+          </motion.button>
         </div>
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
           {HISTORY_SESSIONS.map((session) => (
@@ -89,10 +99,10 @@ export const Chat = memo(function Chat() {
               key={session.id}
               className={`w-full flex items-start gap-2.5 p-3 rounded-xl transition-all text-left group ${session.active ? "bg-indigo-600/15 border border-indigo-500/25" : "hover:bg-slate-800/60 border border-transparent"}`}
             >
-              <MessageSquare className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${session.active ? "text-indigo-400" : "text-slate-500"}`} />
+              <ChatBubbleLeftRightIcon className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${session.active ? "text-indigo-400" : "text-slate-500"}`} />
               <div className="flex-1 min-w-0">
                 <p className={`text-xs font-medium truncate ${session.active ? "text-slate-200" : "text-slate-400 group-hover:text-slate-200"}`}>{session.title}</p>
-                <p className="text-[10px] text-slate-600 flex items-center gap-1 mt-0.5"><Clock className="w-2.5 h-2.5" />{session.time}</p>
+                <p className="text-[10px] text-slate-600 flex items-center gap-1 mt-0.5"><ClockIcon className="w-2.5 h-2.5" />{session.time}</p>
               </div>
             </button>
           ))}
@@ -107,7 +117,7 @@ export const Chat = memo(function Chat() {
           <div className="flex items-center gap-3">
             <div className="relative">
               <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md shadow-indigo-500/25">
-                <Bot className="w-4 h-4 text-white" />
+                <CpuChipIcon className="w-4 h-4 text-white" />
               </div>
               <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#111827]" />
             </div>
@@ -146,7 +156,7 @@ export const Chat = memo(function Chat() {
           {isEmpty && (
             <div className="flex flex-col items-center justify-center h-full px-6 py-10">
               <div className="w-14 h-14 bg-gradient-to-br from-indigo-600/25 to-blue-600/15 rounded-2xl border border-indigo-500/20 flex items-center justify-center mb-5">
-                <Bot className="w-7 h-7 text-indigo-400" />
+                <CpuChipIcon className="w-7 h-7 text-indigo-400" />
               </div>
               <h2 className="text-xl font-bold text-slate-100 mb-2">Your AI CMO is ready</h2>
               <p className="text-slate-400 text-center max-w-md mb-8 text-sm leading-relaxed">
@@ -166,7 +176,7 @@ export const Chat = memo(function Chat() {
                       <p className="text-sm font-semibold text-slate-200">{s.label}</p>
                       <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-2">{s.prompt}</p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-slate-600 shrink-0 mt-0.5 group-hover:text-indigo-400 transition-colors ml-auto" />
+                    <ChevronRightIcon className="w-4 h-4 text-slate-600 shrink-0 mt-0.5 group-hover:text-indigo-400 transition-colors ml-auto" />
                   </button>
                 ))}
               </div>
@@ -179,7 +189,7 @@ export const Chat = memo(function Chat() {
                 <div key={i} className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                   {msg.role === "assistant" && (
                     <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 mt-1 shadow-md shadow-indigo-500/25">
-                      <Bot className="w-4 h-4 text-white" />
+                      <CpuChipIcon className="w-4 h-4 text-white" />
                     </div>
                   )}
                   <div className={`max-w-[82%] px-4 py-3.5 rounded-2xl text-sm leading-relaxed shadow-sm ${
@@ -206,7 +216,7 @@ export const Chat = memo(function Chat() {
               {sendMutation.isPending && (
                 <div className="flex gap-3 justify-start">
                   <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shrink-0 mt-1 shadow-md shadow-indigo-500/25">
-                    <Bot className="w-4 h-4 text-white" />
+                    <CpuChipIcon className="w-4 h-4 text-white" />
                   </div>
                   <div className="px-4 py-3.5 rounded-2xl rounded-tl-sm bg-[#111827] border border-slate-800 flex items-center gap-2">
                     <span className="text-xs text-slate-500 mr-1">Thinking</span>
@@ -237,7 +247,7 @@ export const Chat = memo(function Chat() {
                 disabled={!input.trim() || sendMutation.isPending}
                 className="p-2.5 m-1 rounded-xl flex items-center justify-center transition-all bg-indigo-600 hover:bg-indigo-700 text-white disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-indigo-600/30 shrink-0"
               >
-                <Send className="w-4 h-4" />
+                <PaperAirplaneIcon className="w-4 h-4" />
               </button>
             </div>
             <p className="text-center text-[10px] text-slate-600 mt-2">Shift+Enter for new line · Enter to send</p>

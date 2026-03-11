@@ -3,7 +3,13 @@ import { useIntegrations, useConnectIntegration } from "@/hooks/use-api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Loader2, CheckCircle2, XCircle, Clock, Zap, RefreshCw, Plus, ExternalLink, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  CheckCircleIcon, XCircleIcon, ClockIcon, BoltIcon, ArrowPathIcon,
+  PlusIcon, ArrowTopRightOnSquareIcon, MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 
@@ -36,17 +42,17 @@ const TABS = [
 function StatusBadge({ status }: { status: string }) {
   if (status === "connected") return (
     <Badge className="bg-emerald-500/10 text-emerald-400 border-0 text-xs flex items-center gap-1 h-6">
-      <CheckCircle2 className="w-3 h-3" />Connected
+      <CheckCircleIcon className="w-3 h-3" />Connected
     </Badge>
   );
   if (status === "error") return (
     <Badge className="bg-rose-500/10 text-rose-400 border-0 text-xs flex items-center gap-1 h-6">
-      <XCircle className="w-3 h-3" />Error
+      <XCircleIcon className="w-3 h-3" />Error
     </Badge>
   );
   return (
     <Badge className="bg-slate-800 text-slate-400 border-0 text-xs flex items-center gap-1 h-6">
-      <Clock className="w-3 h-3" />Not connected
+      <ClockIcon className="w-3 h-3" />Not connected
     </Badge>
   );
 }
@@ -77,7 +83,7 @@ const IntegrationCard = memo(function IntegrationCard({
       {item.status === "connected" && (
         <div className="flex items-center justify-between text-[10px] text-slate-500 bg-slate-900 rounded-xl px-3 py-2 border border-slate-800">
           <span className="flex items-center gap-1">
-            <RefreshCw className="w-2.5 h-2.5" />
+            <ArrowPathIcon className="w-2.5 h-2.5" />
             {item.lastSync ? `Synced ${format(item.lastSync, "h:mm a")}` : "Never synced"}
           </span>
           {item.records && <span className="text-slate-400 font-medium">{item.records}</span>}
@@ -88,10 +94,10 @@ const IntegrationCard = memo(function IntegrationCard({
         {item.status === "connected" ? (
           <>
             <Button size="sm" variant="outline" className="flex-1 h-8 text-xs border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800">
-              <RefreshCw className="w-3 h-3 mr-1.5" />Sync
+              <ArrowPathIcon className="w-3 h-3 mr-1.5" />Sync
             </Button>
             <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-slate-500 hover:text-slate-300">
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ArrowTopRightOnSquareIcon className="w-3.5 h-3.5" />
             </Button>
           </>
         ) : item.status === "error" ? (
@@ -100,7 +106,7 @@ const IntegrationCard = memo(function IntegrationCard({
           </Button>
         ) : (
           <Button size="sm" className="flex-1 h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white" onClick={() => onConnect(item.id)}>
-            <Plus className="w-3 h-3 mr-1.5" />Connect
+            <PlusIcon className="w-3 h-3 mr-1.5" />Connect
           </Button>
         )}
       </div>
@@ -156,7 +162,7 @@ export const Integrations = memo(function Integrations() {
       <div className="rounded-2xl border border-indigo-500/20 bg-indigo-600/5 p-5">
         <div className="flex items-start gap-4">
           <div className="w-9 h-9 rounded-xl bg-indigo-600/15 border border-indigo-500/20 flex items-center justify-center shrink-0">
-            <Zap className="w-4 h-4 text-indigo-400" />
+            <BoltIcon className="w-4 h-4 text-indigo-400" />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-slate-200 mb-0.5">AI CMO Integration Recommendation</p>
@@ -170,7 +176,7 @@ export const Integrations = memo(function Integrations() {
 
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+        <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
         <Input
           placeholder="Search integrations..."
           value={search}

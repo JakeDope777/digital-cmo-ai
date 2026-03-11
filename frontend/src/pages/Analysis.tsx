@@ -1,7 +1,14 @@
 import { useMarketAnalysis, useCompetitors } from "@/hooks/use-api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Target, TrendingUp, AlertTriangle, Lightbulb, Globe, Users, ArrowUpRight, ArrowDownRight, ExternalLink, BarChart3, Search } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import {
+  CursorArrowRaysIcon, ArrowTrendingUpIcon, ExclamationTriangleIcon,
+  LightBulbIcon, GlobeAltIcon, UsersIcon, ArrowUpRightIcon, ArrowDownRightIcon,
+  ArrowTopRightOnSquareIcon, ChartBarIcon, MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
+import { motion } from "framer-motion";
+import { fadeUp, stagger } from "@/lib/motion";
 
 const KEYWORD_DATA = [
   { keyword: "AI marketing automation", vol: "18.1K", diff: 62, rank: 14, change: +4, opp: "high" },
@@ -63,7 +70,7 @@ export function Analysis() {
             <p className="text-xs text-muted-foreground mt-0.5">Search interest over 20 weeks — AI Marketing category</p>
           </div>
           <Badge className="bg-emerald-500/10 text-emerald-400 border-0">
-            <TrendingUp className="w-3 h-3 mr-1" />+138% YoY
+            <ArrowTrendingUpIcon className="w-3 h-3 mr-1" />+138% YoY
           </Badge>
         </CardHeader>
         <CardContent className="p-6">
@@ -102,15 +109,15 @@ export function Analysis() {
       {/* SWOT */}
       <div>
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5 text-primary" />
+          <CursorArrowRaysIcon className="w-5 h-5 text-primary" />
           SWOT Analysis
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
-            { title: "Strengths",     items: analysis.swot?.strengths,     icon: TrendingUp,  textColor: "text-emerald-400", accent: "bg-emerald-500", dot: "bg-emerald-400" },
-            { title: "Weaknesses",    items: analysis.swot?.weaknesses,    icon: AlertTriangle, textColor: "text-rose-400",    accent: "bg-rose-500",    dot: "bg-rose-400" },
-            { title: "Opportunities", items: analysis.swot?.opportunities, icon: Lightbulb,   textColor: "text-sky-400",    accent: "bg-sky-500",     dot: "bg-sky-400" },
-            { title: "Threats",       items: analysis.swot?.threats,       icon: AlertTriangle, textColor: "text-amber-400",  accent: "bg-amber-500",   dot: "bg-amber-400" },
+            { title: "Strengths",     items: analysis.swot?.strengths,     icon: ArrowTrendingUpIcon,  textColor: "text-emerald-400", accent: "bg-emerald-500", dot: "bg-emerald-400" },
+            { title: "Weaknesses",    items: analysis.swot?.weaknesses,    icon: ExclamationTriangleIcon, textColor: "text-rose-400",    accent: "bg-rose-500",    dot: "bg-rose-400" },
+            { title: "Opportunities", items: analysis.swot?.opportunities, icon: LightBulbIcon,   textColor: "text-sky-400",    accent: "bg-sky-500",     dot: "bg-sky-400" },
+            { title: "Threats",       items: analysis.swot?.threats,       icon: ExclamationTriangleIcon, textColor: "text-amber-400",  accent: "bg-amber-500",   dot: "bg-amber-400" },
           ].map((q) => (
             <div key={q.title} className="bg-card border border-border/60 rounded-2xl overflow-hidden flex">
               <div className={`w-1 shrink-0 ${q.accent} opacity-70`} />
@@ -136,7 +143,7 @@ export function Analysis() {
       {/* Keyword Tracker */}
       <Card className="bg-card border-border/50 rounded-2xl overflow-hidden">
         <CardHeader className="border-b border-border/50 pb-4 flex flex-row items-center gap-3">
-          <Search className="w-5 h-5 text-primary" />
+          <MagnifyingGlassIcon className="w-5 h-5 text-primary" />
           <div>
             <CardTitle className="text-base">Keyword Opportunity Tracker</CardTitle>
             <p className="text-xs text-muted-foreground mt-0.5">847 keywords tracked · 23 high-opportunity clusters identified</p>
@@ -172,7 +179,7 @@ export function Analysis() {
                   </td>
                   <td className="px-5 py-3.5 text-center">
                     <span className={`flex items-center justify-center gap-0.5 text-xs font-semibold ${kw.change > 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {kw.change > 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                      {kw.change > 0 ? <ArrowUpRightIcon className="w-3 h-3" /> : <ArrowDownRightIcon className="w-3 h-3" />}
                       {Math.abs(kw.change)}
                     </span>
                   </td>
@@ -191,7 +198,7 @@ export function Analysis() {
       {/* Competitors */}
       <div>
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-primary" />
+          <ChartBarIcon className="w-5 h-5 text-primary" />
           Competitive Landscape
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -207,7 +214,7 @@ export function Analysis() {
                       <CardTitle className="text-base">{comp.name}</CardTitle>
                     </div>
                     <a href={comp.website} className="text-xs text-primary hover:underline flex items-center gap-1">
-                      {comp.website} <ExternalLink className="w-2.5 h-2.5" />
+                      {comp.website} <ArrowTopRightOnSquareIcon className="w-2.5 h-2.5" />
                     </a>
                   </div>
                   <div className="text-right">
@@ -253,7 +260,7 @@ export function Analysis() {
       {/* Personas */}
       <div>
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <Users className="w-5 h-5 text-primary" />
+          <UsersIcon className="w-5 h-5 text-primary" />
           Target Personas
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
