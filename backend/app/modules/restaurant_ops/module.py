@@ -1,4 +1,4 @@
-"""TablePilot restaurant operations module (week-1 + core extensions)."""
+"""Legacy restaurant operations module kept separate from the Digital CMO MVP path."""
 
 from __future__ import annotations
 
@@ -81,7 +81,11 @@ class RestaurantOpsModule:
         if venue:
             return venue
 
-        venue = RestaurantVenue(name="TablePilot Demo Venue", currency=self.DEFAULT_CURRENCY, timezone=self.DEFAULT_TIMEZONE)
+        venue = RestaurantVenue(
+            name="Restaurant Ops Demo Venue",
+            currency=self.DEFAULT_CURRENCY,
+            timezone=self.DEFAULT_TIMEZONE,
+        )
         db.add(venue)
         db.commit()
         db.refresh(venue)

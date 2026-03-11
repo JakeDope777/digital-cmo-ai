@@ -1,4 +1,4 @@
-"""Contract and integration tests for TablePilot restaurant endpoints."""
+"""Contract and integration tests for legacy restaurant endpoints."""
 
 from io import BytesIO
 

@@ -342,7 +342,7 @@ class IntegrationRun(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), index=True)
 
 
-# --- Restaurant operations tables (TablePilot) ---
+# --- Legacy restaurant operations tables ---
 
 
 class RestaurantVenue(Base):

@@ -1,4 +1,4 @@
-"""TablePilot restaurant operations API endpoints."""
+"""Legacy restaurant operations API endpoints kept outside the Digital CMO MVP path."""
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session

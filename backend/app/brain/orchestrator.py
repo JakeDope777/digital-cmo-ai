@@ -1,5 +1,5 @@
 """
-Brain Orchestrator - the central coordinator of TablePilot AI.
+Brain Orchestrator - the central coordinator of Digital CMO AI.
 
 Receives user inputs, determines which module to invoke via the Router,
 assembles context via the Prompt Builder, manages memory via the Memory Manager,

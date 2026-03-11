@@ -1,4 +1,4 @@
-"""Smoke test for TablePilot restaurant week-1 flow.
+"""Smoke test for the legacy restaurant week-1 flow.
 
 Usage:
   cd backend

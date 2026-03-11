@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # Database
-    DATABASE_URL: str = "sqlite:///./data/tablepilot.db"
+    DATABASE_URL: str = "sqlite:///./data/digital_cmo.db"
 
     # JWT Authentication
     SECRET_KEY: str = "change-me-in-production-use-a-strong-random-key"
