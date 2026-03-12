@@ -2,6 +2,7 @@ import { Sidebar } from "./Sidebar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
 import { OnboardingModal } from "@/components/OnboardingModal";
+import { AgentBoot } from "@/components/demo/AgentBoot";
 import { Bell, Search, Plus, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -86,6 +87,9 @@ export const AppLayout = memo(function AppLayout({
     >
       <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+
+        {/* Agent Boot Banner (demo mode ticker) */}
+        <AgentBoot />
 
         {/* Demo Mode Banner */}
         <AnimatePresence>

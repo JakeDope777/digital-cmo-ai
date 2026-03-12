@@ -20,6 +20,8 @@ const IndustryPage  = lazy(() => import("./pages/IndustryPage"));
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
+const ROICalculatorPage = lazy(() => import("./pages/ROICalculatorPage"));
+const ProductTourPage   = lazy(() => import("./pages/ProductTourPage"));
 
 // ── New *Page.tsx files (react-router-dom native) ────────────────────────
 const DashboardPage    = lazy(() => import("./pages/DashboardPage"));
@@ -91,6 +93,8 @@ function AppRoutes() {
         <Route path="/whitepaper" element={<WhitePaperPage />} />
         <Route path="/white-paper" element={<Navigate to="/whitepaper" replace />} />
         <Route path="/industry/:slug" element={<IndustryPage />} />
+        <Route path="/roi-calculator" element={<ROICalculatorPage />} />
+        <Route path="/product-tour" element={<ProductTourPage />} />
 
         {/* Auth flows */}
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
