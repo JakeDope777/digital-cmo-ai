@@ -1,8 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Trash2, Bot, UserCircle } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Brain, Zap, Plus, Clock, MessageSquare } from 'lucide-react';
 import { chatService } from '../services/api';
 import type { ChatMessage } from '../types';
-// react-markdown removed — using simple inline renderer to avoid extra dep
 import { trackEvent, trackOnboardingStep } from '../services/analytics';
 import { useDemoMode } from '../context/DemoModeContext';
 
@@ -15,7 +14,7 @@ const DEMO_QA: Array<{ keywords: string[]; response: string; module: string }> =
 I recommend reallocating $800/week from Brand Awareness into Competitor Keywords and creating 3 RSA ad variants targeting high-intent long-tail terms. Based on your historical conversion data, this should recover approximately **$4,100 in monthly revenue** within 3 weeks.
 
 Your Quality Scores for non-brand terms average 5.2/10. Improving landing page relevance for your top 10 keywords to a QS of 7+ would reduce your average CPC by an estimated **18–22%**.`,
-    module: 'Google Ads Analyser (demo)',
+    module: 'Google Ads Analyser',
   },
   {
     keywords: ['linkedin', 'campaign brief', 'linkedin campaign', 'linkedin ads', 'b2b campaign'],
@@ -34,7 +33,7 @@ Your Quality Scores for non-brand terms average 5.2/10. Improving landing page r
 **Creative Recommendations:** Use dark-background mockup screenshots of the dashboard, not stock photos. Pilot users report 3.2× higher CTR with product-first creative vs lifestyle imagery.
 
 **KPI Targets:** CPL < $95, CTR > 0.55%, Demo-to-Opportunity rate ≥ 22%.`,
-    module: 'Campaign Brief Generator (demo)',
+    module: 'Campaign Brief Generator',
   },
   {
     keywords: ['best performing channel', 'best channel', 'top channel', 'which channel', 'channel performance', 'top performing'],
@@ -47,7 +46,7 @@ Your Quality Scores for non-brand terms average 5.2/10. Improving landing page r
 5. **Organic SEO** — 3.7× ROAS, $14K attributed, growing +24% MoM
 
 The standout insight: your **Email Nurture** sequence is dramatically underinvested relative to its ROI. You're running one sequence for all leads. Segmenting by ICP fit score and adding 3 conditional branches could unlock an estimated **$11K–18K in additional monthly pipeline** with zero incremental ad spend.`,
-    module: 'Channel Attribution Analyser (demo)',
+    module: 'Channel Attribution Analyser',
   },
   {
     keywords: ['email open rate', 'email open', 'improve email', 'email marketing', 'email campaign', 'open rate', 'subject line'],
@@ -60,7 +59,7 @@ The standout insight: your **Email Nurture** sequence is dramatically underinves
 **3. List hygiene** — 14.3% of your list hasn't opened an email in 90+ days. Running a re-engagement sequence before suppression typically recovers 8–12% of dormant subscribers and improves deliverability for everyone else.
 
 Want me to generate the re-engagement sequence copy now?`,
-    module: 'Email Optimiser (demo)',
+    module: 'Email Optimiser',
   },
   {
     keywords: ['growth tactic', 'growth hack', 'growth strateg', 'tactics for this month', '3 growth', 'three growth', 'growth ideas'],
@@ -74,7 +73,7 @@ Your demo→paid conversion is sitting at 8.2%. The SaaS median for self-serve p
 
 **📧 Tactic 3: Champion-Led Expansion Email** (Est. +$6K MRR, 1 week)
 Target your 28 paying customers with >1 seat and send a personalised "your team is missing out" expansion email with a team dashboard screenshot. Average seat expansion from this playbook: 1.7 seats per customer reached. I can generate the email now.`,
-    module: 'Growth Strategy Engine (demo)',
+    module: 'Growth Strategy Engine',
   },
   {
     keywords: ['roi', 'return on investment', 'return on ad spend', 'roas', 'profitability', 'margin'],
@@ -88,7 +87,7 @@ Target your 28 paying customers with >1 seat and send a personalised "your team 
 Your **LTV:CAC ratio is 9.9×** ($1,250 LTV ÷ $126 blended CAC), which is exceptionally strong — top-quartile SaaS benchmarks sit at 4–6×. This means you have significant room to increase CAC payback period and invest more aggressively in acquisition.
 
 At current unit economics, I calculate you can safely increase monthly ad spend by **$8,400** before hitting margin compression. Want me to model the growth trajectory?`,
-    module: 'ROI Analyser (demo)',
+    module: 'ROI Analyser',
   },
   {
     keywords: ['competitor', 'competition', 'competitive analysis', 'competitor analysis', 'market positioning'],
@@ -103,7 +102,7 @@ I've analysed 4 direct competitors across 12 positioning dimensions. Here's what
 **Vulnerability to address:** Your onboarding is currently 7 steps vs competitors' 2-3. Time-to-first-value is 6.2 minutes — industry leaders are under 90 seconds. I recommend collapsing steps 3–5 into a single brand-voice capture screen. This is your biggest churn risk in the first session.
 
 Want me to generate a full SWOT or competitive battle card?`,
-    module: 'Competitive Intelligence (demo)',
+    module: 'Competitive Intelligence',
   },
   {
     keywords: ['budget', 'budget allocation', 'ad budget', 'spend allocation', 'where should i spend', 'marketing budget'],
@@ -122,7 +121,7 @@ Want me to generate a full SWOT or competitive battle card?`,
 The LinkedIn increase is the clearest ROI move — you're at 8.2× ROAS with a budget cap that's artificially limiting reach. At $8,400/mo you'll still be below LinkedIn's algorithm's "learning phase" ceiling for your audience size.
 
 This reallocation projects **$34K in incremental monthly revenue** at current conversion rates. Shall I draft the change orders for each platform?`,
-    module: 'Budget Allocation Engine (demo)',
+    module: 'Budget Allocation Engine',
   },
   {
     keywords: ['lead gen', 'lead generation', 'generate leads', 'leads', 'pipeline', 'prospects', 'outbound'],
@@ -136,7 +135,7 @@ B2B SaaS companies running monthly 30-min webinars on ICP pain points see 22–2
 
 **Lever 3: Integration Marketplace Listings**
 You integrate with HubSpot. Getting listed on the HubSpot App Marketplace drives an average of 34 inbound leads/month for tools in your category — and it's free distribution. I've drafted your listing copy if you want to review it.`,
-    module: 'Lead Gen Strategist (demo)',
+    module: 'Lead Gen Strategist',
   },
   {
     keywords: ['content strategy', 'content plan', 'content calendar', 'content marketing', 'blog', 'seo content'],
@@ -150,7 +149,7 @@ You integrate with HubSpot. Getting listed on the HubSpot App Marketplace drives
 **Monthly Output Target:** 4 long-form posts (1,500+ words) + 12 LinkedIn repurposes + 8 email editions.
 
 **Time Investment with AI:** ~6 hours/month with Digital CMO AI vs ~80 hours without. I've already identified 24 keyword opportunities with a combined search volume of 47,400/month and keyword difficulty under 35. Shall I build the full 3-month content calendar?`,
-    module: 'Content Strategy Module (demo)',
+    module: 'Content Strategy Module',
   },
 ];
 
@@ -160,6 +159,16 @@ const SUGGESTED_QUESTIONS = [
   "What's my best performing channel?",
   'How do I improve my email open rate?',
   'Give me 3 growth tactics for this month',
+  'Analyse my competitors',
+  'Optimise my marketing budget',
+];
+
+const DEMO_CONVERSATIONS = [
+  { id: 'c1', title: 'Google Ads audit & reallocation', time: '2h ago', preview: 'Your CTR dropped 0.8%...' },
+  { id: 'c2', title: 'Q2 LinkedIn campaign brief', time: 'Yesterday', preview: 'LinkedIn Campaign Brief...' },
+  { id: 'c3', title: 'Email open rate optimisation', time: '2 days ago', preview: 'Your current open rate...' },
+  { id: 'c4', title: 'Channel performance analysis', time: '3 days ago', preview: 'Based on 90 days of data...' },
+  { id: 'c5', title: 'Budget reallocation model', time: 'Last week', preview: 'Current spend $19,750...' },
 ];
 
 function getDemoResponse(input: string): { content: string; module_used: string } {
@@ -169,15 +178,62 @@ function getDemoResponse(input: string): { content: string; module_used: string 
       return { content: qa.response, module_used: qa.module };
     }
   }
-  // Fallback generic response
   return {
     content: `Great question. Based on your current marketing data, I can see several high-impact opportunities across your acquisition funnel. Your blended ROAS of **5.3×** is above industry average, but your signup-to-verified conversion of **68.2%** has room to improve — closing that gap to 80%+ would add an estimated **$14K in monthly pipeline** without increasing ad spend.
 
 For your specific question, I'd recommend starting with a channel attribution audit to identify where your highest-LTV customers are actually coming from (not just last-click). In most SaaS companies at your stage, 60–70% of revenue is attributable to just 2 channels — and one of them is usually underinvested.
 
 Try asking me about a specific area: Google Ads performance, email open rates, budget allocation, lead generation, or competitive analysis — and I'll give you a data-driven action plan.`,
-    module_used: 'AI Brain Orchestrator (demo)',
+    module_used: 'Brain Orchestrator',
   };
+}
+
+// Render markdown-like bold **text** inline
+function RenderMarkdown({ text }: { text: string }) {
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-1.5">
+      {lines.map((line, i) => {
+        // Bold pattern **text**
+        const parts = line.split(/\*\*(.+?)\*\*/g);
+        return (
+          <p key={i} className={`text-sm leading-relaxed ${line.startsWith('**') && line.endsWith('**') && parts.length === 3 ? 'font-semibold text-slate-100' : 'text-slate-300'}`}>
+            {parts.map((part, j) =>
+              j % 2 === 1 ? (
+                <strong key={j} className="font-bold text-slate-100">
+                  {part}
+                </strong>
+              ) : (
+                part
+              )
+            )}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex items-center gap-1.5 px-1 py-0.5">
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="h-2 w-2 rounded-full bg-blue-400"
+          style={{
+            animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes bounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+          30% { transform: translateY(-6px); opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 export default function ChatPage() {
@@ -185,34 +241,53 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | undefined>();
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const cardBg = { background: 'oklch(13% .008 255)', borderColor: 'oklch(24% .008 255)' };
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages]);
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, isTyping]);
 
-  const sendMessage = async () => {
-    const text = input.trim();
-    if (!text || loading) return;
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [input]);
+
+  const sendMessage = useCallback(async (text?: string) => {
+    const msgText = (text ?? input).trim();
+    if (!msgText || loading) return;
 
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
-      content: text,
+      content: msgText,
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setLoading(true);
+    setIsTyping(true);
 
     try {
-      await trackEvent('chat_message_sent', { length: text.length });
+      await trackEvent('chat_message_sent', { length: msgText.length });
 
       if (isDemoMode) {
-        // Simulate realistic AI thinking delay (800ms–1.6s)
-        await new Promise((resolve) => setTimeout(resolve, 800 + Math.random() * 800));
-        const { content, module_used } = getDemoResponse(text);
+        // Simulate realistic thinking delay
+        const delay = 900 + Math.random() * 900;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        setIsTyping(false);
+
+        const { content, module_used } = getDemoResponse(msgText);
         const assistantMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
@@ -226,10 +301,11 @@ export default function ChatPage() {
       }
 
       const response = await chatService.sendMessage({
-        message: text,
+        message: msgText,
         conversation_id: conversationId,
       });
       setConversationId(response.conversation_id);
+      setIsTyping(false);
 
       const assistantMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -242,6 +318,7 @@ export default function ChatPage() {
       setMessages((prev) => [...prev, assistantMsg]);
       void trackOnboardingStep('first_value_completed', { entrypoint: 'chat' });
     } catch {
+      setIsTyping(false);
       const errorMsg: ChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -252,149 +329,382 @@ export default function ChatPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [input, loading, isDemoMode, conversationId]);
 
-  const clearChat = () => {
+  const newChat = () => {
     if (conversationId) {
       chatService.clearConversation(conversationId).catch(() => {});
     }
     setMessages([]);
     setConversationId(undefined);
+    setActiveConvId(null);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
-      sendMessage();
+      void sendMessage();
     }
   };
 
   return (
-    <div className="flex flex-col h-full max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900">AI Marketing Assistant</h2>
-          <p className="text-sm text-gray-500">
-            Ask about market research, campaigns, analytics, creative content, and more.
-          </p>
-        </div>
-        {messages.length > 0 && (
-          <button onClick={clearChat} className="btn-secondary flex items-center gap-2 text-sm">
-            <Trash2 className="w-4 h-4" /> Clear
+    <div
+      className="flex h-[calc(100vh-64px)] -m-6 overflow-hidden"
+      style={{ background: 'oklch(9% .008 255)' }}
+    >
+      {/* ── Left Sidebar ── */}
+      <aside
+        className="hidden md:flex flex-col w-64 border-r flex-shrink-0"
+        style={{ background: 'oklch(11% .008 255)', borderColor: 'oklch(18% .008 255)' }}
+      >
+        {/* New Chat button */}
+        <div className="p-4 border-b" style={{ borderColor: 'oklch(18% .008 255)' }}>
+          <button
+            onClick={newChat}
+            className="w-full flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white transition-all hover:scale-[1.01]"
+            style={{
+              background: '#3c91ed',
+              boxShadow: '0 0 20px #3c91ed40',
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            New Chat
           </button>
-        )}
-      </div>
+        </div>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center text-gray-400">
-            <Bot className="w-16 h-16 mb-4 text-primary-300" />
-            <p className="text-lg font-medium text-gray-600">How can I help with your marketing today?</p>
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
-              {[
-                'Do a SWOT analysis for our SaaS product',
-                'Write a LinkedIn post about AI trends',
-                'Show me dashboard metrics',
-                'Create a welcome email campaign',
-              ].map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => setInput(suggestion)}
-                  className="text-left px-4 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+        {/* Conversation history */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 px-2 mb-3">Recent Conversations</p>
+          {DEMO_CONVERSATIONS.map((conv) => (
+            <button
+              key={conv.id}
+              onClick={() => setActiveConvId(conv.id)}
+              className={`w-full text-left rounded-xl p-3 transition-all group ${
+                activeConvId === conv.id
+                  ? 'bg-blue-500/10 border border-blue-500/20'
+                  : 'hover:bg-white/[0.03] border border-transparent'
+              }`}
+            >
+              <div className="flex items-start gap-2">
+                <MessageSquare className="h-3.5 w-3.5 text-slate-600 flex-shrink-0 mt-0.5 group-hover:text-slate-400" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-slate-300 truncate leading-tight">{conv.title}</p>
+                  <p className="text-xs text-slate-600 truncate mt-0.5">{conv.preview}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <Clock className="h-2.5 w-2.5 text-slate-700" />
+                    <span className="text-xs text-slate-700">{conv.time}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Sidebar footer */}
+        <div className="p-4 border-t" style={{ borderColor: 'oklch(18% .008 255)' }}>
+          <div
+            className="rounded-xl p-3"
+            style={{ background: 'oklch(14% .008 255)', border: '1px solid oklch(20% .008 255)' }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-xs font-semibold text-emerald-400">All agents online</span>
+            </div>
+            <p className="text-xs text-slate-600">10 AI agents ready · GPT-4 powered</p>
+          </div>
+        </div>
+      </aside>
+
+      {/* ── Main Chat Area ── */}
+      <div className="flex flex-col flex-1 min-w-0">
+
+        {/* Top bar */}
+        <header
+          className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
+          style={{ background: 'oklch(11% .008 255)', borderColor: 'oklch(18% .008 255)' }}
+        >
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-9 w-9 items-center justify-center rounded-xl"
+              style={{ background: '#3c91ed20', boxShadow: '0 0 16px #3c91ed30' }}
+            >
+              <Brain className="h-4.5 w-4.5 text-blue-400" style={{ width: '1.1rem', height: '1.1rem' }} />
+            </div>
+            <div>
+              <h1 className="text-sm font-bold text-white">AI CMO Chat</h1>
+              <p className="text-xs text-slate-500">Ask about strategy, campaigns, analytics & more</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div
+              className="hidden sm:flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold"
+              style={{ background: 'oklch(16% .008 255)', border: '1px solid oklch(24% .008 255)' }}
+            >
+              <Zap className="h-3 w-3 text-blue-400" />
+              <span className="text-slate-300">GPT-4 + 10 Agents</span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold bg-emerald-500/10 border border-emerald-500/20">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-emerald-400">Live</span>
+            </div>
+          </div>
+        </header>
+
+        {/* Messages area */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6">
+          {messages.length === 0 && !loading && (
+            <div className="flex flex-col items-center justify-center h-full text-center max-w-xl mx-auto">
+              <div
+                className="flex h-20 w-20 items-center justify-center rounded-3xl mb-6"
+                style={{
+                  background: 'linear-gradient(135deg, #3c91ed22, #3c91ed11)',
+                  border: '1px solid #3c91ed30',
+                  boxShadow: '0 0 40px #3c91ed20',
+                }}
+              >
+                <Brain className="h-9 w-9 text-blue-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Your AI CMO is ready</h2>
+              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
+                Ask me anything about your marketing strategy, campaigns, analytics, or competitors. I have access to all your data and 10 specialist AI agents.
+              </p>
+
+              {/* Suggested questions */}
+              <div className="flex flex-wrap gap-2 justify-center">
+                {SUGGESTED_QUESTIONS.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => void sendMessage(q)}
+                    className="rounded-full border px-4 py-2 text-xs font-medium text-blue-300 transition-all hover:scale-[1.02]"
+                    style={{
+                      borderColor: '#3c91ed40',
+                      background: '#3c91ed0a',
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = '0 0 16px #3c91ed30';
+                      (e.currentTarget as HTMLElement).style.borderColor = '#3c91ed80';
+                      (e.currentTarget as HTMLElement).style.background = '#3c91ed18';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                      (e.currentTarget as HTMLElement).style.borderColor = '#3c91ed40';
+                      (e.currentTarget as HTMLElement).style.background = '#3c91ed0a';
+                    }}
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.map((msg, idx) => (
+            <div
+              key={msg.id}
+              className="flex gap-4 animate-[fadeSlideUp_0.3s_ease_forwards]"
+              style={{
+                animation: 'fadeSlideUp 0.3s ease forwards',
+                justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+              }}
+            >
+              <style>{`
+                @keyframes fadeSlideUp {
+                  from { opacity: 0; transform: translateY(8px); }
+                  to { opacity: 1; transform: translateY(0); }
+                }
+              `}</style>
+
+              {msg.role === 'assistant' && (
+                <div
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl mt-0.5"
+                  style={{
+                    background: '#3c91ed18',
+                    border: '1px solid #3c91ed30',
+                    boxShadow: '0 0 12px #3c91ed20',
+                  }}
                 >
-                  {suggestion}
+                  <Brain className="h-4 w-4 text-blue-400" />
+                </div>
+              )}
+
+              <div className={`max-w-[72%] ${msg.role === 'user' ? 'items-end' : 'items-start'} flex flex-col gap-1.5`}>
+                {msg.role === 'assistant' && msg.module_used && (
+                  <div className="flex items-center gap-2">
+                    <span
+                      className="rounded-full px-2.5 py-0.5 text-xs font-bold text-blue-300"
+                      style={{ background: '#3c91ed15', border: '1px solid #3c91ed25' }}
+                    >
+                      🧠 Brain Orchestrator
+                    </span>
+                    <span
+                      className="rounded-full px-2 py-0.5 text-xs font-medium text-slate-400"
+                      style={{ background: 'oklch(16% .008 255)', border: '1px solid oklch(22% .008 255)' }}
+                    >
+                      via {msg.module_used}
+                    </span>
+                  </div>
+                )}
+
+                <div
+                  className={`rounded-2xl px-5 py-4 ${
+                    msg.role === 'user'
+                      ? 'rounded-tr-sm'
+                      : 'rounded-tl-sm border-l-2'
+                  }`}
+                  style={
+                    msg.role === 'user'
+                      ? {
+                          background: '#3c91ed',
+                          boxShadow: '0 0 20px #3c91ed30',
+                        }
+                      : {
+                          background: 'oklch(14% .008 255)',
+                          border: '1px solid oklch(22% .008 255)',
+                          borderLeft: '2px solid #3c91ed50',
+                          ...cardBg,
+                        }
+                  }
+                >
+                  {msg.role === 'user' ? (
+                    <p className="text-sm text-white leading-relaxed">{msg.content}</p>
+                  ) : (
+                    <RenderMarkdown text={msg.content} />
+                  )}
+
+                  {msg.tokens_used && (
+                    <p className="mt-2 text-xs text-slate-600">{msg.tokens_used} tokens</p>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-700 px-1">
+                  {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+
+              {msg.role === 'user' && (
+                <div
+                  className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl mt-0.5 text-xs font-bold text-white"
+                  style={{
+                    background: 'oklch(30% .1 253)',
+                    border: '1px solid oklch(40% .1 253 / 0.5)',
+                  }}
+                >
+                  You
+                </div>
+              )}
+            </div>
+          ))}
+
+          {/* Typing indicator */}
+          {isTyping && (
+            <div className="flex gap-4" style={{ animation: 'fadeSlideUp 0.3s ease forwards' }}>
+              <div
+                className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl mt-0.5"
+                style={{ background: '#3c91ed18', border: '1px solid #3c91ed30' }}
+              >
+                <Brain className="h-4 w-4 text-blue-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span
+                    className="rounded-full px-2.5 py-0.5 text-xs font-bold text-blue-300"
+                    style={{ background: '#3c91ed15', border: '1px solid #3c91ed25' }}
+                  >
+                    🧠 Brain Orchestrator
+                  </span>
+                  <span className="text-xs text-slate-600">thinking…</span>
+                </div>
+                <div
+                  className="rounded-2xl rounded-tl-sm px-5 py-4"
+                  style={{
+                    background: 'oklch(14% .008 255)',
+                    border: '1px solid oklch(22% .008 255)',
+                    borderLeft: '2px solid #3c91ed50',
+                  }}
+                >
+                  <TypingIndicator />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Input Area ── */}
+        <div
+          className="border-t p-4 flex-shrink-0"
+          style={{ background: 'oklch(11% .008 255)', borderColor: 'oklch(18% .008 255)' }}
+        >
+          {/* Suggested chips (when there are messages) */}
+          {messages.length > 0 && isDemoMode && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {SUGGESTED_QUESTIONS.slice(0, 4).map((q) => (
+                <button
+                  key={q}
+                  onClick={() => void sendMessage(q)}
+                  className="rounded-full border px-3 py-1.5 text-xs font-medium text-blue-300 transition-all hover:scale-[1.02] whitespace-nowrap"
+                  style={{ borderColor: '#3c91ed30', background: '#3c91ed08' }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = '0 0 12px #3c91ed28';
+                    (e.currentTarget as HTMLElement).style.borderColor = '#3c91ed60';
+                    (e.currentTarget as HTMLElement).style.background = '#3c91ed14';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                    (e.currentTarget as HTMLElement).style.borderColor = '#3c91ed30';
+                    (e.currentTarget as HTMLElement).style.background = '#3c91ed08';
+                  }}
+                >
+                  {q}
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {messages.map((msg) => (
           <div
-            key={msg.id}
-            className={`chat-message-enter flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}
+            className="flex gap-3 rounded-2xl p-1 transition-all"
+            style={{
+              background: 'oklch(14% .008 255)',
+              border: '1px solid oklch(22% .008 255)',
+            }}
+            onFocusCapture={(e) => {
+              (e.currentTarget as HTMLElement).style.boxShadow = '0 0 24px #3c91ed2e';
+              (e.currentTarget as HTMLElement).style.borderColor = '#3c91ed50';
+            }}
+            onBlurCapture={(e) => {
+              (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+              (e.currentTarget as HTMLElement).style.borderColor = 'oklch(22% .008 255)';
+            }}
           >
-            {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-primary-600" />
-              </div>
-            )}
-            <div
-              className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                msg.role === 'user'
-                  ? 'bg-primary-600 text-white rounded-br-md'
-                  : 'bg-white border border-gray-200 text-gray-800 rounded-bl-md'
-              }`}
-            >
-              {msg.role === 'assistant' ? (
-                <div className="prose prose-sm max-w-none whitespace-pre-wrap">
-                  {msg.content}
-                </div>
-              ) : (
-                msg.content
-              )}
-              {msg.module_used && (
-                <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-gray-400">
-                  Module: {msg.module_used}
-                  {msg.tokens_used ? ` · ${msg.tokens_used} tokens` : ''}
-                </div>
-              )}
-            </div>
-            {msg.role === 'user' && (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                <UserCircle className="w-4 h-4 text-gray-600" />
-              </div>
-            )}
-          </div>
-        ))}
-
-        {loading && (
-          <div className="flex gap-3 chat-message-enter">
-            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center flex-shrink-0">
-              <Bot className="w-4 h-4 text-primary-600" />
-            </div>
-            <div className="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md">
-              <Loader2 className="w-5 h-5 text-primary-500 animate-spin" />
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Input */}
-      <div className="border-t border-gray-200 pt-4">
-        <div className="flex gap-3">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            rows={1}
-            className="input-field resize-none"
-          />
-          <button
-            onClick={sendMessage}
-            disabled={!input.trim() || loading}
-            className="btn-primary flex items-center gap-2 px-5"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
-        {/* Suggested question chips */}
-        {isDemoMode && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {SUGGESTED_QUESTIONS.map((q) => (
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask your AI CMO anything…"
+              rows={1}
+              className="flex-1 resize-none bg-transparent px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none leading-relaxed"
+              style={{ minHeight: '48px', maxHeight: '160px' }}
+            />
+            <div className="flex items-end p-1.5 gap-2">
+              <span className="hidden sm:block text-xs text-slate-700 mb-2.5 whitespace-nowrap">⌘+Enter</span>
               <button
-                key={q}
-                onClick={() => setInput(q)}
-                className="rounded-full border border-primary-200 bg-primary-50 px-3 py-1 text-xs font-medium text-primary-700 hover:border-primary-400 hover:bg-primary-100 transition-colors whitespace-nowrap"
+                onClick={() => void sendMessage()}
+                disabled={!input.trim() || loading}
+                className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-all disabled:opacity-40"
+                style={{
+                  background: input.trim() && !loading ? '#3c91ed' : 'oklch(20% .008 255)',
+                  boxShadow: input.trim() && !loading ? '0 0 16px #3c91ed50' : 'none',
+                }}
               >
-                {q}
+                <Send className="h-4 w-4 text-white" />
               </button>
-            ))}
+            </div>
           </div>
-        )}
+          <p className="mt-2 text-center text-xs text-slate-700">
+            AI CMO may make mistakes. Always verify important decisions with your data.
+          </p>
+        </div>
       </div>
     </div>
   );
