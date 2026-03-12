@@ -82,9 +82,11 @@ def create_refresh_token(data: dict) -> str:
     Returns:
         Signed JWT string.
     """
+    import uuid as _uuid
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-    to_encode.update({"exp": expire, "type": "refresh"})
+    # jti (JWT ID) ensures uniqueness even for the same user within the same second
+    to_encode.update({"exp": expire, "type": "refresh", "jti": str(_uuid.uuid4())})
     # Do NOT log to_encode — it contains user identity data
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 

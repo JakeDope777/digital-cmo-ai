@@ -81,6 +81,14 @@ class User(Base):
     timezone = Column(String, nullable=True)
     is_email_verified = Column(Boolean, default=False, nullable=False)
     stripe_customer_id = Column(String, nullable=True, index=True)
+
+    # Security hardening fields
+    failed_login_attempts = Column(Integer, default=0, nullable=False)
+    locked_until = Column(DateTime, nullable=True)           # account lockout expiry
+    mfa_secret = Column(String, nullable=True)               # TOTP secret (pyotp)
+    mfa_enabled = Column(Boolean, default=False, nullable=False)
+    mfa_backup_codes = Column(JSON, nullable=True)           # hashed backup codes list
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(
         DateTime,
@@ -89,11 +97,35 @@ class User(Base):
     )
 
     tenant = relationship("Tenant", back_populates="users")
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     token_account = relationship("TokenAccount", back_populates="user", uselist=False)
     usage_logs = relationship("UsageLog", back_populates="user")
     contexts = relationship("Context", back_populates="user")
     memory_files = relationship("MemoryFile", back_populates="user")
     api_credentials = relationship("ApiCredential", back_populates="user")
+
+
+class RefreshToken(Base):
+    """
+    Stored refresh tokens for rotation + family-based revocation.
+
+    On each /auth/refresh:
+    - Old token is marked used=True
+    - New token is issued with same family_id
+    - If a used token is replayed → entire family is revoked (reuse detection)
+    """
+    __tablename__ = "refresh_tokens"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
+    token_hash = Column(String, nullable=False, unique=True, index=True)  # SHA-256 of raw token
+    family_id = Column(String, nullable=False, index=True)                # rotation family
+    used = Column(Boolean, default=False, nullable=False)                 # True after rotation
+    revoked = Column(Boolean, default=False, nullable=False)              # True if family compromised
+    expires_at = Column(DateTime, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    user = relationship("User", back_populates="refresh_tokens")
 
 
 class TokenAccount(Base):

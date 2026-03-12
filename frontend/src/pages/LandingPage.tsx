@@ -341,8 +341,8 @@ export default function LandingPage() {
               Strategy, execution, and reporting — through a single conversational interface. Replace agency retainers with AI that knows your brand, works with managed live pilot data or demo fallback, and executes in minutes.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to={demoDashboardHref} className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-base font-bold text-black hover:bg-orange-400 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 hover:scale-[1.02]">
-                Try the live demo <ArrowRight size={16} />
+              <Link to="/demo" className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-base font-bold text-black hover:bg-orange-400 transition-all shadow-lg shadow-orange-500/25 hover:shadow-orange-500/35 hover:scale-[1.02]">
+                ⚡ Try Live Demo <ArrowRight size={16} />
               </Link>
               <Link to={registerHref} className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-6 py-3.5 text-base font-medium text-white hover:border-white/35 hover:bg-white/5 transition-all">
                 Create free account

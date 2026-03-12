@@ -311,6 +311,36 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      {/* ── ROI Hero — AI Savings vs CMO ── */}
+      {isDemoMode && (
+        <article className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/60 to-slate-900 p-6 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/20">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-2xl">
+                💰
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest text-emerald-500">AI Savings vs Hiring a CMO</p>
+                <p className="mt-1 text-4xl font-extrabold tracking-tight text-white">
+                  $47,200{' '}
+                  <span className="text-lg font-semibold text-emerald-400">saved this month</span>
+                </p>
+                <p className="mt-1 text-sm text-slate-400">
+                  vs. <span className="font-semibold text-slate-300">$25K/mo agency retainer</span> + <span className="font-semibold text-slate-300">$300K/yr CMO salary</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col items-start gap-2 sm:items-end">
+              <div className="flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-4 py-2">
+                <ArrowUpRight className="h-4 w-4 text-emerald-400" />
+                <span className="text-sm font-bold text-emerald-400">317× ROI on subscription</span>
+              </div>
+              <p className="text-xs text-slate-600">Digital CMO AI Pro: $149/mo</p>
+            </div>
+          </div>
+        </article>
+      )}
+
       {/* ── KPI cards ── */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((card) => (
