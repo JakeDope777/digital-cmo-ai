@@ -21,6 +21,7 @@ const Settings     = lazy(() => import("./pages/Settings").then(m => ({ default:
 const Seo          = lazy(() => import("./pages/Seo").then(m => ({ default: m.Seo })));
 const Calendar     = lazy(() => import("./pages/Calendar").then(m => ({ default: m.Calendar })));
 const Reports      = lazy(() => import("./pages/Reports").then(m => ({ default: m.Reports })));
+const Campaigns    = lazy(() => import("./pages/Campaigns").then(m => ({ default: m.Campaigns })));
 const NotFound     = lazy(() => import("./pages/not-found"));
 
 const queryClient = new QueryClient({
@@ -65,6 +66,7 @@ function Router() {
         <Route path="/creative"><ProtectedRoute component={Creative} noPadding /></Route>
         <Route path="/crm"><ProtectedRoute component={Crm} /></Route>
         <Route path="/growth"><ProtectedRoute component={Growth} /></Route>
+        <Route path="/campaigns"><ProtectedRoute component={Campaigns} /></Route>
         <Route path="/seo"><ProtectedRoute component={Seo} /></Route>
         <Route path="/calendar"><ProtectedRoute component={Calendar} /></Route>
         <Route path="/reports"><ProtectedRoute component={Reports} /></Route>

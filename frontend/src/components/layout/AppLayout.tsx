@@ -1,6 +1,7 @@
 import { Sidebar } from "./Sidebar";
 import { CommandPalette } from "@/components/CommandPalette";
 import { NotificationsPanel } from "@/components/NotificationsPanel";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import {
   BellIcon,
   MagnifyingGlassIcon,
@@ -20,6 +21,7 @@ const PAGE_TITLES: Record<string, string> = {
   "/creative":     "Creative Studio",
   "/crm":          "CRM",
   "/growth":       "Growth",
+  "/campaigns":    "Campaigns",
   "/seo":          "SEO Intelligence",
   "/calendar":     "Content Calendar",
   "/reports":      "Reports",
@@ -41,6 +43,9 @@ export const AppLayout = memo(function AppLayout({
   const { isAuthenticated } = useAuth();
   const [cmdOpen, setCmdOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(() => {
+    return !localStorage.getItem("dcmo_onboarded");
+  });
 
   useEffect(() => {
     if (!isAuthenticated) navigate("/login");
@@ -60,6 +65,10 @@ export const AppLayout = memo(function AppLayout({
 
   const closeCmd = useCallback(() => setCmdOpen(false), []);
   const closeNotif = useCallback(() => setNotifOpen(false), []);
+  const completeOnboarding = useCallback(() => {
+    localStorage.setItem("dcmo_onboarded", "1");
+    setShowOnboarding(false);
+  }, []);
 
   if (!isAuthenticated) return null;
 
@@ -134,6 +143,7 @@ export const AppLayout = memo(function AppLayout({
       {/* Global Overlays */}
       <CommandPalette open={cmdOpen} onClose={closeCmd} />
       <NotificationsPanel open={notifOpen} onClose={closeNotif} />
+      {showOnboarding && <OnboardingModal onComplete={completeOnboarding} />}
     </div>
   );
 });

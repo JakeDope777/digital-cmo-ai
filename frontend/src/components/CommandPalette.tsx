@@ -18,6 +18,7 @@ import {
   BoltIcon,
   ArrowRightIcon,
   XMarkIcon,
+  BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 
 const PAGES = [
@@ -27,6 +28,7 @@ const PAGES = [
   { label: "Creative Studio", href: "/creative",      icon: PencilSquareIcon,         group: "Pages",   desc: "Generate ad copy, emails, landing pages" },
   { label: "CRM",             href: "/crm",           icon: UsersIcon,                group: "Pages",   desc: "Contacts, pipeline and deal management" },
   { label: "Growth",          href: "/growth",        icon: ArrowTrendingUpIcon,      group: "Pages",   desc: "Funnel analysis and growth experiments" },
+  { label: "Campaigns",       href: "/campaigns",     icon: BriefcaseIcon,            group: "Pages",   desc: "Manage all marketing campaigns in one place" },
   { label: "SEO",             href: "/seo",           icon: MagnifyingGlassCircleIcon,group: "Pages",   desc: "Keyword rankings, content briefs, site audit" },
   { label: "Calendar",        href: "/calendar",      icon: CalendarDaysIcon,         group: "Pages",   desc: "Content calendar and publishing schedule" },
   { label: "Reports",         href: "/reports",       icon: DocumentChartBarIcon,     group: "Pages",   desc: "Campaign reports and performance downloads" },
