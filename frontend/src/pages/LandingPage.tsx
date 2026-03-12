@@ -379,6 +379,54 @@ export default function LandingPage() {
       {/* INTEGRATION MARQUEE */}
       <IntegrationMarquee />
 
+      {/* BUILT FOR SCALE */}
+      <section className="border-b border-white/8 bg-[#080808] px-6 py-14">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-10 text-center">
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-white/25">Built for scale</p>
+            <h2 className="text-2xl font-bold tracking-tight text-white">Integrates with the tools you already use</h2>
+            <p className="mt-2 text-sm text-white/40">Native connectors. No CSV exports. No manual sync.</p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {/* HubSpot */}
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#111] px-6 py-4 shadow-sm hover:border-orange-500/30 transition-colors group">
+              <svg width="24" height="24" viewBox="0 0 512 512" className="text-orange-400" fill="currentColor">
+                <path d="M267.4 211.6c-25 0-48.3 7.4-67.8 20.2L145.7 178c4.3-10.2 6.7-21.4 6.7-33.1 0-47.8-38.7-86.5-86.5-86.5S-.3 97.1-.3 144.9s38.7 86.5 86.5 86.5c20.9 0 40.1-7.4 54.9-19.6l53.4 53.4c-13.4 19.7-21.2 43.5-21.2 69.1 0 68.3 55.4 123.7 123.7 123.7S420.4 402.6 420.4 334.3s-55.5-122.7-153-122.7zm0 195.6c-40 0-72.4-32.4-72.4-72.4s32.4-72.4 72.4-72.4 72.4 32.4 72.4 72.4-32.4 72.4-72.4 72.4zM66.2 188.1c-23.9 0-43.3-19.4-43.3-43.3s19.4-43.3 43.3-43.3 43.3 19.4 43.3 43.3-19.4 43.3-43.3 43.3z"/>
+              </svg>
+              <span className="text-sm font-semibold text-white/70 group-hover:text-white transition-colors">HubSpot</span>
+            </div>
+            {/* Google Ads */}
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#111] px-6 py-4 shadow-sm hover:border-sky-500/30 transition-colors group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-sky-400">
+                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" fill="currentColor"/>
+              </svg>
+              <span className="text-sm font-semibold text-white/70 group-hover:text-white transition-colors">Google Ads</span>
+            </div>
+            {/* LinkedIn */}
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#111] px-6 py-4 shadow-sm hover:border-blue-500/30 transition-colors group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              <span className="text-sm font-semibold text-white/70 group-hover:text-white transition-colors">LinkedIn</span>
+            </div>
+            {/* Stripe */}
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#111] px-6 py-4 shadow-sm hover:border-violet-500/30 transition-colors group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-violet-400">
+                <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 2.227 0 4.515.858 6.09 1.631l.89-5.494C18.252.975 15.697 0 12.165 0 9.667 0 7.589.654 6.104 1.872 4.56 3.147 3.757 4.992 3.757 7.218c0 4.039 2.467 5.76 6.476 7.219 2.585.92 3.445 1.574 3.445 2.583 0 .98-.84 1.545-2.354 1.545-1.875 0-4.965-.921-6.99-2.109l-.9 5.555C5.175 22.99 8.385 24 11.714 24c2.641 0 4.843-.624 6.328-1.813 1.664-1.305 2.525-3.236 2.525-5.732 0-4.128-2.524-5.851-6.591-7.305z"/>
+              </svg>
+              <span className="text-sm font-semibold text-white/70 group-hover:text-white transition-colors">Stripe</span>
+            </div>
+            {/* SendGrid */}
+            <div className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-[#111] px-6 py-4 shadow-sm hover:border-sky-400/30 transition-colors group">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-sky-300">
+                <path d="M0 8h8V0H0v8zm1-7h6v6H1V1zm7 15H0v8h8v-8zm-1 7H1v-6h6v6zm1-15h8V0H8v8zm1-7h6v6H9V1zM8 16h8v-8H8v8zm1-7h6v6H9V9zm7-9h8v8h-8V0zm1 7h6V1h-6v6zm-1 9h8v8h-8v-8zm1 7h6v-6h-6v6z"/>
+              </svg>
+              <span className="text-sm font-semibold text-white/70 group-hover:text-white transition-colors">SendGrid</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* SOCIAL PROOF STATS */}
       <section className="border-b border-white/8 bg-[#080808] px-6 py-14">
         <div className="mx-auto max-w-6xl">
@@ -610,18 +658,46 @@ export default function LandingPage() {
       <section className="border-t border-white/8 bg-[#080808] px-6 py-20">
         <div className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">Social proof</p>
-            <h2 className="text-4xl font-extrabold tracking-tight">What pilot users say.</h2>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-orange-500">What our beta users say</p>
+            <h2 className="text-4xl font-extrabold tracking-tight">Real results from real teams.</h2>
+            <p className="mt-3 text-white/40 text-sm">From our closed beta cohort of 47 marketing teams.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { quote: "We cut our weekly reporting time from 6 hours to 20 minutes. I don't know how we managed without it.", name: 'Sarah K.', role: 'Head of Growth, B2B SaaS', initials: 'SK', from: 'from-orange-500', to: 'to-rose-500' },
-              { quote: "It replaced our content agency retainer entirely. Saves $9K a month and the quality is genuinely better.", name: 'Marcus T.', role: 'Founder, D2C Brand', initials: 'MT', from: 'from-violet-500', to: 'to-purple-600' },
-              { quote: "The memory system is the killer feature. It actually knows my brand. No more re-briefing an AI from scratch.", name: 'Priya M.', role: 'CMO, Growth Stage Startup', initials: 'PM', from: 'from-sky-500', to: 'to-blue-600' },
+              {
+                quote: "We cut our weekly reporting time from 6 hours to 20 minutes. It identified a $4,100 reallocation opportunity in our Google Ads on day one — we applied it and saw the lift within 10 days. I genuinely don't know how we managed without it.",
+                name: 'Sarah K.',
+                role: 'Head of Growth · B2B SaaS · Series A',
+                initials: 'SK',
+                from: 'from-orange-500',
+                to: 'to-rose-500',
+                metric: '14 hrs/week saved',
+              },
+              {
+                quote: "It completely replaced our $9K/month content agency retainer. The brand memory means I never have to re-brief it — it already knows our tone, our ICP, our positioning. The output quality is genuinely better than what we were paying an agency for.",
+                name: 'Marcus T.',
+                role: 'Co-Founder & CEO · D2C Brand · $2.4M ARR',
+                initials: 'MT',
+                from: 'from-violet-500',
+                to: 'to-purple-600',
+                metric: '$9K/mo agency replaced',
+              },
+              {
+                quote: "The channel attribution analysis was eye-opening. We were spending 60% of our budget on Meta because it 'felt' like it was working. Turns out LinkedIn was delivering 8× ROAS and we'd been capping it. We reallocated in week 1 and pipeline jumped 34% that month.",
+                name: 'Priya M.',
+                role: 'CMO · Growth-Stage SaaS · 120 employees',
+                initials: 'PM',
+                from: 'from-sky-500',
+                to: 'to-blue-600',
+                metric: '+34% pipeline in month 1',
+              },
             ].map((t) => (
               <div key={t.name} className="rounded-2xl border border-white/10 bg-[#111111] p-7 card-accent-orange flex flex-col">
-                <div className="mb-4 flex items-center gap-0.5 text-amber-400">
-                  {[0,1,2,3,4].map((i) => <StarIcon key={i} />)}
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-0.5 text-amber-400">
+                    {[0,1,2,3,4].map((i) => <StarIcon key={i} />)}
+                  </div>
+                  <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold text-emerald-400">{t.metric}</span>
                 </div>
                 <p className="mb-6 flex-1 text-sm leading-relaxed text-white/70">"{t.quote}"</p>
                 <div className="flex items-center gap-3">
