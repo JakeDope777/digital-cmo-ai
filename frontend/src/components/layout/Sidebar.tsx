@@ -76,12 +76,30 @@ function NavLink({ item, isActive }: { item: typeof NAV_ITEMS[0]; isActive: bool
   );
 }
 
-export const Sidebar = memo(function Sidebar() {
+export const Sidebar = memo(function Sidebar({ mobileOpen, onClose }: { mobileOpen?: boolean; onClose?: () => void }) {
   const [location] = useLocation();
   const { user, logout } = useAuth();
 
   return (
-    <aside className="w-[220px] bg-[#111827] border-r border-slate-800 flex flex-col flex-shrink-0 relative z-20">
+    <>
+      {/* Mobile overlay backdrop */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 z-30 md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+        )}
+      </AnimatePresence>
+    <aside className={`
+      w-[220px] bg-[#111827] border-r border-slate-800 flex flex-col flex-shrink-0 relative z-40
+      md:static md:translate-x-0
+      fixed inset-y-0 left-0 transition-transform duration-300
+      ${mobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+    `}>
       {/* Logo */}
       <div className="h-[72px] flex items-center px-5 border-b border-slate-800">
         <Link href="/dashboard" className="flex items-center gap-3 cursor-pointer group">
@@ -168,5 +186,6 @@ export const Sidebar = memo(function Sidebar() {
         </motion.div>
       </div>
     </aside>
+    </>
   );
 });

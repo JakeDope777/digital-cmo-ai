@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, Trash2, Bot, UserCircle } from 'lucide-react';
 import { chatService } from '../services/api';
 import type { ChatMessage } from '../types';
-import ReactMarkdown from 'react-markdown';
+// react-markdown removed — using simple inline renderer to avoid extra dep
 import { trackEvent, trackOnboardingStep } from '../services/analytics';
 import { useDemoMode } from '../context/DemoModeContext';
 
@@ -153,8 +153,8 @@ export default function ChatPage() {
               }`}
             >
               {msg.role === 'assistant' ? (
-                <div className="prose prose-sm max-w-none">
-                  <ReactMarkdown>{msg.content}</ReactMarkdown>
+                <div className="prose prose-sm max-w-none whitespace-pre-wrap">
+                  {msg.content}
                 </div>
               ) : (
                 msg.content

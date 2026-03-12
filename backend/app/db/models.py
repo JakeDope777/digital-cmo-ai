@@ -31,10 +31,44 @@ def generate_uuid() -> str:
     return str(uuid.uuid4())
 
 
+# ---------------------------------------------------------------------------
+# Multi-tenancy
+# ---------------------------------------------------------------------------
+
+class Tenant(Base):
+    """
+    Organisation / workspace that owns multiple users.
+
+    plan values: "free" | "pro" | "enterprise"
+    """
+
+    __tablename__ = "tenants"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    name = Column(String, nullable=False)
+    plan = Column(
+        Enum("free", "pro", "enterprise", name="tenant_plan"),
+        default="free",
+        nullable=False,
+    )
+    stripe_customer_id = Column(String, nullable=True, index=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    updated_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        onupdate=lambda: datetime.now(timezone.utc),
+    )
+
+    users = relationship("User", back_populates="tenant")
+    campaigns = relationship("Campaign", back_populates="tenant")
+    contacts = relationship("Contact", back_populates="tenant")
+
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(String, primary_key=True, default=generate_uuid)
+    tenant_id = Column(String, ForeignKey("tenants.id"), nullable=True, index=True)
     email = Column(String, unique=True, nullable=False, index=True)
     password_hash = Column(String, nullable=False)
     role = Column(
@@ -54,6 +88,7 @@ class User(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
+    tenant = relationship("Tenant", back_populates="users")
     token_account = relationship("TokenAccount", back_populates="user", uselist=False)
     usage_logs = relationship("UsageLog", back_populates="user")
     contexts = relationship("Context", back_populates="user")

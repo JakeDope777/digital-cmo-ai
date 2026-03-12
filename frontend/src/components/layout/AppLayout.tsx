@@ -6,6 +6,7 @@ import {
   BellIcon,
   MagnifyingGlassIcon,
   PlusIcon,
+  Bars3Icon,
 } from "@heroicons/react/24/outline";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
@@ -43,6 +44,7 @@ export const AppLayout = memo(function AppLayout({
   const { isAuthenticated } = useAuth();
   const [cmdOpen, setCmdOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(() => {
     return !localStorage.getItem("dcmo_onboarded");
   });
@@ -76,11 +78,19 @@ export const AppLayout = memo(function AppLayout({
 
   return (
     <div className="flex h-screen bg-[#0a0f1e] text-slate-200 overflow-hidden font-sans selection:bg-indigo-600/30">
-      <Sidebar />
+      <Sidebar mobileOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
         {/* Glass Top Header */}
-        <header className="h-[72px] flex items-center justify-between px-6 border-b border-slate-800/80 bg-[#111827]/70 backdrop-blur-2xl z-10 flex-shrink-0">
+        <header className="h-[72px] flex items-center justify-between px-4 md:px-6 border-b border-slate-800/80 bg-[#111827]/70 backdrop-blur-2xl z-10 flex-shrink-0">
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden p-2 mr-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            onClick={() => setSidebarOpen(o => !o)}
+            aria-label="Toggle menu"
+          >
+            <Bars3Icon className="w-5 h-5" />
+          </button>
           {/* Search / ⌘K trigger */}
           <button
             onClick={() => setCmdOpen(true)}

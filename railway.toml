@@ -1,0 +1,74 @@
+# ============================================================
+# Railway.app — Digital CMO AI
+# https://docs.railway.app/reference/config-as-code
+# ============================================================
+
+[build]
+builder = "DOCKERFILE"
+
+# ─────────────────────────────────────────────────────────
+# Backend Service (FastAPI / Python 3.11)
+# ─────────────────────────────────────────────────────────
+[[services]]
+name = "backend"
+source = "backend"
+
+[services.build]
+dockerfilePath = "backend/Dockerfile"
+buildCommand = ""
+
+[services.deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
+healthcheckPath = "/health/ready"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[[services.deploy.envVars]]
+name = "PORT"
+value = "8000"
+
+[[services.deploy.envVars]]
+name = "HOST"
+value = "0.0.0.0"
+
+[[services.deploy.envVars]]
+name = "DEBUG"
+value = "false"
+
+# These are injected from Railway secret variables:
+# DATABASE_URL, REDIS_URL, SECRET_KEY, OPENAI_API_KEY …
+
+# ─────────────────────────────────────────────────────────
+# Frontend Service (Node / Vite → nginx)
+# ─────────────────────────────────────────────────────────
+[[services]]
+name = "frontend"
+source = "frontend"
+
+[services.build]
+dockerfilePath = "frontend/Dockerfile"
+buildCommand = ""
+
+[services.deploy]
+startCommand = "nginx -g 'daemon off;'"
+healthcheckPath = "/"
+healthcheckTimeout = 15
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+
+[[services.deploy.envVars]]
+name = "PORT"
+value = "3000"
+
+# ─────────────────────────────────────────────────────────
+# Plugins
+# ─────────────────────────────────────────────────────────
+
+# PostgreSQL — Railway managed plugin
+# Add via Railway dashboard: "New Plugin → PostgreSQL"
+# Provides $DATABASE_URL automatically
+
+# Redis — Railway managed plugin  
+# Add via Railway dashboard: "New Plugin → Redis"
+# Provides $REDIS_URL automatically

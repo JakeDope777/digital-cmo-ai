@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as demo from "@/lib/demo-data";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth as useAuthContext } from "@/context/AuthContext";
 
 // ============================================================================
 // FALLBACK WRAPPER
@@ -27,31 +28,17 @@ async function fetchWithFallback<T>(
 }
 
 // ----------------------------------------------------------------------------
-// AUTH
+// AUTH — delegates to AuthContext (single source of truth)
 // ----------------------------------------------------------------------------
-export function useAuth() {
-  const token = typeof window !== 'undefined' ? localStorage.getItem("dcmo_token") : null;
-  return {
-    isAuthenticated: !!token,
-    user: token ? demo.DEMO_USER : null,
-    logout: () => {
-      localStorage.removeItem("dcmo_token");
-      window.location.href = "/login";
-    }
-  };
-}
+/** @deprecated Use useAuth from @/context/AuthContext directly */
+export { useAuthContext as useAuth };
 
 export function useLogin() {
+  const { login } = useAuthContext();
   return useMutation({
-    mutationFn: async (data: any) => {
-      // Mocking login for frontend demo
-      await new Promise(r => setTimeout(r, 1000));
-      if (data.email && data.password) {
-        localStorage.setItem("dcmo_token", "demo_jwt_token");
-        return { token: "demo_jwt_token", user: demo.DEMO_USER };
-      }
-      throw new Error("Invalid credentials");
-    }
+    mutationFn: async (data: { email: string; password: string }) => {
+      await login(data.email, data.password);
+    },
   });
 }
 
