@@ -172,6 +172,7 @@ class Campaign(Base):
     __tablename__ = "campaigns"
 
     id = Column(String, primary_key=True, default=generate_uuid)
+    tenant_id = Column(String, ForeignKey("tenants.id"), nullable=True, index=True)
     name = Column(String, nullable=False)
     channel = Column(String, nullable=False)
     status = Column(
@@ -189,17 +190,22 @@ class Campaign(Base):
         onupdate=lambda: datetime.now(timezone.utc),
     )
 
+    tenant = relationship("Tenant", back_populates="campaigns")
+
 
 class Contact(Base):
     __tablename__ = "contacts"
 
     id = Column(String, primary_key=True, default=generate_uuid)
+    tenant_id = Column(String, ForeignKey("tenants.id"), nullable=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, nullable=True, index=True)
     company = Column(String, nullable=True)
     status = Column(String, default="new")
     attributes = Column(JSON, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    tenant = relationship("Tenant", back_populates="contacts")
 
 
 class ApiEndpoint(Base):

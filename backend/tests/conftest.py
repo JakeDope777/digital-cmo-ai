@@ -7,18 +7,25 @@ import shutil
 import sys
 import tempfile
 import uuid
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-# Set test environment before importing app modules
+# ---------------------------------------------------------------------------
+# Environment must be configured BEFORE any app module is imported.
+# ---------------------------------------------------------------------------
 TEST_ROOT = tempfile.mkdtemp(prefix="digital_cmo_tests_")
 TEST_DB_PATH = os.path.join(TEST_ROOT, "test.db")
 TEST_MEMORY_PATH = os.path.join(TEST_ROOT, "memory")
 
 os.environ["DATABASE_URL"] = f"sqlite:///{TEST_DB_PATH}"
 os.environ["SECRET_KEY"] = "test-secret-key-not-for-production"
+os.environ["ALGORITHM"] = "HS256"
 os.environ["DEBUG"] = "false"
 os.environ["MEMORY_BASE_PATH"] = TEST_MEMORY_PATH
+os.environ["OPENAI_API_KEY"] = "sk-test-fake-key"
+os.environ["REDIS_URL"] = "redis://localhost:6379"  # not actually used in tests
+os.environ["OLLAMA_ENABLED"] = "false"  # disable Ollama in tests
 
 
 @pytest.fixture()
@@ -78,10 +85,23 @@ try:
 
     @pytest.fixture()
     def client():
-        """Provide a FastAPI test client with overridden database dependency."""
+        """Provide a FastAPI test client with overridden database dependency.
+
+        Also patches the Redis-based rate limiter so tests don't require a
+        running Redis instance.
+        """
+        from unittest.mock import AsyncMock, patch
+
         app.dependency_overrides[get_db] = override_get_db
-        with TestClient(app) as c:
-            yield c
+
+        # Mock the rate limiter dependency to always allow requests
+        async def mock_rate_limit(*args, **kwargs):
+            return None
+
+        from app.core import rate_limiter as _rl_mod
+        with patch.object(_rl_mod, "sliding_window_check", AsyncMock(return_value=(True, 0, 0))):
+            with TestClient(app) as c:
+                yield c
         app.dependency_overrides.clear()
 
     @pytest.fixture()
@@ -109,6 +129,66 @@ try:
         if response.status_code == 409:
             response = client.post("/auth/login", json=signup_data)
         token = response.json()["access_token"]
+        return {"Authorization": f"Bearer {token}"}
+
+    # ------------------------------------------------------------------
+    # test_db — SQLAlchemy session backed by the in-memory SQLite DB
+    # ------------------------------------------------------------------
+    @pytest.fixture()
+    def test_db(db_session):
+        """Alias for db_session; provides a clean SQLAlchemy session per test."""
+        return db_session
+
+    # ------------------------------------------------------------------
+    # test_user — a User row inserted into the test DB
+    # ------------------------------------------------------------------
+    @pytest.fixture()
+    def test_user(db_session):
+        """Insert a known test user (email-verified) into the DB and return it."""
+        from app.core.security import hash_password
+        from app.db import models
+
+        email = f"testuser-{uuid.uuid4().hex[:8]}@example.com"
+        user = models.User(
+            id=str(uuid.uuid4()),
+            email=email,
+            password_hash=hash_password("testpassword123"),
+            role="user",
+            is_email_verified=True,
+        )
+        db_session.add(user)
+        db_session.commit()
+        db_session.refresh(user)
+        return user
+
+    # ------------------------------------------------------------------
+    # mock_openai — patches LLMClient.generate with a canned response
+    # ------------------------------------------------------------------
+    @pytest.fixture()
+    def mock_openai():
+        """Patch the brain's LLM client so no real OpenAI calls are made."""
+        canned = {
+            "reply": "This is a mocked AI response.",
+            "conversation_id": "mock-conv-id",
+            "module_used": "general",
+            "tokens_used": 10,
+        }
+        with pytest.MonkeyPatch.context() as mp:
+            mp.setattr(
+                "app.api.chat._brain.process_message",
+                AsyncMock(return_value=canned),
+            )
+            yield canned
+
+    # ------------------------------------------------------------------
+    # auth_headers_jwt — builds JWT directly without HTTP round-trip
+    # ------------------------------------------------------------------
+    @pytest.fixture()
+    def auth_headers_jwt(test_user):
+        """Return Authorization headers built from a fresh JWT for test_user."""
+        from app.core.security import create_access_token
+
+        token = create_access_token({"sub": test_user.id, "email": test_user.email})
         return {"Authorization": f"Bearer {token}"}
 
 except ImportError:

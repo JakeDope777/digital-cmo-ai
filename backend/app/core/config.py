@@ -25,9 +25,13 @@ class Settings(BaseSettings):
 
     # JWT Authentication
     SECRET_KEY: str = "change-me-in-production-use-a-strong-random-key"
+    SESSION_SECRET: str = "change-me-in-production-session-secret"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Password hashing
+    BCRYPT_ROUNDS: int = 12  # min cost factor — do not set below 12 in production
     REQUIRE_EMAIL_VERIFICATION: bool = False
     EMAIL_VERIFICATION_EXPIRE_HOURS: int = 48
     PASSWORD_RESET_EXPIRE_MINUTES: int = 60
@@ -37,6 +41,21 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4.1-mini"
     OPENAI_BASE_URL: Optional[str] = None
     TELEGRAM_FALLBACK_BOT: Optional[str] = "@baltazar_loco_bot"
+
+    # Anthropic / Google / Local LLM
+    ANTHROPIC_API_KEY: Optional[str] = None
+    GOOGLE_GEMINI_API_KEY: Optional[str] = None
+
+    # Ollama (local, free)
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "qwen2.5:7b"          # default local model
+    OLLAMA_ENABLED: bool = True                # set False to disable local routing
+
+    # LLM routing thresholds
+    # Tasks with estimated token complexity BELOW this go to local Ollama
+    LLM_LOCAL_MAX_COMPLEXITY: int = 800       # tokens threshold for local routing
+    # Provider preference order (comma-separated): ollama,openai,anthropic,google
+    LLM_PROVIDER_ORDER: str = "ollama,openai,anthropic,google"
 
     # Vector Database (FAISS)
     VECTOR_DB_PATH: str = "./data/vector_store"
@@ -121,9 +140,11 @@ class Settings(BaseSettings):
     PRO_TIER_MONTHLY_TOKENS: int = 100000
     ENTERPRISE_TIER_MONTHLY_TOKENS: int = 1000000
 
-    # CORS
+    # CORS & Security
     CORS_ORIGINS: list[str] = ["*"]
     CORS_ORIGINS_CSV: Optional[str] = None
+    ALLOWED_ORIGINS: Optional[str] = None   # alias for CORS_ORIGINS_CSV
+    MAX_UPLOAD_SIZE_MB: int = 10             # max file upload size in MB
 
     # URLs
     APP_BASE_URL: str = "http://localhost:8000"

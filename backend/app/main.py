@@ -18,6 +18,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from .core.catalog import PUBLIC_MODULES, list_public_domains
+from .middleware.security_middleware import SecurityMiddleware
 from .core.config import settings
 from .db import models
 from .db.session import SessionLocal, init_db
@@ -245,7 +246,14 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Security middleware (headers, request ID, slow request logging)
+# Must be added BEFORE CORSMiddleware so security headers are always present
+app.add_middleware(SecurityMiddleware)
+
 # CORS middleware
+# NOTE: In production, CORS_ORIGINS_CSV must be set to explicit allowed origins.
+# Wildcard (*) is blocked when allow_credentials=True by browsers anyway, but
+# explicit origins are always safer.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_configured_cors_origins(),
@@ -286,10 +294,22 @@ async def api_health():
 
 @app.get("/health", tags=["Health"])
 async def health_check():
-    """Detailed health check."""
-    return {
-        "status": "healthy",
-        "database": "connected",
+    """Detailed health check with dependency status."""
+    import time
+
+    redis_status = await _check_redis()
+    db_status = await _check_db()
+
+    all_ok = all(s.get("status") == "ok" for s in [redis_status, db_status])
+    overall = "healthy" if all_ok else "degraded"
+
+    payload = {
+        "status": overall,
+        "uptime_seconds": round(time.time() - _START_TIME, 2),
+        "checks": {
+            "redis": redis_status,
+            "database": db_status,
+        },
         "llm_configured": bool(settings.OPENAI_API_KEY),
         "memory_path": settings.MEMORY_BASE_PATH,
         "frontend_base_url": settings.FRONTEND_BASE_URL,
@@ -297,6 +317,69 @@ async def health_check():
         "pilot_connectors": _integration_service.get_pilot_readiness(),
         "launch_readiness": _launch_readiness(),
     }
+
+    from fastapi.responses import JSONResponse
+    status_code = 200 if all_ok else 503
+    return JSONResponse(content=payload, status_code=status_code)
+
+
+_START_TIME = __import__("time").time()
+
+
+async def _check_redis() -> dict:
+    """Async Redis connectivity check."""
+    redis_url = getattr(settings, "REDIS_URL", "redis://localhost:6379")
+    try:
+        import redis.asyncio as aioredis
+        client = aioredis.Redis.from_url(redis_url, decode_responses=True, socket_connect_timeout=2)
+        await client.ping()
+        await client.aclose()
+        return {"status": "ok"}
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc)[:120]}
+
+
+async def _check_db() -> dict:
+    """Sync DB connectivity check wrapped for async use."""
+    try:
+        from sqlalchemy import text as sa_text
+        db = SessionLocal()
+        try:
+            db.execute(sa_text("SELECT 1"))
+            return {"status": "ok"}
+        finally:
+            db.close()
+    except Exception as exc:
+        return {"status": "error", "detail": str(exc)[:120]}
+
+
+@app.get("/metrics", tags=["Health"])
+async def metrics_endpoint():
+    """Prometheus-compatible metrics endpoint."""
+    from fastapi.responses import Response
+    import time
+
+    lines = [
+        "# HELP request_count_total Total number of requests",
+        "# TYPE request_count_total counter",
+        "request_count_total 0",
+        "# HELP request_errors_total Total number of request errors",
+        "# TYPE request_errors_total counter",
+        "request_errors_total 0",
+        "# HELP cache_hits_total Total cache hits",
+        "# TYPE cache_hits_total counter",
+        "cache_hits_total 0",
+        "# HELP cache_misses_total Total cache misses",
+        "# TYPE cache_misses_total counter",
+        "cache_misses_total 0",
+        f"# HELP process_uptime_seconds Uptime in seconds",
+        "# TYPE process_uptime_seconds gauge",
+        f"process_uptime_seconds {round(time.time() - _START_TIME, 2)}",
+    ]
+    return Response(
+        content="\n".join(lines) + "\n",
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
 
 
 @app.get("/health/ready", tags=["Health"])

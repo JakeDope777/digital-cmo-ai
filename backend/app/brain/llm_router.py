@@ -39,6 +39,16 @@ logger = logging.getLogger(__name__)
 # Cost tables (USD per 1K tokens) — update as pricing changes
 # ---------------------------------------------------------------------------
 COST_TABLE: dict[str, dict[str, float]] = {
+    "ollama": {
+        # Local models — effectively free (electricity cost only)
+        "qwen2.5:7b": {"input": 0.0, "output": 0.0},
+        "qwen2.5:14b": {"input": 0.0, "output": 0.0},
+        "llama3:8b": {"input": 0.0, "output": 0.0},
+        "llama3:70b": {"input": 0.0, "output": 0.0},
+        "mistral:7b": {"input": 0.0, "output": 0.0},
+        "codellama:7b": {"input": 0.0, "output": 0.0},
+        "deepseek-coder:6.7b": {"input": 0.0, "output": 0.0},
+    },
     "openai": {
         "gpt-4": {"input": 0.03, "output": 0.06},
         "gpt-4-turbo": {"input": 0.01, "output": 0.03},
@@ -64,6 +74,7 @@ class LLMProvider(str, Enum):
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     GOOGLE = "google"
+    OLLAMA = "ollama"
 
 
 @dataclass
@@ -444,6 +455,103 @@ async def _stream_google(request: LLMRequest) -> AsyncIterator[str]:
 
 
 # ---------------------------------------------------------------------------
+# Ollama provider (local, free)
+# ---------------------------------------------------------------------------
+
+async def _call_ollama(request: LLMRequest) -> LLMResponse:
+    """Call local Ollama API (OpenAI-compatible /api/chat endpoint)."""
+    import httpx
+
+    base_url = settings.OLLAMA_BASE_URL.rstrip("/")
+    model = request.model or settings.OLLAMA_MODEL
+
+    messages = list(request.messages)
+    if request.system:
+        messages = [{"role": "system", "content": request.system}] + messages
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "options": {
+            "temperature": request.temperature,
+            "num_predict": request.max_tokens,
+        },
+    }
+
+    t0 = time.monotonic()
+    async with httpx.AsyncClient(base_url=base_url, timeout=request.timeout) as client:
+        response = await client.post("/api/chat", json=payload)
+        response.raise_for_status()
+        data = response.json()
+
+    latency_ms = (time.monotonic() - t0) * 1000
+    content = data.get("message", {}).get("content", "")
+
+    # Ollama provides eval_count (output tokens) and prompt_eval_count (input)
+    input_tokens = data.get("prompt_eval_count", len(str(messages)) // 4)
+    output_tokens = data.get("eval_count", len(content) // 4)
+
+    logger.info(
+        "ollama call complete",
+        extra={
+            "model": model,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cost_usd": 0.0,
+            "latency_ms": latency_ms,
+        },
+    )
+    return LLMResponse(
+        content=content,
+        provider=LLMProvider.OLLAMA,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cost_usd=0.0,
+        latency_ms=latency_ms,
+    )
+
+
+async def _stream_ollama(request: LLMRequest) -> AsyncIterator[str]:
+    """Stream tokens from local Ollama."""
+    import httpx
+
+    base_url = settings.OLLAMA_BASE_URL.rstrip("/")
+    model = request.model or settings.OLLAMA_MODEL
+
+    messages = list(request.messages)
+    if request.system:
+        messages = [{"role": "system", "content": request.system}] + messages
+
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": True,
+        "options": {
+            "temperature": request.temperature,
+            "num_predict": request.max_tokens,
+        },
+    }
+
+    async with httpx.AsyncClient(base_url=base_url, timeout=request.timeout) as client:
+        async with client.stream("POST", "/api/chat", json=payload) as response:
+            response.raise_for_status()
+            async for line in response.aiter_lines():
+                if line.strip():
+                    import json as _json
+                    try:
+                        chunk = _json.loads(line)
+                        token = chunk.get("message", {}).get("content", "")
+                        if token:
+                            yield token
+                        if chunk.get("done"):
+                            break
+                    except _json.JSONDecodeError:
+                        continue
+
+
+# ---------------------------------------------------------------------------
 # Provider registry
 # ---------------------------------------------------------------------------
 
@@ -451,16 +559,18 @@ _PROVIDER_CALL_MAP = {
     LLMProvider.OPENAI: _call_openai,
     LLMProvider.ANTHROPIC: _call_anthropic,
     LLMProvider.GOOGLE: _call_google,
+    LLMProvider.OLLAMA: _call_ollama,
 }
 
 _PROVIDER_STREAM_MAP = {
     LLMProvider.OPENAI: _stream_openai,
     LLMProvider.ANTHROPIC: _stream_anthropic,
     LLMProvider.GOOGLE: _stream_google,
+    LLMProvider.OLLAMA: _stream_ollama,
 }
 
-# Fallback order
-_FALLBACK_ORDER = [LLMProvider.OPENAI, LLMProvider.ANTHROPIC, LLMProvider.GOOGLE]
+# Fallback order — Ollama first (free), then paid providers
+_FALLBACK_ORDER = [LLMProvider.OLLAMA, LLMProvider.OPENAI, LLMProvider.ANTHROPIC, LLMProvider.GOOGLE]
 
 
 def _is_provider_configured(provider: LLMProvider) -> bool:
@@ -473,6 +583,8 @@ def _is_provider_configured(provider: LLMProvider) -> bool:
             getattr(settings, "GOOGLE_GEMINI_API_KEY", None)
             or getattr(settings, "GOOGLE_API_KEY", None)
         )
+    if provider == LLMProvider.OLLAMA:
+        return bool(getattr(settings, "OLLAMA_ENABLED", True))
     return False
 
 
@@ -513,17 +625,60 @@ class LLMRouter:
         self._total_output_tokens: int = 0
 
     # ------------------------------------------------------------------
+    # Smart routing helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _estimate_complexity(request: LLMRequest) -> int:
+        """Estimate task complexity as rough token count of all messages."""
+        total = sum(len(m.get("content", "")) for m in request.messages)
+        if request.system:
+            total += len(request.system)
+        return total // 4  # ~4 chars per token
+
+    def _smart_providers(self, request: LLMRequest) -> list[LLMProvider]:
+        """
+        Route to local Ollama for simple tasks, paid APIs for complex ones.
+
+        Rules:
+        - If force_provider is set → honour it
+        - If complexity < LLM_LOCAL_MAX_COMPLEXITY AND Ollama is available → start with Ollama
+        - Otherwise → skip Ollama, go straight to paid providers
+        - Always fall back down the full chain on failure
+        """
+        if request.force_provider:
+            return [request.force_provider]
+
+        available = self._available_providers()
+        complexity = self._estimate_complexity(request)
+        local_threshold = getattr(settings, "LLM_LOCAL_MAX_COMPLEXITY", 800)
+
+        ollama_available = LLMProvider.OLLAMA in available
+        paid_providers = [p for p in available if p != LLMProvider.OLLAMA]
+
+        if ollama_available and complexity < local_threshold:
+            # Simple task: try local first, fall back to paid
+            logger.debug("Routing to Ollama (complexity=%d < threshold=%d)", complexity, local_threshold)
+            return [LLMProvider.OLLAMA] + paid_providers
+        else:
+            # Complex task: skip local, use paid providers + Ollama as last resort
+            logger.debug("Routing to paid providers (complexity=%d >= threshold=%d)", complexity, local_threshold)
+            if ollama_available:
+                return paid_providers + [LLMProvider.OLLAMA]
+            return paid_providers
+
+    # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
     async def complete(self, request: LLMRequest) -> LLMResponse:
         """
         Complete a chat request with automatic fallback across providers.
+        Uses smart complexity-based routing: simple tasks → Ollama (free),
+        complex tasks → paid providers.
         Returns the first successful LLMResponse.
         """
-        providers = (
-            [request.force_provider] if request.force_provider else self._available_providers()
-        )
+        providers = self._smart_providers(request)
 
         last_error: Optional[Exception] = None
         for provider in providers:

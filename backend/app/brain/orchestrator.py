@@ -31,65 +31,74 @@ from .conversation_state import (
     TaskStatus,
     TASK_SLOT_TEMPLATES,
 )
+from .llm_router import LLMRouter, LLMRequest, LLMResponse, LLMProvider, get_llm_router
+from ..core.config import settings
 
 
 class LLMClient:
     """
-    Wrapper around an LLM API (OpenAI-compatible).
-    Replace with actual implementation when API keys are configured.
+    Adapter that wraps LLMRouter with a simple generate() interface.
+
+    Used internally by Brain sub-components (IntentRouter, MemoryWatcher, etc.)
+    that expect a single .generate(messages) method.  Routing intelligence
+    (Ollama vs paid APIs) lives in LLMRouter.
+
+    Accepts legacy kwargs (api_key, model, telegram_fallback_bot) for
+    backwards compatibility with existing call sites.
     """
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
-        model: str = "gpt-4",
+        router: Optional[LLMRouter] = None,
+        model: Optional[str] = None,
         telegram_fallback_bot: Optional[str] = None,
+        # Legacy compat kwargs — accepted but routing is handled by LLMRouter
+        api_key: Optional[str] = None,
+        **kwargs: Any,
     ):
-        self.api_key = api_key
-        self.model = model
-        self.telegram_fallback_bot = telegram_fallback_bot
-        self._client = None
+        self._router = router or get_llm_router()
+        self.model = model  # optional model override
+        self.telegram_fallback_bot = telegram_fallback_bot or getattr(
+            settings, "TELEGRAM_FALLBACK_BOT", None
+        )
+        # Legacy compat attributes (kept so existing code that reads .api_key doesn't break)
+        self.api_key = api_key or getattr(settings, "OPENAI_API_KEY", None)
 
     async def generate(self, messages: Union[list[dict], str]) -> str:
         """
-        Send messages to the LLM and return the assistant's response.
+        Send messages through LLMRouter and return the response text.
 
-        Accepts either a list of message dicts or a plain string prompt.
-        If no API key is configured, returns a placeholder response.
+        Automatically routes to Ollama (free/local) for simple tasks,
+        and paid APIs for complex ones. Falls back gracefully.
         """
-        # Normalise input
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
 
-        if self.api_key:
-            try:
-                from openai import AsyncOpenAI
-
-                if self._client is None:
-                    self._client = AsyncOpenAI(api_key=self.api_key)
-                response = await self._client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    temperature=0.7,
-                    max_tokens=2000,
-                )
-                return response.choices[0].message.content or ""
-            except Exception as e:
-                return f"[LLM Error: {str(e)}] Please configure a valid API key."
-        else:
-            # Placeholder response for demo / development
-            user_msg = messages[-1]["content"] if messages else ""
+        available = self._router.available_providers()
+        if not available:
+            # No providers configured — demo mode
+            user_msg = messages[-1].get("content", "") if messages else ""
             fallback_hint = (
-                f"\n\nFallback option: you can route long-form tasks through Telegram bot {self.telegram_fallback_bot}."
-                if self.telegram_fallback_bot
-                else ""
+                f"\n\nFallback: route tasks through {self.telegram_fallback_bot}."
+                if self.telegram_fallback_bot else ""
             )
             return (
-                f"[Demo Mode] I received your message about: '{user_msg[:100]}...'\n\n"
-                "To enable full AI responses, please configure your OPENAI_API_KEY "
-                "in the .env file. The system has routed your request and is ready "
-                f"to process it once an LLM provider is connected.{fallback_hint}"
+                f"[Demo Mode] Received: '{user_msg[:100]}...'\n\n"
+                "Configure OPENAI_API_KEY or ensure Ollama is running to enable AI responses."
+                f"{fallback_hint}"
             )
+
+        try:
+            request = LLMRequest(
+                messages=messages,
+                model=self.model,
+                max_tokens=2000,
+                temperature=0.7,
+            )
+            response = await self._router.complete(request)
+            return response.content
+        except Exception as exc:
+            return f"[LLM Error: {exc}] All providers failed. Check logs for details."
 
 
 class BrainOrchestrator:
@@ -106,8 +115,10 @@ class BrainOrchestrator:
         llm_client: Optional[LLMClient] = None,
         memory_manager: Optional[MemoryManager] = None,
         state_manager: Optional[ConversationStateManager] = None,
+        llm_router: Optional[LLMRouter] = None,
     ):
-        self.llm = llm_client or LLMClient()
+        # Use provided client, or build one wrapping the shared LLMRouter
+        self.llm = llm_client or LLMClient(router=llm_router or get_llm_router())
         self.memory = memory_manager or MemoryManager()
         self.router = IntentRouter(llm_client=self.llm)
         self.prompt_builder = PromptBuilder()

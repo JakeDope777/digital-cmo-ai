@@ -1,79 +1,104 @@
+"""Sliding window rate limiter using Redis. Tiers: free=10/min, pro=60/min, enterprise=unlimited."""
+import os
 import time
 from typing import Optional
+import redis.asyncio as aioredis
+from fastapi import Request, HTTPException, Depends
 
-from fastapi import HTTPException, Header, Depends
-from fastapi.responses import JSONResponse
+REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379")
 
-from app.core.cache import get_redis
-
-# Tier limits: requests per minute (-1 = unlimited)
 TIER_LIMITS = {
     "free": 10,
     "pro": 60,
-    "enterprise": -1,
+    "enterprise": None,  # unlimited
 }
 
+WINDOW_SECONDS = 60
 
-async def check_rate_limit(user_id: str, tier: str = "free") -> None:
-    """Sliding window rate limiter using Redis sorted sets.
 
-    Call as a FastAPI dependency or directly in route handlers.
-    Raises HTTP 429 with Retry-After header when limit exceeded.
+def get_redis_client() -> aioredis.Redis:
+    return aioredis.Redis.from_url(REDIS_URL, decode_responses=True)
+
+
+async def sliding_window_check(
+    redis: aioredis.Redis,
+    key: str,
+    limit: int,
+    window: int = WINDOW_SECONDS,
+) -> tuple[bool, int, int]:
     """
-    limit = TIER_LIMITS.get(tier, TIER_LIMITS["free"])
-    if limit == -1:
-        return  # Enterprise: unlimited
-
-    r = await get_redis()
+    Returns (allowed, count, retry_after_seconds).
+    Uses sorted set with timestamps as scores.
+    """
     now = time.time()
-    window = 60.0  # 1 minute sliding window
-    key = f"rate:{user_id}"
+    window_start = now - window
 
-    pipe = r.pipeline()
-    # Remove entries older than the window
-    pipe.zremrangebyscore(key, 0, now - window)
-    # Count remaining entries
-    pipe.zcard(key)
-    # Add current request
+    pipe = redis.pipeline()
+    pipe.zremrangebyscore(key, 0, window_start)
     pipe.zadd(key, {str(now): now})
-    # Set expiry on the key
-    pipe.expire(key, int(window) + 1)
+    pipe.zcard(key)
+    pipe.expire(key, window)
     results = await pipe.execute()
 
-    request_count = results[1]  # count before adding current
-
-    if request_count >= limit:
-        # Find oldest entry to compute retry-after
-        oldest = await r.zrange(key, 0, 0, withscores=True)
+    count = results[2]
+    if count > limit:
+        oldest = await redis.zrange(key, 0, 0, withscores=True)
         if oldest:
-            oldest_ts = oldest[0][1]
-            retry_after = int(window - (now - oldest_ts)) + 1
+            retry_after = int(oldest[0][1] + window - now) + 1
         else:
-            retry_after = int(window)
+            retry_after = window
+        return False, count, retry_after
 
+    return True, count, 0
+
+
+def get_user_tier(request: Request) -> str:
+    """Extract tier from request state or header. Defaults to 'free'."""
+    tier = getattr(request.state, "user_tier", None)
+    if tier is None:
+        tier = request.headers.get("X-User-Tier", "free")
+    return tier if tier in TIER_LIMITS else "free"
+
+
+def get_user_id(request: Request) -> str:
+    """Extract user identifier for rate limiting."""
+    user_id = getattr(request.state, "user_id", None)
+    if user_id is None:
+        user_id = request.headers.get("X-User-Id", request.client.host if request.client else "anonymous")
+    return str(user_id)
+
+
+async def rate_limit(request: Request) -> None:
+    """FastAPI dependency that enforces sliding window rate limiting by user tier."""
+    tier = get_user_tier(request)
+    limit = TIER_LIMITS[tier]
+
+    if limit is None:
+        return  # enterprise: unlimited
+
+    user_id = get_user_id(request)
+    key = f"rate_limit:{tier}:{user_id}"
+
+    redis = get_redis_client()
+    try:
+        allowed, count, retry_after = await sliding_window_check(redis, key, limit)
+    except Exception:
+        # Redis unavailable — fail open (allow request) to avoid blocking users
+        # In production, monitor Redis health separately
+        return
+    finally:
+        try:
+            await redis.aclose()
+        except Exception:
+            pass
+
+    if not allowed:
         raise HTTPException(
             status_code=429,
-            detail={
-                "error": "Rate limit exceeded",
-                "limit": limit,
-                "window": "60s",
-                "retry_after": retry_after,
+            detail=f"Rate limit exceeded. Tier '{tier}' allows {limit} requests/minute.",
+            headers={
+                "Retry-After": str(retry_after),
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": "0",
             },
-            headers={"Retry-After": str(retry_after)},
         )
-
-
-class RateLimiter:
-    """Reusable FastAPI dependency with configurable tier."""
-
-    def __init__(self, tier: str = "free"):
-        self.tier = tier
-
-    async def __call__(self, user_id: str) -> None:
-        await check_rate_limit(user_id, self.tier)
-
-
-# Convenience dependency factories
-free_rate_limit = RateLimiter(tier="free")
-pro_rate_limit = RateLimiter(tier="pro")
-enterprise_rate_limit = RateLimiter(tier="enterprise")

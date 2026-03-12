@@ -156,6 +156,8 @@ async def send_message(
             module_used=result.get("module_used"),
             tokens_used=result.get("tokens_used", 0),
         )
+    except HTTPException:
+        raise  # propagate 401, 429, 403 etc. unchanged
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 

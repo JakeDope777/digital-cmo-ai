@@ -8,7 +8,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
-from .security import decode_token
+from .security import decode_token, TokenInvalidError, TokenExpiredError
 from ..db.session import get_db
 from ..db import models
 
@@ -25,7 +25,13 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication required",
         )
-    payload = decode_token(credentials.credentials)
+    try:
+        payload = decode_token(credentials.credentials)
+    except (TokenInvalidError, TokenExpiredError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
     if payload is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

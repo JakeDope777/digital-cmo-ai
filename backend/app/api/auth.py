@@ -17,10 +17,21 @@ def _utc(dt: datetime) -> datetime:
         return dt.replace(tzinfo=timezone.utc)
     return dt
 
-from fastapi import APIRouter, Depends, HTTPException, Header, status
+from fastapi import APIRouter, Depends, HTTPException, Header, Request, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from ..core.security import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
+from ..core.rate_limiter import rate_limit
+from ..core.security import (
+    hash_password,
+    verify_password,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+    decode_token_safe,
+    TokenExpiredError,
+    TokenInvalidError,
+)
 from ..core.config import settings
 from ..core.dependencies import get_current_user, require_verified_user
 from ..db.session import get_db
@@ -53,7 +64,7 @@ def _optional_user(
     if not authorization.lower().startswith("bearer "):
         return None
     token = authorization.split(" ", 1)[1].strip()
-    payload = decode_token(token)
+    payload = decode_token_safe(token)
     if not payload:
         return None
     user_id = payload.get("sub")
@@ -105,8 +116,16 @@ async def signup(user_data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(user_data: UserLogin, db: Session = Depends(get_db)):
-    """Authenticate a user and return access/refresh tokens."""
+async def login(
+    request: Request,
+    user_data: UserLogin,
+    db: Session = Depends(get_db),
+    _rate: None = Depends(rate_limit),
+):
+    """Authenticate a user and return access/refresh tokens.
+
+    Rate-limited per user/IP to prevent brute-force attacks.
+    """
     user = db.query(models.User).filter(models.User.email == user_data.email).first()
     if not user or not verify_password(user_data.password, user.password_hash):
         raise HTTPException(
@@ -127,11 +146,27 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     )
 
 
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
+async def refresh_token(body: RefreshTokenRequest, db: Session = Depends(get_db)):
+    refresh_token = body.refresh_token
     """Refresh an access token using a valid refresh token."""
-    payload = decode_token(refresh_token)
-    if payload is None or payload.get("type") != "refresh":
+    try:
+        payload = decode_token(refresh_token)
+    except TokenExpiredError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token has expired. Please log in again.",
+        )
+    except TokenInvalidError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+        )
+    if payload.get("type") != "refresh":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid refresh token",
@@ -150,6 +185,24 @@ async def refresh_token(refresh_token: str, db: Session = Depends(get_db)):
         access_token=create_access_token(token_data),
         refresh_token=create_refresh_token(token_data),
     )
+
+
+@router.post("/logout", response_model=MessageResponse)
+async def logout(
+    current_user: models.User = Depends(get_current_user),
+):
+    """Logout the current user.
+
+    JWTs are stateless — we cannot truly revoke them server-side without a
+    token blocklist (Redis-backed).  This endpoint signals to the client
+    that it should discard the access and refresh tokens.
+
+    For full revocation: store revoked token JTIs in Redis until expiry.
+    TODO: implement JTI blocklist when Redis is confirmed available.
+    """
+    # The client MUST discard both access_token and refresh_token on receipt
+    # of this response.
+    return MessageResponse(message="Logged out successfully. Discard your tokens.")
 
 
 @router.get("/me", response_model=UserResponse)

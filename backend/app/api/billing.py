@@ -1,16 +1,31 @@
 """
-Billing API endpoints (Stripe test mode ready).
+Billing API endpoints (Stripe production-ready).
+
+Route map
+---------
+POST /billing/checkout                  → create Stripe checkout session (canonical)
+POST /billing/portal                    → create Stripe billing portal session (canonical)
+POST /billing/webhook                   → receive & verify Stripe webhooks (canonical)
+POST /billing/create-checkout-session   → legacy alias (kept for backwards compat)
+POST /billing/portal-session            → legacy alias (kept for backwards compat)
+GET  /billing/subscription              → current subscription status
+GET  /billing/invoices                  → invoice history
+GET  /billing/health                    → readiness check
 """
 
-from datetime import datetime, timezone
+from __future__ import annotations
+
 import hashlib
 import hmac
 import json
+import logging
 import time
+from datetime import datetime, timezone
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter, Depends, Header, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Request
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from ..core.config import settings
@@ -24,8 +39,142 @@ from ..db.schemas import (
     CheckoutSessionRequest,
 )
 from ..db.session import get_db
+from ..services.stripe_service import stripe_service
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/billing", tags=["Billing"])
+
+
+# ---------------------------------------------------------------------------
+# Request / Response models for canonical routes
+# ---------------------------------------------------------------------------
+
+
+class CheckoutRequest(BaseModel):
+    plan: str = "pro"
+    success_url: Optional[str] = None
+    cancel_url: Optional[str] = None
+
+
+class PortalRequest(BaseModel):
+    return_url: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# ── Canonical routes (used by new frontend code) ──────────────────────────
+# ---------------------------------------------------------------------------
+
+
+@router.post("/checkout", response_model=BillingSessionResponse)
+async def checkout(
+    body: CheckoutRequest,
+    current_user: models.User = Depends(require_verified_user),
+    db: Session = Depends(get_db),
+):
+    """Create a Stripe checkout session; return ``{url}``."""
+    success_url = body.success_url or (
+        f"{settings.FRONTEND_BASE_URL.rstrip('/')}/app/billing?checkout=success"
+    )
+    cancel_url = body.cancel_url or (
+        f"{settings.FRONTEND_BASE_URL.rstrip('/')}/app/billing?checkout=cancel"
+    )
+    price_id = _resolve_price_id(body.plan)
+
+    # Demo mode — Stripe not configured
+    if not stripe_service.is_configured or not price_id:
+        logger.warning("Stripe not configured — returning demo checkout URL")
+        return BillingSessionResponse(
+            checkout_url=f"{settings.FRONTEND_BASE_URL.rstrip('/')}/app/billing?demo_checkout=1",
+            session_id="demo_session",
+            status="demo",
+            demo=True,
+        )
+
+    try:
+        customer_id = await _ensure_stripe_customer(current_user, db)
+        url = stripe_service.create_checkout_session(
+            user_id=current_user.id,
+            price_id=price_id,
+            success_url=success_url,
+            cancel_url=cancel_url,
+            customer_id=customer_id,
+            email=current_user.email,
+            name=current_user.full_name,
+        )
+        return BillingSessionResponse(checkout_url=url, status="ok", demo=False)
+    except Exception as exc:
+        logger.error("checkout error for user %s: %s", current_user.id, exc)
+        raise HTTPException(status_code=502, detail=f"Stripe error: {exc}") from exc
+
+
+@router.post("/portal", response_model=BillingSessionResponse)
+async def portal(
+    body: PortalRequest = Body(default=PortalRequest()),
+    current_user: models.User = Depends(require_verified_user),
+    db: Session = Depends(get_db),
+):
+    """Create a Stripe Billing Portal session; return ``{url}``."""
+    return_url = body.return_url or (
+        f"{settings.FRONTEND_BASE_URL.rstrip('/')}/app/billing"
+    )
+
+    if not stripe_service.is_configured:
+        return BillingSessionResponse(
+            portal_url=f"{settings.FRONTEND_BASE_URL.rstrip('/')}/app/billing?demo_portal=1",
+            status="demo",
+            demo=True,
+        )
+
+    try:
+        customer_id = await _ensure_stripe_customer(current_user, db)
+        url = stripe_service.create_portal_session(
+            customer_id=customer_id,
+            return_url=return_url,
+        )
+        return BillingSessionResponse(portal_url=url, status="ok", demo=False)
+    except Exception as exc:
+        logger.error("portal error for user %s: %s", current_user.id, exc)
+        raise HTTPException(status_code=502, detail=f"Stripe error: {exc}") from exc
+
+
+@router.post("/webhook")
+async def stripe_webhook_canonical(
+    request: Request,
+    stripe_signature: Optional[str] = Header(default=None, alias="Stripe-Signature"),
+    db: Session = Depends(get_db),
+):
+    """Canonical Stripe webhook endpoint.
+
+    Verifies the Stripe-Signature header using ``stripe_service.construct_event``
+    (which uses the official Stripe SDK), then dispatches to the shared
+    ``_handle_webhook_event`` helper.
+    """
+    payload = await request.body()
+
+    # --- Signature verification ---
+    if settings.STRIPE_WEBHOOK_SECRET:
+        if not stripe_signature:
+            raise HTTPException(status_code=400, detail="Missing Stripe-Signature header")
+        try:
+            event = stripe_service.construct_event(payload, stripe_signature)
+            event_dict = dict(event)
+        except Exception as exc:
+            logger.warning("Webhook signature verification failed: %s", exc)
+            raise HTTPException(status_code=400, detail="Invalid Stripe signature") from exc
+    else:
+        # No secret configured — accept in dev/demo mode
+        try:
+            event_dict = json.loads(payload.decode("utf-8"))
+        except json.JSONDecodeError as exc:
+            raise HTTPException(status_code=400, detail="Invalid JSON") from exc
+
+    return await _handle_webhook_event(payload, event_dict, db)
+
+
+# ---------------------------------------------------------------------------
+# ── Legacy routes (backwards compatibility) ───────────────────────────────
+# ---------------------------------------------------------------------------
 
 
 @router.post("/create-checkout-session", response_model=BillingSessionResponse)
@@ -88,70 +237,9 @@ async def create_portal_session(
     return BillingSessionResponse(portal_url=stripe_data.get("url"), status="ok", demo=False)
 
 
-@router.post("/webhook")
-async def stripe_webhook(
-    request: Request,
-    stripe_signature: Optional[str] = Header(default=None, alias="Stripe-Signature"),
-    db: Session = Depends(get_db),
-):
-    """Handle Stripe webhooks for subscription and invoice sync."""
-    payload = await request.body()
-    if settings.STRIPE_WEBHOOK_SECRET:
-        if not stripe_signature or not _verify_signature(payload, stripe_signature, settings.STRIPE_WEBHOOK_SECRET):
-            raise HTTPException(status_code=400, detail="Invalid Stripe signature")
-
-    event = json.loads(payload.decode("utf-8"))
-    event_id = event.get("id") or f"evt_fallback_{hashlib.sha256(payload).hexdigest()[:24]}"
-    event_type = event.get("type", "")
-    data_object = event.get("data", {}).get("object", {})
-    event_row = (
-        db.query(models.StripeWebhookEvent)
-        .filter(models.StripeWebhookEvent.stripe_event_id == event_id)
-        .first()
-    )
-    if event_row and event_row.status in {"processed", "processing"}:
-        return {"received": True, "duplicate": True}
-
-    if not event_row:
-        event_row = models.StripeWebhookEvent(
-            stripe_event_id=event_id,
-            event_type=event_type or "unknown",
-            payload_hash=hashlib.sha256(payload).hexdigest(),
-            status="processing",
-        )
-        db.add(event_row)
-    else:
-        # Retrying a previously failed event — mark as processing to prevent
-        # concurrent delivery races while we re-process.
-        event_row.status = "processing"
-    db.commit()
-
-    try:
-        if event_type == "checkout.session.completed":
-            subscription_id = data_object.get("subscription")
-            if subscription_id and settings.STRIPE_SECRET_KEY:
-                subscription_data = await _stripe_get(f"/v1/subscriptions/{subscription_id}")
-                if not subscription_data.get("customer") and data_object.get("customer"):
-                    subscription_data["customer"] = data_object.get("customer")
-                await _sync_subscription(subscription_data, db)
-            else:
-                await _sync_subscription(data_object, db)
-        elif event_type in {"customer.subscription.updated", "customer.subscription.created", "customer.subscription.deleted"}:
-            await _sync_subscription(data_object, db)
-        elif event_type in {"invoice.paid", "invoice.payment_failed", "invoice.finalized"}:
-            await _sync_invoice(data_object, db)
-
-        event_row.status = "processed"
-        event_row.processed_at = datetime.now(timezone.utc)
-        event_row.last_error = None
-        db.commit()
-    except Exception as exc:
-        event_row.status = "failed"
-        event_row.last_error = str(exc)[:2000]
-        db.commit()
-        raise
-
-    return {"received": True, "duplicate": False}
+# NOTE: The /webhook route is defined above as stripe_webhook_canonical.
+# The legacy function below is intentionally removed to avoid duplicate route
+# registration.  The canonical implementation delegates to _handle_webhook_event.
 
 
 @router.get("/health")
@@ -237,6 +325,7 @@ def _resolve_price_id(plan: str) -> Optional[str]:
 
 
 async def _ensure_customer(user: models.User, db: Session) -> str:
+    """Legacy httpx-based customer ensure (used by legacy routes)."""
     if user.stripe_customer_id:
         return user.stripe_customer_id
 
@@ -246,6 +335,100 @@ async def _ensure_customer(user: models.User, db: Session) -> str:
     user.stripe_customer_id = customer_id
     db.commit()
     return customer_id
+
+
+async def _ensure_stripe_customer(user: models.User, db: Session) -> str:
+    """Stripe SDK-based customer ensure (used by canonical routes).
+
+    Creates a new Stripe customer via the SDK if the user doesn't have one,
+    persists the ID, and returns it.
+    """
+    if user.stripe_customer_id:
+        return user.stripe_customer_id
+
+    customer = stripe_service.create_customer(
+        user_id=user.id,
+        email=user.email,
+        name=user.full_name,
+    )
+    user.stripe_customer_id = customer.id
+    db.commit()
+    logger.info("Persisted stripe_customer_id %s for user %s", customer.id, user.id)
+    return customer.id
+
+
+async def _handle_webhook_event(payload: bytes, event: dict, db: Session) -> dict:
+    """Shared webhook event dispatcher (used by both canonical and legacy routes).
+
+    Implements idempotency via the StripeWebhookEvent table.
+    Handles:
+      - checkout.session.completed
+      - customer.subscription.created / updated / deleted
+      - invoice.paid / invoice.payment_failed / invoice.finalized
+    """
+    event_id = event.get("id") or f"evt_fallback_{hashlib.sha256(payload).hexdigest()[:24]}"
+    event_type = event.get("type", "")
+    data_object = event.get("data", {}).get("object", {})
+
+    # --- Idempotency check ---
+    event_row = (
+        db.query(models.StripeWebhookEvent)
+        .filter(models.StripeWebhookEvent.stripe_event_id == event_id)
+        .first()
+    )
+    if event_row and event_row.status in {"processed", "processing"}:
+        logger.info("Duplicate webhook event %s (%s) — skipping", event_id, event_type)
+        return {"received": True, "duplicate": True}
+
+    if not event_row:
+        event_row = models.StripeWebhookEvent(
+            stripe_event_id=event_id,
+            event_type=event_type or "unknown",
+            payload_hash=hashlib.sha256(payload).hexdigest(),
+            status="processing",
+        )
+        db.add(event_row)
+    else:
+        event_row.status = "processing"
+    db.commit()
+
+    try:
+        if event_type == "checkout.session.completed":
+            subscription_id = data_object.get("subscription")
+            if subscription_id and settings.STRIPE_SECRET_KEY:
+                subscription_data = await _stripe_get(f"/v1/subscriptions/{subscription_id}")
+                if not subscription_data.get("customer") and data_object.get("customer"):
+                    subscription_data["customer"] = data_object.get("customer")
+                await _sync_subscription(subscription_data, db)
+            else:
+                await _sync_subscription(data_object, db)
+
+        elif event_type in {
+            "customer.subscription.updated",
+            "customer.subscription.created",
+            "customer.subscription.deleted",
+        }:
+            await _sync_subscription(data_object, db)
+
+        elif event_type in {"invoice.paid", "invoice.payment_failed", "invoice.finalized"}:
+            await _sync_invoice(data_object, db)
+
+        else:
+            logger.debug("Unhandled Stripe event type: %s", event_type)
+
+        event_row.status = "processed"
+        event_row.processed_at = datetime.now(timezone.utc)
+        event_row.last_error = None
+        db.commit()
+
+    except Exception as exc:
+        logger.error("Error processing webhook event %s: %s", event_id, exc, exc_info=True)
+        event_row.status = "failed"
+        event_row.last_error = str(exc)[:2000]
+        db.commit()
+        raise
+
+    return {"received": True, "duplicate": False}
 
 
 async def _stripe_form_post(path: str, data: dict) -> dict:
