@@ -48,11 +48,12 @@ class Settings(BaseSettings):
 
     # Ollama (local, free)
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "qwen2.5:7b"          # default local model
+    OLLAMA_MODEL: str = "qwen2.5:7b"           # primary local model (fast, proven)
+    OLLAMA_MODEL_FALLBACK: str = "llama3.3:70b"  # heavier local fallback (not default)
     OLLAMA_ENABLED: bool = True                # set False to disable local routing
 
     # LLM routing thresholds
-    # Tasks with estimated token complexity BELOW this go to local Ollama
+    # Tasks with estimated token complexity BELOW this go to local fast Ollama
     LLM_LOCAL_MAX_COMPLEXITY: int = 800       # tokens threshold for local routing
     # Provider preference order (comma-separated): ollama,openai,anthropic,google
     LLM_PROVIDER_ORDER: str = "ollama,openai,anthropic,google"
