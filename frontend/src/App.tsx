@@ -14,6 +14,12 @@ const LandingPage   = lazy(() => import("./pages/LandingPage"));
 const LoginPage     = lazy(() => import("./pages/LoginPage"));
 const RegisterPage  = lazy(() => import("./pages/RegisterPage"));
 const DemoEntryPage = lazy(() => import("./pages/DemoEntryPage"));
+const UseCasesPage  = lazy(() => import("./pages/UseCasesPage"));
+const WhitePaperPage = lazy(() => import("./pages/WhitePaperPage"));
+const IndustryPage  = lazy(() => import("./pages/IndustryPage"));
+const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
+const VerifyEmailPage = lazy(() => import("./pages/VerifyEmailPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 
 // ── New *Page.tsx files (react-router-dom native) ────────────────────────
 const DashboardPage    = lazy(() => import("./pages/DashboardPage"));
@@ -80,7 +86,18 @@ function AppRoutes() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/demo" element={<DemoEntryPage />} />
 
-        {/* Legacy /dashboard etc → redirect to /app/dashboard */}
+        {/* Public marketing pages */}
+        <Route path="/use-cases" element={<UseCasesPage />} />
+        <Route path="/whitepaper" element={<WhitePaperPage />} />
+        <Route path="/white-paper" element={<Navigate to="/whitepaper" replace />} />
+        <Route path="/industry/:slug" element={<IndustryPage />} />
+
+        {/* Auth flows */}
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Legacy redirects */}
         <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
         <Route path="/chat" element={<Navigate to="/app/chat" replace />} />
 

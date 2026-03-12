@@ -353,22 +353,22 @@ function NavBar() {
 
         {/* Desktop nav */}
         <div className="hidden md:flex items-center gap-6 text-sm text-white/55">
-          <a href="#agents" className="hover:text-white transition-colors">Agents</a>
+          <a href="#agents" className="hover:text-white transition-colors">AI Agents</a>
           <a href="#pricing" className="hover:text-white transition-colors">Pricing</a>
-          <a href="#testimonials" className="hover:text-white transition-colors">Testimonials</a>
+          <Link to="/demo" className="hover:text-white transition-colors">Live Demo</Link>
           <Link to="/use-cases" className="hover:text-white transition-colors">Use Cases</Link>
+          <Link to="/whitepaper" className="hover:text-white transition-colors">White Paper</Link>
         </div>
 
         {/* CTAs */}
         <div className="hidden md:flex items-center gap-3">
           <Link to="/login" className="text-sm text-white/55 hover:text-white transition-colors px-3 py-2">Sign in</Link>
-          <Link to="/demo" className="rounded-lg border border-white/20 px-4 py-2 text-sm font-medium text-white hover:border-white/35 hover:bg-white/5 transition-colors">Try demo</Link>
           <Link
             to="/register"
             className="rounded-lg px-4 py-2 text-sm font-bold text-white transition-all hover:scale-[1.02]"
             style={{ background: 'oklch(65% .16 253)', boxShadow: '0 0 16px #3c91ed30' }}
           >
-            Start free →
+            Register free →
           </Link>
         </div>
 
@@ -382,15 +382,20 @@ function NavBar() {
         </button>
       </div>
       {menuOpen && (
-        <div className="border-t border-white/8 px-6 py-4 md:hidden space-y-3" style={{ background: 'oklch(9% .008 255)' }}>
-          <a href="#agents" onClick={() => setMenuOpen(false)} className="block text-sm text-white/60 hover:text-white py-1">Agents</a>
-          <a href="#pricing" onClick={() => setMenuOpen(false)} className="block text-sm text-white/60 hover:text-white py-1">Pricing</a>
-          <a href="#testimonials" onClick={() => setMenuOpen(false)} className="block text-sm text-white/60 hover:text-white py-1">Testimonials</a>
-          <Link to="/use-cases" onClick={() => setMenuOpen(false)} className="block text-sm text-white/60 hover:text-white py-1">Use Cases</Link>
-          <div className="flex gap-3 pt-2">
-            <Link to="/demo" className="flex-1 rounded-lg border border-white/20 py-2.5 text-center text-sm font-medium text-white">Try demo</Link>
-            <Link to="/register" className="flex-1 rounded-lg py-2.5 text-center text-sm font-bold text-white" style={{ background: 'oklch(65% .16 253)' }}>Start free</Link>
-          </div>
+        <div className="border-t border-white/8 px-6 py-5 md:hidden" style={{ background: 'oklch(9% .008 255)' }}>
+          {/* PRODUCT */}
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30 mb-2">Product</p>
+          <a href="#agents" onClick={() => setMenuOpen(false)} className="block text-sm text-white/70 hover:text-white py-1.5">AI Agents</a>
+          <a href="#pricing" onClick={() => setMenuOpen(false)} className="block text-sm text-white/70 hover:text-white py-1.5">Pricing</a>
+          <Link to="/demo" onClick={() => setMenuOpen(false)} className="block text-sm text-white/70 hover:text-white py-1.5">Live Demo</Link>
+          {/* COMPANY */}
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30 mt-4 mb-2">Company</p>
+          <Link to="/use-cases" onClick={() => setMenuOpen(false)} className="block text-sm text-white/70 hover:text-white py-1.5">Use Cases</Link>
+          <Link to="/whitepaper" onClick={() => setMenuOpen(false)} className="block text-sm text-white/70 hover:text-white py-1.5">White Paper</Link>
+          {/* ACCOUNT */}
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-white/30 mt-4 mb-2">Account</p>
+          <Link to="/login" onClick={() => setMenuOpen(false)} className="block text-sm text-white/70 hover:text-white py-1.5">Sign in</Link>
+          <Link to="/register" onClick={() => setMenuOpen(false)} className="block text-sm text-white/70 hover:text-white py-1.5">Register free</Link>
         </div>
       )}
     </nav>
