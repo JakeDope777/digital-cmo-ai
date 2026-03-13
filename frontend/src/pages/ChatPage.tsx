@@ -453,7 +453,71 @@ export default function ChatPage() {
 
         {/* Messages area */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.length === 0 && !loading && (
+          {messages.length === 0 && !loading && isDemoMode && (
+            <div className="flex flex-col items-center justify-center min-h-full text-center py-8">
+              <style>{`
+                @keyframes brainPulse {
+                  0%, 100% { box-shadow: 0 0 24px #3c91ed40, 0 0 48px #3c91ed20; }
+                  50% { box-shadow: 0 0 48px #3c91ed80, 0 0 96px #3c91ed40; }
+                }
+              `}</style>
+              {/* Brain icon with pulse glow */}
+              <div
+                className="flex h-20 w-20 items-center justify-center rounded-3xl mb-6"
+                style={{
+                  background: 'linear-gradient(135deg, #3c91ed30, #3c91ed15)',
+                  border: '1px solid #3c91ed50',
+                  animation: 'brainPulse 2.5s ease-in-out infinite',
+                }}
+              >
+                <Brain className="h-9 w-9 text-blue-400" />
+              </div>
+              <h1 className="text-3xl font-extrabold text-white mb-2">Hi, I'm your AI CMO 👋</h1>
+              <p className="text-slate-400 text-sm mb-10 leading-relaxed max-w-sm">
+                Running on 10 specialised agents. Ask me anything.
+              </p>
+
+              {/* 6 prompt cards in 2×3 grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-3xl w-full text-left">
+                {[
+                  { emoji: '🎯', title: 'Analyse my Google Ads performance', border: '#3c91ed', glow: '#3c91ed30' },
+                  { emoji: '📧', title: 'Write a 5-email onboarding sequence', border: '#a78bfa', glow: '#a78bfa30' },
+                  { emoji: '📊', title: 'Run a SWOT analysis on my business', border: '#34d399', glow: '#34d39930' },
+                  { emoji: '💰', title: 'Allocate my $50K monthly ad budget', border: '#fbbf24', glow: '#fbbf2430' },
+                  { emoji: '🔍', title: 'Find 10 SEO opportunities', border: '#fb7185', glow: '#fb718530' },
+                  { emoji: '🚀', title: 'Create a Q2 marketing campaign brief', border: '#f97316', glow: '#f9731630' },
+                ].map((card) => (
+                  <button
+                    key={card.title}
+                    onClick={() => { setInput(card.title); void sendMessage(card.title); }}
+                    className="flex items-start gap-3 rounded-2xl p-4 text-left transition-all cursor-pointer"
+                    style={{
+                      background: 'oklch(13% .008 255)',
+                      border: `1px solid oklch(24% .008 255)`,
+                      borderLeft: `3px solid ${card.border}`,
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = `0 0 20px ${card.glow}`;
+                      (e.currentTarget as HTMLElement).style.borderColor = `${card.border}50`;
+                      (e.currentTarget as HTMLElement).style.borderLeftColor = card.border;
+                      (e.currentTarget as HTMLElement).style.background = 'oklch(15% .008 255)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.boxShadow = 'none';
+                      (e.currentTarget as HTMLElement).style.borderColor = 'oklch(24% .008 255)';
+                      (e.currentTarget as HTMLElement).style.borderLeftColor = card.border;
+                      (e.currentTarget as HTMLElement).style.background = 'oklch(13% .008 255)';
+                    }}
+                  >
+                    <span className="text-2xl flex-shrink-0 mt-0.5">{card.emoji}</span>
+                    <span className="text-sm font-semibold text-slate-200 leading-snug">{card.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {messages.length === 0 && !loading && !isDemoMode && (
             <div className="flex flex-col items-center justify-center h-full text-center max-w-xl mx-auto">
               <div
                 className="flex h-20 w-20 items-center justify-center rounded-3xl mb-6"
