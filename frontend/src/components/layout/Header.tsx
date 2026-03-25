@@ -32,7 +32,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-4">
         <button className="relative p-2 text-slate-500 hover:text-slate-700 rounded-lg hover:bg-slate-100">
           <Bell className="w-5 h-5" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full" />
+          <span className="absolute top-1 right-1 w-2 h-2 bg-accent-500 rounded-full" />
         </button>
         <Link
           to="/app/profile"

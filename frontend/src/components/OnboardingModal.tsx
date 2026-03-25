@@ -18,7 +18,7 @@ const GOALS = [
   { icon: UsersIcon,           label: "Generate more leads",     color: "text-violet-400",  bg: "bg-violet-500/10 border-violet-500/30"},
   { icon: TrophyIcon,          label: "Increase revenue",        color: "text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30"},
   { icon: ArrowTrendingUpIcon, label: "Build brand awareness",   color: "text-indigo-400",  bg: "bg-indigo-500/10 border-indigo-500/30"},
-  { icon: MegaphoneIcon,       label: "Launch a product",        color: "text-orange-400",  bg: "bg-orange-500/10 border-orange-500/30"},
+  { icon: MegaphoneIcon,       label: "Launch a product",        color: "text-primary-500",  bg: "bg-primary-600/10 border-primary-600/30"},
   { icon: SparklesIcon,        label: "Replace my agency",       color: "text-pink-400",    bg: "bg-pink-500/10 border-pink-500/30"   },
 ];
 
@@ -26,7 +26,7 @@ const AGENTS = [
   { icon: MagnifyingGlassIcon, name: "SEO Agent",         color: "text-sky-400",     delay: 0 },
   { icon: PencilSquareIcon,    name: "Creative Agent",    color: "text-violet-400",  delay: 0.3 },
   { icon: EnvelopeIcon,        name: "Email Agent",       color: "text-emerald-400", delay: 0.6 },
-  { icon: MegaphoneIcon,       name: "Paid Ads Agent",    color: "text-orange-400",  delay: 0.9 },
+  { icon: MegaphoneIcon,       name: "Paid Ads Agent",    color: "text-primary-500",  delay: 0.9 },
   { icon: ChartBarIcon,        name: "Analytics Agent",   color: "text-indigo-400",  delay: 1.2 },
   { icon: ShareIcon,           name: "Social Agent",      color: "text-pink-400",    delay: 1.5 },
   { icon: UsersIcon,           name: "CRM Agent",         color: "text-teal-400",    delay: 1.8 },

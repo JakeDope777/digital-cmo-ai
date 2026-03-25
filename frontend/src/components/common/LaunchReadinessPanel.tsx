@@ -33,11 +33,11 @@ function readinessPillClass(
 ) {
   if (tone === 'dark') {
     if (state === 'positive') return 'border-emerald-500/20 bg-emerald-500/10 text-emerald-300';
-    if (state === 'pending') return 'border-orange-500/20 bg-orange-500/10 text-orange-300';
+    if (state === 'pending') return 'border-amber-500/20 bg-amber-500/10 text-amber-300';
     return 'border-white/10 bg-white/5 text-white/65';
   }
   if (state === 'positive') return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-  if (state === 'pending') return 'border-orange-200 bg-orange-50 text-orange-700';
+  if (state === 'pending') return 'border-amber-200 bg-amber-50 text-amber-700';
   return 'border-slate-200 bg-slate-100 text-slate-600';
 }
 

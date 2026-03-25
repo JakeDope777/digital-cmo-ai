@@ -47,11 +47,11 @@ function DemoBanner({ moduleId }: { moduleId?: ModuleId }) {
   const moduleLabel = moduleId ? MODULE_CATALOG[moduleId].title : 'App';
 
   return (
-    <div className="flex items-center justify-between gap-4 bg-orange-500 px-4 py-2 text-sm text-white">
+    <div className="flex items-center justify-between gap-4 bg-amber-500 px-4 py-2 text-sm text-white">
       <div className="flex items-center gap-2">
         <Sparkles className="h-4 w-4 flex-shrink-0" />
         <span className="font-medium">Demo mode</span>
-        <span className="hidden sm:inline text-orange-100">
+        <span className="hidden sm:inline text-amber-100">
           {`— ${domainLabel} · ${moduleLabel}. Exploring with realistic sample data. Switch to live mode to connect your real account.`}
         </span>
       </div>

@@ -151,7 +151,7 @@ function StepProgress({ current, total }: { current: number; total: number }) {
         <div
           key={i}
           className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
-            i < current ? 'bg-orange-500' : i === current ? 'bg-orange-300' : 'bg-slate-700'
+            i < current ? 'bg-primary-600' : i === current ? 'bg-primary-400' : 'bg-slate-700'
           }`}
         />
       ))}
@@ -178,7 +178,7 @@ function Step1({ onNext, data }: { onNext: (d: Step1Data) => void; data: Partial
         <label className="block text-sm font-medium text-slate-300 mb-1.5">Company Name *</label>
         <input
           {...register('company_name')}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none focus:ring-1 focus:ring-primary-600"
           placeholder="Acme Corp"
         />
         <FieldError message={errors.company_name?.message} />
@@ -188,7 +188,7 @@ function Step1({ onNext, data }: { onNext: (d: Step1Data) => void; data: Partial
         <label className="block text-sm font-medium text-slate-300 mb-1.5">Industry *</label>
         <select
           {...register('industry')}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white focus:border-primary-600 focus:outline-none focus:ring-1 focus:ring-primary-600"
         >
           <option value="">Select industry…</option>
           {INDUSTRIES.map((ind) => (
@@ -204,7 +204,7 @@ function Step1({ onNext, data }: { onNext: (d: Step1Data) => void; data: Partial
           {(['1-10', '11-50', '51-200', '201-1000', '1000+'] as const).map((size) => (
             <label key={size} className="cursor-pointer">
               <input {...register('company_size')} type="radio" value={size} className="sr-only peer" />
-              <div className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-2 text-center text-xs text-slate-400 peer-checked:border-orange-500 peer-checked:bg-orange-500/10 peer-checked:text-orange-400 hover:border-slate-600 transition-all">
+              <div className="rounded-lg border border-slate-700 bg-slate-800 px-2 py-2 text-center text-xs text-slate-400 peer-checked:border-primary-600 peer-checked:bg-primary-600/10 peer-checked:text-primary-500 hover:border-slate-600 transition-all">
                 {size}
               </div>
             </label>
@@ -221,14 +221,14 @@ function Step1({ onNext, data }: { onNext: (d: Step1Data) => void; data: Partial
           <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
           <input
             {...register('website')}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="w-full rounded-lg border border-slate-700 bg-slate-800 pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none focus:ring-1 focus:ring-primary-600"
             placeholder="https://yourcompany.com"
           />
         </div>
         <FieldError message={errors.website?.message} />
       </div>
 
-      <button type="submit" className="w-full rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+      <button type="submit" className="w-full rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors flex items-center justify-center gap-2">
         Continue <ChevronRight className="h-4 w-4" />
       </button>
     </form>
@@ -265,8 +265,8 @@ function Step2({ onNext, onBack, data }: { onNext: (d: Step2Data) => void; onBac
         <label className="block text-sm font-medium text-slate-300 mb-2">Brand Tone *</label>
         <div className="space-y-2">
           {TONE_OPTIONS.map((opt) => (
-            <label key={opt.value} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-700 bg-slate-800 p-3 hover:border-slate-600 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10 transition-all">
-              <input {...register('tone')} type="radio" value={opt.value} className="mt-0.5 accent-orange-500" />
+            <label key={opt.value} className="flex cursor-pointer items-start gap-3 rounded-lg border border-slate-700 bg-slate-800 p-3 hover:border-slate-600 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-600/10 transition-all">
+              <input {...register('tone')} type="radio" value={opt.value} className="mt-0.5 accent-primary-600" />
               <div>
                 <p className="text-sm font-medium text-white">{opt.label}</p>
                 <p className="text-xs text-slate-500">{opt.desc}</p>
@@ -284,7 +284,7 @@ function Step2({ onNext, onBack, data }: { onNext: (d: Step2Data) => void; onBac
             value={valueInput}
             onChange={(e) => setValueInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addValue(); } }}
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+            className="flex-1 rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none"
             placeholder="Innovation, Trust, Transparency…"
             maxLength={30}
           />
@@ -294,7 +294,7 @@ function Step2({ onNext, onBack, data }: { onNext: (d: Step2Data) => void; onBac
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           {values.map((v, i) => (
-            <span key={i} className="flex items-center gap-1 rounded-full border border-orange-500/40 bg-orange-500/10 px-3 py-0.5 text-xs text-orange-300">
+            <span key={i} className="flex items-center gap-1 rounded-full border border-primary-600/40 bg-primary-600/10 px-3 py-0.5 text-xs text-primary-400">
               {v}
               <button type="button" onClick={() => removeValue(i)}><X className="h-3 w-3" /></button>
             </span>
@@ -308,7 +308,7 @@ function Step2({ onNext, onBack, data }: { onNext: (d: Step2Data) => void; onBac
         <textarea
           {...register('brand_description')}
           rows={3}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none"
+          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none resize-none"
           placeholder="We speak like a trusted advisor — clear, direct, and always jargon-free…"
         />
         <FieldError message={errors.brand_description?.message} />
@@ -318,7 +318,7 @@ function Step2({ onNext, onBack, data }: { onNext: (d: Step2Data) => void; onBac
         <button type="button" onClick={onBack} className="flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-400 hover:text-white hover:border-slate-600 transition-colors">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
-        <button type="submit" className="flex-1 rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+        <button type="submit" className="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors flex items-center justify-center gap-2">
           Continue <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -339,7 +339,7 @@ function Step3({ onNext, onBack, data }: { onNext: (d: Step3Data) => void; onBac
         <textarea
           {...register('icp_description')}
           rows={4}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none"
+          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none resize-none"
           placeholder="Series A–B SaaS founders and VPs of Marketing at companies with 20–200 employees who are looking to…"
         />
         <FieldError message={errors.icp_description?.message} />
@@ -350,7 +350,7 @@ function Step3({ onNext, onBack, data }: { onNext: (d: Step3Data) => void; onBac
           <label className="block text-sm font-medium text-slate-300 mb-1.5">Age Range</label>
           <input
             {...register('age_range')}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none"
             placeholder="25–45"
           />
         </div>
@@ -358,7 +358,7 @@ function Step3({ onNext, onBack, data }: { onNext: (d: Step3Data) => void; onBac
           <label className="block text-sm font-medium text-slate-300 mb-1.5">Location</label>
           <input
             {...register('location')}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none"
             placeholder="US, EU, Global…"
           />
         </div>
@@ -368,7 +368,7 @@ function Step3({ onNext, onBack, data }: { onNext: (d: Step3Data) => void; onBac
         <label className="block text-sm font-medium text-slate-300 mb-1.5">Job Titles / Roles</label>
         <input
           {...register('job_titles')}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none"
           placeholder="VP Marketing, Growth Lead, CMO, Founder…"
         />
       </div>
@@ -378,7 +378,7 @@ function Step3({ onNext, onBack, data }: { onNext: (d: Step3Data) => void; onBac
         <textarea
           {...register('pain_points')}
           rows={2}
-          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none resize-none"
+          className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none resize-none"
           placeholder="Scaling content without growing headcount, proving marketing ROI…"
         />
       </div>
@@ -387,7 +387,7 @@ function Step3({ onNext, onBack, data }: { onNext: (d: Step3Data) => void; onBac
         <button type="button" onClick={onBack} className="flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-400 hover:text-white transition-colors">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
-        <button type="submit" className="flex-1 rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+        <button type="submit" className="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors flex items-center justify-center gap-2">
           Continue <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -445,7 +445,7 @@ function Step4({ onNext, onBack, data }: { onNext: (d: Step4Data) => void; onBac
               value={comp.name}
               onChange={(e) => updateCompetitor(idx, 'name', e.target.value)}
               onBlur={() => void autoFetch(idx)}
-              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none"
               placeholder={`Competitor ${idx + 1} name`}
             />
             <div className="relative">
@@ -453,7 +453,7 @@ function Step4({ onNext, onBack, data }: { onNext: (d: Step4Data) => void; onBac
               <input
                 value={comp.website}
                 onChange={(e) => updateCompetitor(idx, 'website', e.target.value)}
-                className="w-full rounded-lg border border-slate-700 bg-slate-800 pl-8 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-700 bg-slate-800 pl-8 pr-4 py-2 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none"
                 placeholder="https://…"
               />
               {fetchingIdx === idx && (
@@ -483,7 +483,7 @@ function Step4({ onNext, onBack, data }: { onNext: (d: Step4Data) => void; onBac
         <button type="button" onClick={onBack} className="flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-400 hover:text-white transition-colors">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
-        <button type="submit" className="flex-1 rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+        <button type="submit" className="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors flex items-center justify-center gap-2">
           Continue <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -503,8 +503,8 @@ function Step5({ onNext, onBack, data }: { onNext: (d: Step5Data) => void; onBac
         <label className="block text-sm font-medium text-slate-300 mb-2">Primary Goal *</label>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {GOAL_OPTIONS.map((goal) => (
-            <label key={goal.value} className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-700 bg-slate-800 p-3 hover:border-slate-600 has-[:checked]:border-orange-500 has-[:checked]:bg-orange-500/10 transition-all">
-              <input {...register('primary_goal')} type="radio" value={goal.value} className="accent-orange-500" />
+            <label key={goal.value} className="flex cursor-pointer items-center gap-3 rounded-lg border border-slate-700 bg-slate-800 p-3 hover:border-slate-600 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-600/10 transition-all">
+              <input {...register('primary_goal')} type="radio" value={goal.value} className="accent-primary-600" />
               <span className="text-lg">{goal.icon}</span>
               <span className="text-sm font-medium text-white">{goal.label}</span>
             </label>
@@ -519,7 +519,7 @@ function Step5({ onNext, onBack, data }: { onNext: (d: Step5Data) => void; onBac
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">$</span>
           <input
             {...register('monthly_budget')}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 pl-7 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-orange-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-700 bg-slate-800 pl-7 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:border-primary-600 focus:outline-none"
             placeholder="5,000"
           />
         </div>
@@ -536,7 +536,7 @@ function Step5({ onNext, onBack, data }: { onNext: (d: Step5Data) => void; onBac
           ] as const).map((opt) => (
             <label key={opt.value} className="cursor-pointer">
               <input {...register('timeline')} type="radio" value={opt.value} className="sr-only peer" />
-              <div className="rounded-lg border border-slate-700 bg-slate-800 py-2.5 text-center text-xs text-slate-400 peer-checked:border-orange-500 peer-checked:bg-orange-500/10 peer-checked:text-orange-400 hover:border-slate-600 transition-all">
+              <div className="rounded-lg border border-slate-700 bg-slate-800 py-2.5 text-center text-xs text-slate-400 peer-checked:border-primary-600 peer-checked:bg-primary-600/10 peer-checked:text-primary-500 hover:border-slate-600 transition-all">
                 {opt.label}
               </div>
             </label>
@@ -549,7 +549,7 @@ function Step5({ onNext, onBack, data }: { onNext: (d: Step5Data) => void; onBac
         <button type="button" onClick={onBack} className="flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-400 hover:text-white transition-colors">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
-        <button type="submit" className="flex-1 rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+        <button type="submit" className="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors flex items-center justify-center gap-2">
           Continue <ChevronRight className="h-4 w-4" />
         </button>
       </div>
@@ -583,7 +583,7 @@ function Step6({ onNext, onBack, data, saving }: { onNext: (d: Step6Data) => voi
               onClick={() => toggle(ch.id)}
               className={`flex items-center gap-2 rounded-lg border p-3 text-left text-sm transition-all ${
                 active
-                  ? 'border-orange-500 bg-orange-500/10 text-orange-300'
+                  ? 'border-primary-600 bg-primary-600/10 text-primary-400'
                   : 'border-slate-700 bg-slate-800 text-slate-400 hover:border-slate-600'
               }`}
             >
@@ -599,7 +599,7 @@ function Step6({ onNext, onBack, data, saving }: { onNext: (d: Step6Data) => voi
         <button type="button" onClick={onBack} disabled={saving} className="flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-400 hover:text-white transition-colors disabled:opacity-50">
           <ChevronLeft className="h-4 w-4" /> Back
         </button>
-        <button type="submit" disabled={saving} className="flex-1 rounded-lg bg-orange-500 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+        <button type="submit" disabled={saving} className="flex-1 rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
           {saving ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <><CheckCircle2 className="h-4 w-4" /> Complete Setup</>}
         </button>
       </div>
@@ -680,7 +680,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
       <div className="w-full max-w-lg">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-xs text-orange-400 mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary-600/20 bg-primary-600/10 px-3 py-1 text-xs text-primary-500 mb-4">
             Step {step + 1} of {STEP_META.length}
           </div>
           <h1 className="text-2xl font-bold text-white mb-1">{title}</h1>
@@ -698,7 +698,7 @@ export function OnboardingWizard({ onComplete, onSkip }: OnboardingWizardProps) 
                 key={i}
                 className={`flex h-9 w-9 items-center justify-center rounded-xl transition-all ${
                   i === step
-                    ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30'
+                    ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30'
                     : i < step
                     ? 'bg-slate-700 text-emerald-400'
                     : 'bg-slate-800 text-slate-600'
