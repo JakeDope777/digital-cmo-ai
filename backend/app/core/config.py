@@ -42,6 +42,11 @@ class Settings(BaseSettings):
     OPENAI_BASE_URL: Optional[str] = None
     TELEGRAM_FALLBACK_BOT: Optional[str] = "@baltazar_loco_bot"
 
+    # OpenRouter (smart auto-routing)
+    OPENROUTER_API_KEY: Optional[str] = None
+    OPENROUTER_MODEL: str = "openrouter/auto"  # NotDiamond auto-routing
+    OPENROUTER_ALLOWED_MODELS: Optional[str] = None  # e.g., "anthropic/*" or "anthropic/*,openai/*"
+
     # Anthropic / Google / Local LLM
     ANTHROPIC_API_KEY: Optional[str] = None
     GOOGLE_GEMINI_API_KEY: Optional[str] = None
@@ -55,8 +60,8 @@ class Settings(BaseSettings):
     # LLM routing thresholds
     # Tasks with estimated token complexity BELOW this go to local fast Ollama
     LLM_LOCAL_MAX_COMPLEXITY: int = 800       # tokens threshold for local routing
-    # Provider preference order (comma-separated): ollama,openai,anthropic,google
-    LLM_PROVIDER_ORDER: str = "ollama,openai,anthropic,google"
+    # Provider preference order (comma-separated): ollama,openrouter,openai,anthropic,google
+    LLM_PROVIDER_ORDER: str = "ollama,openrouter,openai,anthropic,google"
 
     # Vector Database (FAISS)
     VECTOR_DB_PATH: str = "./data/vector_store"

@@ -72,6 +72,7 @@ COST_TABLE: dict[str, dict[str, float]] = {
 
 class LLMProvider(str, Enum):
     OPENAI = "openai"
+    OPENROUTER = "openrouter"
     ANTHROPIC = "anthropic"
     GOOGLE = "google"
     OLLAMA = "ollama"
@@ -219,6 +220,146 @@ async def _stream_openai(request: LLMRequest) -> AsyncIterator[str]:
         max_tokens=request.max_tokens,
         temperature=request.temperature,
         timeout=request.timeout,
+    ) as stream:
+        async for chunk in stream:
+            if chunk.choices:
+                delta = chunk.choices[0].delta.content or ""
+                if delta:
+                    yield delta
+
+
+# ---------------------------------------------------------------------------
+# OpenRouter provider (NotDiamond auto-routing)
+# ---------------------------------------------------------------------------
+
+async def _call_openrouter(request: LLMRequest) -> LLMResponse:
+    """Call OpenRouter API with auto-routing via openrouter/auto model."""
+    try:
+        from openai import AsyncOpenAI
+    except ImportError as exc:
+        raise RuntimeError("openai package not installed") from exc
+
+    api_key = getattr(settings, "OPENROUTER_API_KEY", None)
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY not configured")
+
+    client = AsyncOpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
+    model = request.model or getattr(settings, "OPENROUTER_MODEL", "openrouter/auto")
+
+    messages = list(request.messages)
+    if request.system:
+        messages = [{"role": "system", "content": request.system}] + messages
+
+    # Build extra_body for OpenRouter plugins (model restrictions)
+    extra_body = {}
+    allowed_models = getattr(settings, "OPENROUTER_ALLOWED_MODELS", None)
+    if allowed_models:
+        extra_body["plugins"] = [{
+            "id": "auto-router",
+            "allowed_models": [m.strip() for m in allowed_models.split(",")]
+        }]
+
+    t0 = time.monotonic()
+
+    if request.stream:
+        collected = []
+        async with client.chat.completions.stream(
+            model=model,
+            messages=messages,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            timeout=request.timeout,
+            extra_body=extra_body if extra_body else None,
+        ) as stream:
+            async for chunk in stream:
+                delta = chunk.choices[0].delta.content or "" if chunk.choices else ""
+                collected.append(delta)
+        content = "".join(collected)
+        input_tokens = sum(len(m.get("content", "")) for m in messages) // 4
+        output_tokens = len(content) // 4
+    else:
+        response = await client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=request.max_tokens,
+            temperature=request.temperature,
+            timeout=request.timeout,
+            extra_body=extra_body if extra_body else None,
+        )
+        content = response.choices[0].message.content or ""
+        input_tokens = response.usage.prompt_tokens if response.usage else 0
+        output_tokens = response.usage.completion_tokens if response.usage else 0
+        
+        # OpenRouter returns the actual model used in the response
+        actual_model = getattr(response, "model", model)
+        logger.info(f"OpenRouter routed to: {actual_model}")
+
+    latency_ms = (time.monotonic() - t0) * 1000
+    
+    # Cost calculation: OpenRouter charges based on actual model used
+    # For now, estimate conservatively (will be tracked in OpenRouter dashboard)
+    cost = _calculate_cost("openai", "gpt-4.1-mini", input_tokens, output_tokens)
+
+    logger.info(
+        "openrouter call complete",
+        extra={
+            "model": model,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "cost_usd": cost,
+            "latency_ms": latency_ms,
+        },
+    )
+    return LLMResponse(
+        content=content,
+        provider=LLMProvider.OPENROUTER,
+        model=model,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        cost_usd=cost,
+        latency_ms=latency_ms,
+    )
+
+
+async def _stream_openrouter(request: LLMRequest) -> AsyncIterator[str]:
+    """Stream tokens from OpenRouter."""
+    try:
+        from openai import AsyncOpenAI
+    except ImportError as exc:
+        raise RuntimeError("openai package not installed") from exc
+
+    api_key = getattr(settings, "OPENROUTER_API_KEY", None)
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY not configured")
+
+    client = AsyncOpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
+    model = request.model or getattr(settings, "OPENROUTER_MODEL", "openrouter/auto")
+
+    messages = list(request.messages)
+    if request.system:
+        messages = [{"role": "system", "content": request.system}] + messages
+
+    extra_body = {}
+    allowed_models = getattr(settings, "OPENROUTER_ALLOWED_MODELS", None)
+    if allowed_models:
+        extra_body["plugins"] = [{
+            "id": "auto-router",
+            "allowed_models": [m.strip() for m in allowed_models.split(",")]
+        }]
+
+    async with client.chat.completions.stream(
+        model=model,
+        messages=messages,
+        max_tokens=request.max_tokens,
+        temperature=request.temperature,
+        timeout=request.timeout,
+        extra_body=extra_body if extra_body else None,
     ) as stream:
         async for chunk in stream:
             if chunk.choices:
@@ -557,6 +698,7 @@ async def _stream_ollama(request: LLMRequest) -> AsyncIterator[str]:
 
 _PROVIDER_CALL_MAP = {
     LLMProvider.OPENAI: _call_openai,
+    LLMProvider.OPENROUTER: _call_openrouter,
     LLMProvider.ANTHROPIC: _call_anthropic,
     LLMProvider.GOOGLE: _call_google,
     LLMProvider.OLLAMA: _call_ollama,
@@ -564,18 +706,21 @@ _PROVIDER_CALL_MAP = {
 
 _PROVIDER_STREAM_MAP = {
     LLMProvider.OPENAI: _stream_openai,
+    LLMProvider.OPENROUTER: _stream_openrouter,
     LLMProvider.ANTHROPIC: _stream_anthropic,
     LLMProvider.GOOGLE: _stream_google,
     LLMProvider.OLLAMA: _stream_ollama,
 }
 
-# Fallback order — Ollama first (free), then paid providers
-_FALLBACK_ORDER = [LLMProvider.OLLAMA, LLMProvider.OPENAI, LLMProvider.ANTHROPIC, LLMProvider.GOOGLE]
+# Fallback order — Ollama first (free), then OpenRouter auto-routing, then specific providers
+_FALLBACK_ORDER = [LLMProvider.OLLAMA, LLMProvider.OPENROUTER, LLMProvider.OPENAI, LLMProvider.ANTHROPIC, LLMProvider.GOOGLE]
 
 
 def _is_provider_configured(provider: LLMProvider) -> bool:
     if provider == LLMProvider.OPENAI:
         return bool(settings.OPENAI_API_KEY)
+    if provider == LLMProvider.OPENROUTER:
+        return bool(getattr(settings, "OPENROUTER_API_KEY", None))
     if provider == LLMProvider.ANTHROPIC:
         return bool(getattr(settings, "ANTHROPIC_API_KEY", None))
     if provider == LLMProvider.GOOGLE:
