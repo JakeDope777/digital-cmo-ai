@@ -66,6 +66,7 @@ class Settings(BaseSettings):
     CUSTOMERIO_API_KEY: Optional[str] = None
     FIRECRAWL_API_KEY: Optional[str] = None
     CONVERT_API_KEY: Optional[str] = None
+    CONVERT_API_SECRET: Optional[str] = None
     CONVERT_PROJECT_ID: Optional[str] = None
     COMPETITOR_URLS: Optional[str] = None            # comma-separated
     GOOGLE_GEMINI_API_KEY: Optional[str] = None
