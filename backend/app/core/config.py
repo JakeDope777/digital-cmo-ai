@@ -49,6 +49,25 @@ class Settings(BaseSettings):
 
     # Anthropic / Google / Local LLM
     ANTHROPIC_API_KEY: Optional[str] = None
+    ANTHROPIC_MODEL: str = "claude-sonnet-4-6"
+
+    # ── Agent notification channels ──────────────────────────────────────
+    SLACK_WEBHOOK_URL: Optional[str] = None          # Incoming Webhook URL
+    TELEGRAM_BOT_TOKEN: Optional[str] = None         # from @BotFather
+    TELEGRAM_CHAT_ID: Optional[str] = None           # your personal chat ID
+
+    # ── Agent tool connectors ─────────────────────────────────────────────
+    SHOPIFY_STORE_DOMAIN: Optional[str] = None       # your-store.myshopify.com
+    SHOPIFY_ADMIN_API_TOKEN: Optional[str] = None    # shpat_xxx
+    AMPLITUDE_API_KEY: Optional[str] = None
+    AMPLITUDE_SECRET_KEY: Optional[str] = None
+    CUSTOMERIO_APP_API_KEY: Optional[str] = None
+    CUSTOMERIO_SITE_ID: Optional[str] = None
+    CUSTOMERIO_API_KEY: Optional[str] = None
+    FIRECRAWL_API_KEY: Optional[str] = None
+    CONVERT_API_KEY: Optional[str] = None
+    CONVERT_PROJECT_ID: Optional[str] = None
+    COMPETITOR_URLS: Optional[str] = None            # comma-separated
     GOOGLE_GEMINI_API_KEY: Optional[str] = None
 
     # Ollama (local, free)

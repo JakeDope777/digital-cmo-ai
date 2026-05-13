@@ -23,6 +23,8 @@ from .core.config import settings
 from .db import models
 from .db.session import SessionLocal, init_db
 from .modules.integrations.service import IntegrationService
+from .agents.scheduler import agent_scheduler
+from .api.agents import agents_router
 from .api import auth, chat, analysis, creative, crm, analytics, memory, billing, growth, integrations, restaurant
 
 _integration_service = IntegrationService()
@@ -233,7 +235,9 @@ async def lifespan(app: FastAPI):
     """Application lifecycle: initialise resources on startup."""
     # Initialise database tables
     init_db()
+    await agent_scheduler.start()
     yield
+    await agent_scheduler.stop()
 
 
 app = FastAPI(
@@ -275,6 +279,7 @@ app.include_router(billing.router)
 app.include_router(growth.router)
 app.include_router(integrations.router)
 app.include_router(restaurant.router, include_in_schema=False)
+app.include_router(agents_router, prefix="/agents", tags=["agents"])
 
 
 @app.get("/api/health", tags=["Health"])
