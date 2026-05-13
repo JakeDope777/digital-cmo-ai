@@ -1,0 +1,12 @@
+# ── Add these to backend/requirements.txt ───────────────────────────────────
+# Agent infrastructure
+anthropic>=0.34.0          # Claude API — ANTHROPIC_API_KEY already in .env.example
+apscheduler>=3.10.4        # Autonomous agent scheduling
+httpx>=0.27.0              # Async HTTP for tool connectors (likely already installed)
+
+# Notification services
+# (no extra deps needed — uses httpx for both Slack webhooks + Telegram Bot API)
+
+# Tool connectors
+# Shopify, Amplitude, Customer.io, Firecrawl, Convert.com — all via httpx REST calls
+# No SDK dependencies needed; keeps the footprint minimal
